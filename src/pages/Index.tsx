@@ -4,12 +4,15 @@ import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DataLoader from "@/components/DataLoader";
 import LoadingSkeletons from "@/components/LoadingSkeletons";
 import PageHeader from "@/components/PageHeader";
 import MonthSelectorWithCount from "@/components/MonthSelectorWithCount";
+import { getSheetData } from "@/lib/googleSheetsApi";
+import { saveStudents } from "@/services/supabaseService";
+import { toast } from "sonner";
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -18,6 +21,7 @@ const Index = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
+  const [isImporting, setIsImporting] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Função para lidar com os dados carregados
@@ -27,6 +31,47 @@ const Index = () => {
     setFilteredStudents([]);
     setActiveFilter(null);
     setLoadingSource(source);
+  };
+
+  // Função para forçar importação completa dos dados da planilha para o banco
+  const handleForceImport = async () => {
+    if (!selectedMonth) {
+      toast.error("Selecione um mês antes de importar os dados");
+      return;
+    }
+    
+    try {
+      setIsImporting(true);
+      toast.info(`Iniciando importação dos dados para o mês ${selectedMonth}...`);
+      
+      // Busca dados diretamente da planilha
+      const sheetsData = await getSheetData(selectedMonth);
+      
+      if (sheetsData.length === 0) {
+        toast.error(`Não foram encontrados alunos na planilha para o mês ${selectedMonth}`);
+        setIsImporting(false);
+        return;
+      }
+      
+      console.log(`Importando ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
+      
+      // Salva os dados no banco de dados
+      await saveStudents(sheetsData, selectedMonth);
+      
+      // Atualiza a lista de estudantes
+      handleDataLoaded(sheetsData, "sheets");
+      
+      toast.success(`Importação concluída com sucesso`, {
+        description: `${sheetsData.length} alunos foram importados para o banco de dados`
+      });
+    } catch (error) {
+      console.error("Erro ao importar dados:", error);
+      toast.error("Erro ao importar dados da planilha", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   // Aplicar filtros com base na seleção de cartão
@@ -129,12 +174,23 @@ const Index = () => {
       <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
       
       <div className="flex justify-between items-center mb-8 flex-wrap gap-2">
-        <MonthSelectorWithCount
-          onMonthChange={setSelectedMonth}
-          studentsCount={students.length}
-          loadingSource={loadingSource}
-          loading={loading}
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <MonthSelectorWithCount
+            onMonthChange={setSelectedMonth}
+            studentsCount={students.length}
+            loadingSource={loadingSource}
+            loading={loading}
+          />
+          <Button
+            onClick={handleForceImport}
+            disabled={isImporting || !selectedMonth}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isImporting ? "Importando..." : "Importar da Planilha"}
+          </Button>
+        </div>
         <Button 
           onClick={() => navigate("/register-student")}
           className="flex items-center gap-2 bg-primary text-white"
