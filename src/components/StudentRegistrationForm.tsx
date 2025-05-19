@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 
 // Schema para validar os dados do formulário
@@ -22,6 +23,8 @@ const studentSchema = z.object({
   email: z.string().email({ message: "E-mail inválido" }).optional().or(z.literal("")),
   telefone: z.string().optional(),
   observacoes: z.string().optional(),
+  diasAtraso: z.string().optional(),
+  followUp: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -43,7 +46,9 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       curso: "",
       email: "",
       telefone: "",
-      observacoes: ""
+      observacoes: "",
+      diasAtraso: "",
+      followUp: ""
     }
   });
 
@@ -59,9 +64,9 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       // Converter o valor para número
       const valorNumerico = parseFloat(values.valor.replace(/[^\d,.]/g, "").replace(",", "."));
       
-      // Calcular dias de atraso
-      let diasAtraso = 0;
-      if (values.dataVencimento) {
+      // Calcular dias de atraso (usar o valor informado ou calcular)
+      let diasAtraso = parseInt(values.diasAtraso || "0");
+      if (isNaN(diasAtraso) && values.dataVencimento) {
         const partesData = values.dataVencimento.split('/');
         
         if (partesData.length >= 2) {
@@ -78,6 +83,10 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         }
       }
 
+      // Data atual formatada para o primeiro contato (caso seja necessário)
+      const dataAtual = new Date();
+      const dataFormatada = `${dataAtual.getDate().toString().padStart(2, '0')}/${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}/${dataAtual.getFullYear()}`;
+
       // Criar o objeto do aluno com ID único
       const newStudent: Student = {
         id: uuidv4(),
@@ -86,7 +95,7 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         valor: valorNumerico,
         dataVencimento: values.dataVencimento,
         diasAtraso: diasAtraso,
-        followUp: "",
+        followUp: values.followUp || "",
         email: values.email || "",
         telefone: values.telefone || "",
         observacoes: values.observacoes || "",
@@ -208,27 +217,48 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="dataVencimento"
-              render={({ field: { onChange, ...rest } }) => (
-                <FormItem>
-                  <FormLabel>Data de Vencimento</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...rest} 
-                      placeholder="DD/MM/AAAA" 
-                      onChange={(e) => {
-                        const formattedValue = formatDate(e.target.value);
-                        onChange(formattedValue);
-                      }} 
-                      maxLength={10}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dataVencimento"
+                render={({ field: { onChange, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>Data de Vencimento</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...rest} 
+                        placeholder="DD/MM/AAAA" 
+                        onChange={(e) => {
+                          const formattedValue = formatDate(e.target.value);
+                          onChange(formattedValue);
+                        }} 
+                        maxLength={10}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="diasAtraso"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dias de Atraso</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="0" 
+                        type="number"
+                        min="0"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}
@@ -276,12 +306,26 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
             
             <FormField
               control={form.control}
+              name="followUp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Follow Up</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Informações de acompanhamento" rows={2} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
               name="observacoes"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Observações adicionais" />
+                    <Textarea {...field} placeholder="Observações adicionais" rows={3} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
