@@ -161,9 +161,18 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     }
     
     // Verificar se o campo follow up está preenchido
-    if (student.followUp.trim() === "" && newStatus !== "pagamento-feito") {
+    if (student.followUp.trim() === "" && student.status === "inadimplente") {
       toast.error("O campo 'Follow Up' precisa ser preenchido para mover o aluno", {
         description: "Atualize o campo na planilha ou no detalhe do aluno e tente novamente."
+      });
+      setProcessingStudentId(null);
+      return;
+    }
+    
+    // Verificar se o campo data de pagamento está preenchido quando movendo para "pagamento-feito"
+    if (newStatus === "pagamento-feito" && (!student.dataPagamento || student.dataPagamento.trim() === "")) {
+      toast.error("Data de pagamento é obrigatória", {
+        description: "Preencha a data de pagamento no detalhe do aluno antes de mover para Pagamento Realizado."
       });
       setProcessingStudentId(null);
       return;

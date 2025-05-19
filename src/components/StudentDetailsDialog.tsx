@@ -30,17 +30,29 @@ const StudentDetailsDialog = ({
   const [observacoes, setObservacoes] = useState(student.observacoes || "");
   const [dataPagamento, setDataPagamento] = useState(student.dataPagamento || "");
   const [isDateRequired, setIsDateRequired] = useState(false);
+  const [isFollowUpRequired, setIsFollowUpRequired] = useState(false);
 
   // Reset form when student changes
   useEffect(() => {
     setFollowUp(student.followUp || "");
     setObservacoes(student.observacoes || "");
     setDataPagamento(student.dataPagamento || "");
+    
     // Date is required when current status is "resposta-recebida" and we want to move to "pagamento-feito"
     setIsDateRequired(student.status === "resposta-recebida");
+    
+    // FollowUp is required when student is in "inadimplente" status
+    setIsFollowUpRequired(student.status === "inadimplente");
   }, [student]);
 
   const handleSave = () => {
+    // Validation checks
+    if (isFollowUpRequired && followUp.trim() === "") {
+      // If student is inadimplente and followUp is required but empty
+      alert("O campo 'Follow Up' é obrigatório para alunos inadimplentes");
+      return;
+    }
+    
     // Update the student object with the new values
     const updatedStudent = {
       ...student,
@@ -102,14 +114,23 @@ const StudentDetailsDialog = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="followUp">Follow Up</Label>
+              <Label htmlFor="followUp">
+                Follow Up
+                {isFollowUpRequired && <span className="text-red-500 ml-1">*</span>}
+              </Label>
               <Textarea
                 id="followUp"
                 value={followUp}
                 onChange={(e) => setFollowUp(e.target.value)}
                 rows={3}
                 placeholder="Adicione informações de acompanhamento aqui..."
+                className={isFollowUpRequired && followUp.trim() === "" ? "border-red-500" : ""}
               />
+              {isFollowUpRequired && followUp.trim() === "" && (
+                <p className="text-xs text-red-600">
+                  O Follow Up é obrigatório para alunos inadimplentes
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -134,6 +155,7 @@ const StudentDetailsDialog = ({
                 onChange={(e) => setDataPagamento(e.target.value)}
                 placeholder="DD/MM/YYYY"
                 type="text"
+                className={isDateRequired && !dataPagamento ? "border-red-500" : ""}
               />
               {isDateRequired && (
                 <p className="text-xs text-amber-600">
@@ -146,7 +168,12 @@ const StudentDetailsDialog = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          <Button 
+            onClick={handleSave}
+            disabled={(isFollowUpRequired && followUp.trim() === "")}
+          >
+            Salvar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
