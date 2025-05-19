@@ -1,3 +1,4 @@
+
 import { Student, SheetData, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
 
@@ -158,11 +159,13 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         email: "", // Não temos na planilha
         telefone: "", // Não temos na planilha
         observacoes: row[6] || "", // OBSERVAÇÃO está na coluna G (índice 6)
+        primeiroContato: row[3] || "", // PRIMEIRO CONTATO está na coluna D (índice 3)
+        ultimoContato: row[4] || "", // ÚLTIMO CONTATO está na coluna E (índice 4)
         status: "inadimplente" as Status,
         statusHistory: [] // Inicializa o histórico de status vazio
       };
       
-      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}`);
+      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}, primeiro contato: ${student.primeiroContato}, último contato: ${student.ultimoContato}`);
       students.push(student);
     }
     
