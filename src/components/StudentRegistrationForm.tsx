@@ -20,11 +20,14 @@ const studentSchema = z.object({
   valor: z.string().min(1, { message: "Valor é obrigatório" }),
   dataVencimento: z.string().min(1, { message: "Data de vencimento é obrigatória" }),
   curso: z.string().optional(),
+  primeiroContato: z.string().optional(),
+  ultimoContato: z.string().optional(), 
+  dataPagamento: z.string().optional(),
+  observacoes: z.string().optional(),
+  dataFollowUp: z.string().optional(),
   email: z.string().email({ message: "E-mail inválido" }).optional().or(z.literal("")),
   telefone: z.string().optional(),
-  observacoes: z.string().optional(),
   diasAtraso: z.string().optional(),
-  followUp: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -44,11 +47,14 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       valor: "",
       dataVencimento: "",
       curso: "",
+      primeiroContato: "",
+      ultimoContato: "",
+      dataPagamento: "",
+      observacoes: "",
+      dataFollowUp: "",
       email: "",
       telefone: "",
-      observacoes: "",
       diasAtraso: "",
-      followUp: ""
     }
   });
 
@@ -83,10 +89,6 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         }
       }
 
-      // Data atual formatada para o primeiro contato (caso seja necessário)
-      const dataAtual = new Date();
-      const dataFormatada = `${dataAtual.getDate().toString().padStart(2, '0')}/${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}/${dataAtual.getFullYear()}`;
-
       // Criar o objeto do aluno com ID único
       const newStudent: Student = {
         id: uuidv4(),
@@ -95,14 +97,14 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         valor: valorNumerico,
         dataVencimento: values.dataVencimento,
         diasAtraso: diasAtraso,
-        followUp: values.followUp || "",
+        followUp: values.dataFollowUp || "",
         email: values.email || "",
         telefone: values.telefone || "",
         observacoes: values.observacoes || "",
         status: "inadimplente" as Status,
         statusHistory: [],
-        primeiroContato: "",
-        ultimoContato: "",
+        primeiroContato: values.primeiroContato || "",
+        ultimoContato: values.ultimoContato || "",
         mes: selectedMonth
       };
 
@@ -187,7 +189,7 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome do Aluno</FormLabel>
+                  <FormLabel>NOME</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Nome completo do aluno" />
                   </FormControl>
@@ -201,7 +203,7 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
               name="valor"
               render={({ field: { onChange, ...rest } }) => (
                 <FormItem>
-                  <FormLabel>Valor Devido</FormLabel>
+                  <FormLabel>VALOR</FormLabel>
                   <FormControl>
                     <Input 
                       {...rest} 
@@ -223,7 +225,7 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
                 name="dataVencimento"
                 render={({ field: { onChange, ...rest } }) => (
                   <FormItem>
-                    <FormLabel>Data de Vencimento</FormLabel>
+                    <FormLabel>VENCIMEN.</FormLabel>
                     <FormControl>
                       <Input 
                         {...rest} 
@@ -252,6 +254,98 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
                         placeholder="0" 
                         type="number"
                         min="0"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="primeiroContato"
+                render={({ field: { onChange, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>PRIMEIRO CONTATO</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...rest} 
+                        placeholder="DD/MM/AAAA" 
+                        onChange={(e) => {
+                          const formattedValue = formatDate(e.target.value);
+                          onChange(formattedValue);
+                        }} 
+                        maxLength={10}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="ultimoContato"
+                render={({ field: { onChange, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>ÚLTIMO CONTATO</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...rest} 
+                        placeholder="DD/MM/AAAA" 
+                        onChange={(e) => {
+                          const formattedValue = formatDate(e.target.value);
+                          onChange(formattedValue);
+                        }} 
+                        maxLength={10}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dataPagamento"
+                render={({ field: { onChange, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>DATA DO PAGAMENTO</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...rest} 
+                        placeholder="DD/MM/AAAA" 
+                        onChange={(e) => {
+                          const formattedValue = formatDate(e.target.value);
+                          onChange(formattedValue);
+                        }} 
+                        maxLength={10}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dataFollowUp"
+                render={({ field: { onChange, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>DATA DO FOLLOW</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...rest} 
+                        placeholder="DD/MM/AAAA" 
+                        onChange={(e) => {
+                          const formattedValue = formatDate(e.target.value);
+                          onChange(formattedValue);
+                        }} 
+                        maxLength={10}
                       />
                     </FormControl>
                     <FormMessage />
@@ -306,26 +400,16 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
             
             <FormField
               control={form.control}
-              name="followUp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Follow Up</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Informações de acompanhamento" rows={2} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
               name="observacoes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações</FormLabel>
+                  <FormLabel>OBSERVAÇÃO</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Observações adicionais" rows={3} />
+                    <Textarea 
+                      {...field} 
+                      placeholder="Informações adicionais" 
+                      className="min-h-[80px] resize-vertical" 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
