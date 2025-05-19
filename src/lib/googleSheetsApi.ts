@@ -99,31 +99,48 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
           .replace(",", ".")
       );
       
-      // Calcular dias de atraso com o ano atual
+      // Calcular dias de atraso corretamente
       let diasAtraso = 0;
       if (row[2]) { // Data de vencimento
         const partesData = row[2].toString().split('/');
         
-        if (partesData.length === 2) {
+        if (partesData.length === 3) {
+          // Formato completo: DD/MM/YYYY
+          const dia = parseInt(partesData[0]);
+          const mes = parseInt(partesData[1]) - 1; // 0-based em JS
+          const ano = parseInt(partesData[2]);
+          
+          // Criar data de vencimento com ano, mês e dia
+          const dataVencimento = new Date(ano, mes, dia);
+          const hoje = new Date();
+          
+          // Calcular diferença em dias
+          const diff = hoje.getTime() - dataVencimento.getTime();
+          diasAtraso = Math.floor(diff / (1000 * 60 * 60 * 24));
+          if (diasAtraso < 0) diasAtraso = 0;
+        } else if (partesData.length === 2) {
+          // Formato simplificado: DD/MM (assumir ano atual)
           const dia = parseInt(partesData[0]);
           const mes = parseInt(partesData[1]) - 1; // 0-based em JS
           const hoje = new Date();
-          const anoAtual = hoje.getFullYear();
+          const ano = hoje.getFullYear();
           
-          // Criar data de vencimento com o ano atual
-          const dataVencimento = new Date(anoAtual, mes, dia);
+          // Criar data de vencimento
+          const dataVencimento = new Date(ano, mes, dia);
           
-          // Se o mês de vencimento já passou (estamos em dezembro e o vencimento é de janeiro)
-          // assumimos que é do próximo ano
-          if (mes < hoje.getMonth() && hoje.getMonth() > 10) {
-            dataVencimento.setFullYear(anoAtual + 1);
+          // Se a data de vencimento está no futuro mas o mês já é anterior ao atual,
+          // significa que o vencimento já passou e estamos no ano seguinte
+          if (dataVencimento > hoje && mes < hoje.getMonth()) {
+            dataVencimento.setFullYear(ano - 1);
           }
           
-          // Se o mês atual é janeiro e o vencimento é de dezembro, assumimos que o vencimento foi no ano anterior
-          if (mes > hoje.getMonth() && hoje.getMonth() < 1) {
-            dataVencimento.setFullYear(anoAtual - 1);
+          // Se a data de vencimento está no passado mas o mês é posterior ao atual,
+          // significa que o vencimento ainda não chegou e estamos no ano anterior
+          if (dataVencimento < hoje && mes > hoje.getMonth()) {
+            dataVencimento.setFullYear(ano + 1);
           }
           
+          // Calcular diferença em dias
           const diff = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diff / (1000 * 60 * 60 * 24));
           if (diasAtraso < 0) diasAtraso = 0;
@@ -145,7 +162,7 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         status: "inadimplente" as Status
       };
       
-      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}`);
+      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}`);
       students.push(student);
     }
     
