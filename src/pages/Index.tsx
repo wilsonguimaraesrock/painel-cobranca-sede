@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
@@ -127,6 +126,26 @@ const Index = () => {
   const handleStudentUpdate = useCallback((updatedStudent: Student) => {
     console.log(`Updating student ${updatedStudent.id} with status ${updatedStudent.status}`);
     
+    // Check if this is a delete operation (hack: we identify deletes by receiving a student object with just an id)
+    const isDeleteOperation = Object.keys(updatedStudent).length === 1 && updatedStudent.id;
+    
+    if (isDeleteOperation) {
+      console.log(`Deleting student ${updatedStudent.id} from local state`);
+      // Remove the student from state
+      setStudents(prevStudents => 
+        prevStudents.filter(student => student.id !== updatedStudent.id)
+      );
+      
+      // Also update filtered students if filter is active
+      if (activeFilter) {
+        setFilteredStudents(prevFiltered => 
+          prevFiltered.filter(student => student.id !== updatedStudent.id)
+        );
+      }
+      return;
+    }
+    
+    // Otherwise, this is a regular update
     // Update local state first to reflect changes immediately
     setStudents(prevStudents => 
       prevStudents.map(student => 

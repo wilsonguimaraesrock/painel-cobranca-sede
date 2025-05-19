@@ -1,459 +1,211 @@
 
-import { Student, Status, StatusHistory } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { Student, Status } from "@/types";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/googleSheetsApi";
-import { ChevronLeft, ChevronRight, History, Eye, Calendar } from "lucide-react";
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { ChevronRight, ChevronLeft, Info, Trash2 } from "lucide-react";
+import StudentDetailsDialog from "./StudentDetailsDialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface StudentCardProps {
   student: Student;
   onStatusChange: (studentId: string, newStatus: Status) => void;
   onReturnToPrevious: (studentId: string) => void;
-  onStudentUpdate?: (updatedStudent: Student) => void;
+  onStudentUpdate: (updatedStudent: Student) => void;
+  onStudentDelete?: (studentId: string) => void;
 }
 
-const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpdate }: StudentCardProps) => {
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+const StudentCard = ({ 
+  student, 
+  onStatusChange, 
+  onReturnToPrevious, 
+  onStudentUpdate,
+  onStudentDelete
+}: StudentCardProps) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [editedStudent, setEditedStudent] = useState<Student>({...student});
-  
-  // Atualizar o estudante editado sempre que as props mudarem
-  useEffect(() => {
-    setEditedStudent({...student});
-  }, [student]);
-  
-  // Mapeia os status para os próximos status possíveis
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+
+  // Next status mapping
   const nextStatusMap: Record<Status, Status> = {
     "inadimplente": "mensagem-enviada",
     "mensagem-enviada": "resposta-recebida",
     "resposta-recebida": "pagamento-feito",
-    "pagamento-feito": "pagamento-feito", // Não tem próximo estado
-  };
-  
-  const statusDisplay: Record<Status, string> = {
-    "inadimplente": "Inadimplente",
-    "mensagem-enviada": "Mensagem enviada",
-    "resposta-recebida": "Resposta recebida",
-    "pagamento-feito": "Pagamento realizado"
-  };
-  
-  const statusColors: Record<Status, string> = {
-    "inadimplente": "bg-kanban-overdue text-white",
-    "mensagem-enviada": "bg-kanban-sent text-white",
-    "resposta-recebida": "bg-kanban-replied text-white",
-    "pagamento-feito": "bg-kanban-paid text-white"
+    "pagamento-feito": "pagamento-feito" // Last stage has no next
   };
 
-  // Verificar se pode avançar para o próximo status
-  // Para pagamento-feito, verificamos se dataPagamento está preenchido
-  const canAdvance = () => {
-    // Se está indo para pagamento-feito, precisa ter data de pagamento
-    if (student.status === "resposta-recebida") {
-      return student.followUp?.trim() !== "" && editedStudent.dataPagamento?.trim() !== "";
-    }
-    
-    // Para outros status, apenas verifica o followUp
-    return student.followUp?.trim() !== "";
+  // Status display names
+  const statusDisplayNames: Record<Status, string> = {
+    "inadimplente": "Inadimplente",
+    "mensagem-enviada": "Mensagem Enviada",
+    "resposta-recebida": "Resposta Recebida",
+    "pagamento-feito": "Pagamento Realizado"
   };
-  
-  const handleMoveNext = () => {
-    if (!canAdvance()) {
-      if (student.status === "resposta-recebida") {
-        toast.error("Os campos 'Follow Up' e 'Data de Pagamento' precisam ser preenchidos");
-      } else {
-        toast.error("O campo 'Follow Up' precisa ser preenchido");
-      }
-      return;
-    }
-    
-    const nextStatus = nextStatusMap[student.status];
-    if (nextStatus !== student.status) {
-      console.log(`Movendo aluno ${student.id} para ${nextStatus}`);
-      
-      // Se estiver movendo para pagamento-feito, deve ter data de pagamento
-      if (nextStatus === "pagamento-feito" && !editedStudent.dataPagamento) {
-        toast.error("É necessário preencher a Data de Pagamento");
-        return;
-      }
-      
-      // Atualizar dados do estudante antes de mudar o status
-      if (onStudentUpdate) {
-        onStudentUpdate(editedStudent);
-      }
-      
+
+  // Get the next status
+  const getNextStatus = (currentStatus: Status): Status | null => {
+    return nextStatusMap[currentStatus];
+  };
+
+  // Format currency values
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  // Handle status change
+  const handleNextStatus = () => {
+    const nextStatus = getNextStatus(student.status);
+    if (nextStatus && nextStatus !== student.status) {
       onStatusChange(student.id, nextStatus);
     }
   };
 
-  // Verificar se pode retornar para o status anterior
-  const canReturn = student.status !== "inadimplente";
-  
-  const handleReturnToPrevious = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que o evento de clique do cartão seja acionado
-    if (canReturn) {
-      console.log(`Retornando aluno ${student.id} para status anterior`);
-      onReturnToPrevious(student.id);
-    }
-  };
-  
-  // Truncate observações text if it's too long
-  const truncateText = (text: string, maxLength: number) => {
-    if (!text) return "";
-    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-  };
-  
-  // Formatar data para exibição
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(date));
-  };
-
-  // Função para atualizar os dados do aluno
-  const handleUpdateStudentData = () => {
-    if (onStudentUpdate) {
-      console.log(`Atualizando dados do aluno ${student.id} via detalhes`);
-      
-      // Verificar se houve mudanças
-      const hasChanges = JSON.stringify(editedStudent) !== JSON.stringify(student);
-      
-      if (hasChanges) {
-        onStudentUpdate(editedStudent);
-        toast.success("Dados do aluno atualizados");
-        toast.info("Clique em 'Salvar Alterações' para persistir as mudanças no banco de dados", {
-          duration: 5000
-        });
-      } else {
-        toast.info("Nenhuma mudança detectada");
-      }
-      
-      setIsDetailsOpen(false);
-    }
-  };
-
-  // Função para registrar contato
-  const handleRegisterContact = (type: 'primeiro' | 'ultimo') => {
-    const now = new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date());
-    
-    const updatedStudent = {...editedStudent};
-    
-    if (type === 'primeiro' && !updatedStudent.primeiroContato) {
-      updatedStudent.primeiroContato = now;
-    } else if (type === 'ultimo') {
-      updatedStudent.ultimoContato = now;
-    }
-    
-    setEditedStudent(updatedStudent);
-  };
-
-  const hasHistory = student.statusHistory && student.statusHistory.length > 0;
-
-  // Handle card click - we want to either show details or advance status
-  const handleCardClick = () => {
-    setEditedStudent({...student});
+  // Handle details dialog
+  const handleOpenDetails = () => {
     setIsDetailsOpen(true);
   };
 
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+  };
+
+  // Handle delete student
+  const handleDeleteStudent = () => {
+    if (onStudentDelete) {
+      onStudentDelete(student.id);
+      setIsConfirmDeleteOpen(false);
+    }
+  };
+
   return (
-    <>
-      <Card 
-        className="mb-3 cursor-pointer hover:shadow-md transition-shadow animate-card-move relative"
-        onClick={handleCardClick}
-      >
-        {/* Botão para retornar ao quadro anterior */}
-        {canReturn && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="absolute -top-2 -left-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
-            onClick={handleReturnToPrevious}
-            title="Retornar para o quadro anterior"
+    <Card className="mb-3 border-l-4 hover:shadow-md transition-shadow" 
+      style={{ 
+        borderLeftColor: 
+          student.status === "inadimplente" ? "#ef4444" : 
+          student.status === "mensagem-enviada" ? "#f59e0b" : 
+          student.status === "resposta-recebida" ? "#3b82f6" : 
+          "#10b981" 
+      }}
+    >
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold truncate mb-1" title={student.nome}>
+              {student.nome}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {formatCurrency(student.valor)}
+            </p>
+            <p className="text-xs text-gray-400">
+              Vencimento: {student.dataVencimento}
+            </p>
+            {student.diasAtraso > 0 && (
+              <p className="text-xs font-medium text-red-500">
+                {student.diasAtraso} dias em atraso
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <AlertDialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 text-gray-500 hover:text-red-500"
+                  title="Excluir aluno"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja excluir o aluno "{student.nome}"? Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteStudent}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Excluir
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7" 
+              onClick={handleOpenDetails}
+              title="Ver detalhes"
+            >
+              <Info size={16} />
+            </Button>
+          </div>
+        </div>
+        
+        {student.followUp && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-600 line-clamp-2" title={student.followUp}>
+              {student.followUp}
+            </p>
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="p-2 pt-0 flex justify-between">
+        {student.status !== "inadimplente" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs h-8 px-2"
+            onClick={() => onReturnToPrevious(student.id)}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft size={14} />
+            Voltar
           </Button>
         )}
+        {student.status === "inadimplente" && <div />}
         
-        {/* Botão para mostrar histórico */}
-        {hasHistory && (
-          <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute -top-2 -right-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                title="Ver histórico de alterações"
-              >
-                <History className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]" onClick={e => e.stopPropagation()}>
-              <DialogHeader>
-                <DialogTitle>Histórico de alterações - {student.nome}</DialogTitle>
-              </DialogHeader>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>De</TableHead>
-                    <TableHead>Para</TableHead>
-                    <TableHead>Alterado por</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {student.statusHistory && student.statusHistory.map((history, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{formatDate(history.changedAt)}</TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[history.oldStatus]}>
-                          {statusDisplay[history.oldStatus]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[history.newStatus]}>
-                          {statusDisplay[history.newStatus]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{history.changedBy}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </DialogContent>
-          </Dialog>
+        {student.status !== "pagamento-feito" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs h-8 px-2 ml-auto"
+            onClick={handleNextStatus}
+          >
+            Avançar
+            <ChevronRight size={14} />
+          </Button>
         )}
-        
-        <CardHeader className="p-3 pb-1">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-base font-bold truncate" title={student.nome}>
-              {student.nome}
-            </CardTitle>
-            <Badge className={statusColors[student.status]}>
-              {statusDisplay[student.status]}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 pt-1 text-sm">
-          <div className="grid grid-cols-2 gap-1">
-            <div className="text-muted-foreground">Valor:</div>
-            <div className="font-medium">{formatCurrency(student.valor)}</div>
-            
-            <div className="text-muted-foreground">Vencimento:</div>
-            <div className="font-medium">{student.dataVencimento}</div>
-            
-            <div className="text-muted-foreground">Dias em atraso:</div>
-            <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
-            
-            <div className="text-muted-foreground">Follow up:</div>
-            <div className={`font-medium ${!student.followUp ? 'text-destructive italic' : ''}`}>
-              {student.followUp || "Pendente"}
-            </div>
-            
-            {student.observacoes && (
-              <>
-                <div className="text-muted-foreground">Observações:</div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="font-medium truncate" style={{ maxWidth: "120px" }}>
-                      {truncateText(student.observacoes, 15)}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">{student.observacoes}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            )}
-          </div>
-          
-          {!canAdvance() && student.status !== "pagamento-feito" && (
-            <div className="mt-2 text-xs text-red-500">
-              {student.status === "resposta-recebida" 
-                ? "Preencha os campos 'follow up' e 'data de pagamento' para mover este aluno."
-                : "Preencha o campo 'follow up' para mover este aluno."
-              }
-            </div>
-          )}
-          
-          {canAdvance() && student.status !== "pagamento-feito" && (
-            <div className="mt-2 text-xs text-blue-500 flex items-center justify-end">
-              <span>Clique para detalhes</span>
-              <Eye className="h-4 w-4 ml-1" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialog de detalhes do aluno */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{student.nome}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="mt-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <Badge className={`${statusColors[student.status]} text-base py-1 px-3`}>
-                {statusDisplay[student.status]}
-              </Badge>
-              <span className="font-bold text-xl">{formatCurrency(student.valor)}</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-              <div>
-                <div className="text-sm text-muted-foreground">Vencimento</div>
-                <div className="font-medium">{student.dataVencimento}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-muted-foreground">Dias em atraso</div>
-                <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
-              </div>
-              
-              <div className="relative">
-                <div className="text-sm text-muted-foreground">Primeiro contato</div>
-                <div className="flex items-center">
-                  <div className="font-medium flex-1">
-                    {editedStudent.primeiroContato || "Não registrado"}
-                  </div>
-                  {!editedStudent.primeiroContato && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleRegisterContact('primeiro')}
-                      title="Registrar primeiro contato"
-                      className="ml-2"
-                    >
-                      <Calendar className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-muted-foreground">Último contato</div>
-                <div className="flex items-center">
-                  <div className="font-medium flex-1">
-                    {editedStudent.ultimoContato || "Não registrado"}
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleRegisterContact('ultimo')}
-                    title="Registrar último contato"
-                    className="ml-2"
-                  >
-                    <Calendar className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Nova seção para data de pagamento */}
-              <div className="col-span-2">
-                <div className="text-sm text-muted-foreground">Data de Pagamento</div>
-                <Input 
-                  value={editedStudent.dataPagamento || ""} 
-                  onChange={(e) => setEditedStudent({...editedStudent, dataPagamento: e.target.value})}
-                  placeholder="Informar data de pagamento (dd/mm/aaaa)"
-                  className={student.status === "resposta-recebida" ? "border-orange-300" : ""}
-                />
-                {student.status === "resposta-recebida" && !editedStudent.dataPagamento && (
-                  <p className="text-xs text-orange-500 mt-1">
-                    *Obrigatório para mover para "Pagamento Realizado"
-                  </p>
-                )}
-              </div>
-              
-              <div className="col-span-2">
-                <div className="text-sm text-muted-foreground">Follow up</div>
-                <Input 
-                  value={editedStudent.followUp || ""} 
-                  onChange={(e) => setEditedStudent({...editedStudent, followUp: e.target.value})}
-                  placeholder="Adicione informações de follow up"
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <div className="text-sm text-muted-foreground">Observações</div>
-                <Textarea 
-                  value={editedStudent.observacoes || ""} 
-                  onChange={(e) => setEditedStudent({...editedStudent, observacoes: e.target.value})}
-                  placeholder="Adicione observações"
-                  rows={3}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-between pt-4 gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDetailsOpen(false)}
-                className="w-1/2"
-              >
-                Cancelar
-              </Button>
-              
-              <Button 
-                onClick={handleUpdateStudentData}
-                className="w-1/2"
-              >
-                Salvar alterações
-              </Button>
-            </div>
-            
-            {student.status !== "pagamento-feito" && (
-              <div className="pt-2">
-                <Button 
-                  className="w-full" 
-                  disabled={!canAdvance()}
-                  onClick={() => {
-                    handleMoveNext();
-                    setIsDetailsOpen(false);
-                  }}
-                >
-                  Avançar para {statusDisplay[nextStatusMap[student.status]]}
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+      </CardFooter>
+      
+      {isDetailsOpen && (
+        <StudentDetailsDialog 
+          student={student}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+          onUpdate={onStudentUpdate}
+        />
+      )}
+    </Card>
   );
 };
 

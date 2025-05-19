@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateStudentStatus, saveAllStudents } from "@/services/supabaseService";
+import { updateStudentStatus, saveAllStudents, deleteStudent } from "@/services/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 
@@ -21,6 +20,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
   const [localStudents, setLocalStudents] = useState<Student[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const [isDeletingStudent, setIsDeletingStudent] = useState<boolean>(false);
   
   // Sincronizar o estado local com as props e calcular dias de atraso
   useEffect(() => {
@@ -315,6 +315,42 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     }
   };
 
+  // Handler for student deletion
+  const handleDeleteStudent = async (studentId: string) => {
+    if (isDeletingStudent) {
+      return;
+    }
+    
+    try {
+      setIsDeletingStudent(true);
+      console.log(`Deleting student with ID: ${studentId}`);
+      
+      // Delete student from database
+      await deleteStudent(studentId);
+      
+      // Update local state
+      setLocalStudents(prev => prev.filter(student => student.id !== studentId));
+      
+      // Update parent component state
+      const updatedStudents = students.filter(student => student.id !== studentId);
+      onStudentUpdate({
+        ...students.find(s => s.id === studentId)!,
+        id: studentId // This is a hack to identify the deleted student in the parent component
+      });
+      
+      toast.success("Aluno excluído com sucesso", {
+        description: "O aluno foi removido do sistema."
+      });
+    } catch (error) {
+      console.error("Erro ao excluir aluno:", error);
+      toast.error("Erro ao excluir aluno", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+    } finally {
+      setIsDeletingStudent(false);
+    }
+  };
+
   return (
     <div className="w-full overflow-hidden">
       <div className="flex justify-between items-center mb-4">
@@ -361,6 +397,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
                     onStatusChange={handleStatusChange}
                     onReturnToPrevious={handleReturnToPreviousStatus}
                     onStudentUpdate={onStudentUpdate}
+                    onStudentDelete={handleDeleteStudent}
                   />
                 ))
               ) : (

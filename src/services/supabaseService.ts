@@ -375,3 +375,44 @@ export const updateStudentStatus = async (
     throw error;
   }
 };
+
+// Delete a student from the database
+export const deleteStudent = async (studentId: string): Promise<void> => {
+  try {
+    console.log(`Deleting student with ID: ${studentId}`);
+    
+    // First delete any status history records related to this student
+    const { error: historyError } = await supabase
+      .from('status_history')
+      .delete()
+      .eq('student_id', studentId);
+    
+    if (historyError) {
+      console.error("Error deleting student's status history:", historyError);
+      
+      if (historyError.code !== "42501") { // Not a permission error
+        throw historyError;
+      }
+      // Continue with student deletion even if history deletion fails due to permissions
+    }
+    
+    // Now delete the student
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', studentId);
+    
+    if (error) {
+      console.error("Error deleting student:", error);
+      throw error;
+    }
+    
+    console.log(`Student ${studentId} deleted successfully`);
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    toast.error("Erro ao excluir aluno", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    throw error;
+  }
+};
