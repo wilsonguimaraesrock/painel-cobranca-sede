@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { User, UserRound, Lock } from "lucide-react";
+import { UserRound, Lock } from "lucide-react";
 
 interface UserCredential {
   username: string;
@@ -44,7 +44,7 @@ const LoginPage = () => {
         description: `Bem-vindo(a), ${username}!`
       });
       
-      // Redirect to main page
+      // Redirect to main page - ensuring we use navigate instead of window.location
       navigate("/");
     } else {
       setError("Usuário ou senha inválidos");
