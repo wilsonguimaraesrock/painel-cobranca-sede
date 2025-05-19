@@ -78,7 +78,7 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         }
       }
 
-      // Criar o objeto do aluno
+      // Criar o objeto do aluno com ID único
       const newStudent: Student = {
         id: uuidv4(),
         nome: values.nome,

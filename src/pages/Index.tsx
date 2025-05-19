@@ -21,7 +21,6 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const [initialLoadDone, setInitialLoadDone] = useState<boolean>(false);
-  const [databaseLoaded, setDatabaseLoaded] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Carregar dados quando o mês muda
@@ -33,131 +32,28 @@ const Index = () => {
         setLoading(true);
         console.log(`Carregando dados para o mês: ${selectedMonth}`);
         
-        // Primeiro verificar se existem dados no banco para este mês
+        // SEMPRE verificar primeiro se existem dados no banco para este mês
         const hasData = await checkMonthData(selectedMonth);
         console.log(`Dados existentes no banco para o mês ${selectedMonth}: ${hasData}`);
         
         if (hasData) {
-          // Se existem dados no banco, carregamos eles primeiro
+          // Se existem dados no banco, carregamos APENAS eles
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
           console.log(`Carregados ${dbStudents.length} alunos do banco para o mês ${selectedMonth}`);
           
           if (dbStudents.length > 0) {
             setStudents(dbStudents);
-            setDatabaseLoaded(true);
             toast.success(`Dados carregados do banco de dados`, {
               description: `${dbStudents.length} alunos para o mês ${selectedMonth}`
             });
-
-            // Depois carregamos dados da planilha apenas para complementar informações, 
-            // sem sobrescrever status ou histórico do banco
-            setLoadingSource("sheets");
-            const sheetsData = await getSheetData(selectedMonth);
-            console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
-            
-            // Mesclar apenas dados da planilha que não existem no banco ou precisam de atualização
-            if (sheetsData.length > 0) {
-              // Criar um mapa dos estudantes do banco pelo nome para identificar correspondências
-              const dbStudentsByName = new Map();
-              dbStudents.forEach(s => {
-                // Usar o nome como chave principal para correspondência
-                dbStudentsByName.set(s.nome.toLowerCase().trim(), s);
-              });
-              
-              // Atualizar estudantes existentes e adicionar novos
-              const updatedStudents = [...dbStudents];
-              const newStudents: Student[] = [];
-              
-              sheetsData.forEach(sheetStudent => {
-                // Tentar encontrar correspondência por nome
-                const existingStudent = dbStudentsByName.get(sheetStudent.nome.toLowerCase().trim());
-                
-                if (existingStudent) {
-                  // Atualiza apenas os campos da planilha, mantendo os dados do banco
-                  // Especialmente status e historico
-                  const updatedIndex = updatedStudents.findIndex(s => s.id === existingStudent.id);
-                  if (updatedIndex >= 0) {
-                    updatedStudents[updatedIndex] = {
-                      ...existingStudent,
-                      // Atualizamos apenas os dados que vêm da planilha
-                      valor: sheetStudent.valor,
-                      dataVencimento: sheetStudent.dataVencimento,
-                      diasAtraso: sheetStudent.diasAtraso,
-                      followUp: sheetStudent.followUp || existingStudent.followUp,
-                      observacoes: sheetStudent.observacoes || existingStudent.observacoes,
-                      primeiroContato: existingStudent.primeiroContato || sheetStudent.primeiroContato,
-                      ultimoContato: existingStudent.ultimoContato || sheetStudent.ultimoContato,
-                      // Mantemos o status e histórico do banco - IMPORTANTE!
-                      status: existingStudent.status,
-                      statusHistory: existingStudent.statusHistory
-                    };
-                  }
-                } else {
-                  // Este é um novo estudante da planilha que não existe no banco
-                  newStudents.push(sheetStudent);
-                }
-              });
-              
-              // Adicionar novos estudantes à lista
-              if (newStudents.length > 0) {
-                updatedStudents.push(...newStudents);
-                toast.info(`Adicionados ${newStudents.length} novos alunos da planilha`, {
-                  description: `Total agora: ${updatedStudents.length} alunos`
-                });
-              }
-              
-              // Atualizar estado
-              setStudents(updatedStudents);
-              
-              // Salvar novos estudantes e atualizações no banco
-              if (newStudents.length > 0) {
-                await saveStudents(newStudents, selectedMonth);
-              }
-            }
           } else {
-            // Se o banco retornou vazio (pode ser erro ou primeira carga), carregamos da planilha
-            setLoadingSource("sheets");
-            const sheetsData = await getSheetData(selectedMonth);
-            
-            if (sheetsData.length === 0) {
-              toast.error(`Não foram encontrados alunos na planilha para o mês ${selectedMonth}`);
-              setLoading(false);
-              setLoadingSource("");
-              return;
-            }
-            
-            console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
-            setStudents(sheetsData);
-            
-            // Salvamos os dados da planilha no banco
-            await saveStudents(sheetsData, selectedMonth);
-            
-            toast.success(`Dados carregados da planilha e salvos no banco`, {
-              description: `${sheetsData.length} alunos para o mês ${selectedMonth}`
-            });
+            // Se o banco retornou vazio (pode ser erro), tentamos carregar da planilha
+            await loadFromSheets(selectedMonth);
           }
         } else {
           // Se não existem dados no banco, carregamos da planilha
-          setLoadingSource("sheets");
-          const sheetsData = await getSheetData(selectedMonth);
-          
-          if (sheetsData.length === 0) {
-            toast.error(`Não foram encontrados alunos na planilha para o mês ${selectedMonth}`);
-            setLoading(false);
-            setLoadingSource("");
-            return;
-          }
-          
-          console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
-          setStudents(sheetsData);
-          
-          // Salvamos os dados da planilha no banco
-          await saveStudents(sheetsData, selectedMonth);
-          
-          toast.success(`Dados carregados da planilha e salvos no banco`, {
-            description: `${sheetsData.length} alunos para o mês ${selectedMonth}`
-          });
+          await loadFromSheets(selectedMonth);
         }
         
         setFilteredStudents([]);
@@ -172,6 +68,27 @@ const Index = () => {
         setLoading(false);
         setLoadingSource("");
       }
+    };
+
+    // Função auxiliar para carregar dados da planilha do Google
+    const loadFromSheets = async (month: string) => {
+      setLoadingSource("sheets");
+      const sheetsData = await getSheetData(month);
+      
+      if (sheetsData.length === 0) {
+        toast.error(`Não foram encontrados alunos na planilha para o mês ${month}`);
+        return;
+      }
+      
+      console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${month}`);
+      setStudents(sheetsData);
+      
+      // Salvamos os dados da planilha no banco para uso futuro
+      await saveStudents(sheetsData, month);
+      
+      toast.success(`Dados carregados da planilha e salvos no banco`, {
+        description: `${sheetsData.length} alunos para o mês ${month}`
+      });
     };
 
     fetchData();
