@@ -22,6 +22,7 @@ const Index = () => {
 
   // Função para lidar com os dados carregados
   const handleDataLoaded = (loadedStudents: Student[], source: "sheets" | "database" | "") => {
+    console.log("Dados carregados:", loadedStudents.length, "alunos da fonte:", source);
     setStudents(loadedStudents);
     setFilteredStudents([]);
     setActiveFilter(null);
@@ -110,6 +111,19 @@ const Index = () => {
     );
   }
 
+  // Adicionar log para debug
+  useEffect(() => {
+    if (!loading && students.length > 0) {
+      console.log("Estado atual - Total de alunos:", students.length);
+      console.log("Distribuição de status:", {
+        inadimplente: students.filter(s => s.status === "inadimplente").length,
+        mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
+        respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
+        pagamentoFeito: students.filter(s => s.status === "pagamento-feito").length
+      });
+    }
+  }, [loading, students]);
+
   return (
     <div className="container mx-auto p-4">
       <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
@@ -123,7 +137,7 @@ const Index = () => {
         />
         <Button 
           onClick={() => navigate("/register-student")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary text-white"
         >
           <Plus className="h-4 w-4" />
           Cadastrar Novo Aluno
