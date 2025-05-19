@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
@@ -15,7 +15,7 @@ import { saveStudents } from "@/services/supabaseService";
 import { toast } from "sonner";
 
 const Index = () => {
-  // Todos os hooks de estado no início
+  // All state hooks at the top
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -25,16 +25,16 @@ const Index = () => {
   const [isImporting, setIsImporting] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Função para lidar com os dados carregados
-  const handleDataLoaded = (loadedStudents: Student[], source: "sheets" | "database" | "") => {
+  // Use useCallback for functions that are passed as props
+  const handleDataLoaded = useCallback((loadedStudents: Student[], source: "sheets" | "database" | "") => {
     console.log("Dados carregados:", loadedStudents.length, "alunos da fonte:", source);
     setStudents(loadedStudents);
     setFilteredStudents([]);
     setActiveFilter(null);
     setLoadingSource(source);
-  };
+  }, []);
 
-  // Efeito para log de debug - colocado antes de outros efeitos
+  // Debug logging effect
   useEffect(() => {
     if (!loading && students.length > 0) {
       console.log("Estado atual - Total de alunos:", students.length);
@@ -47,7 +47,7 @@ const Index = () => {
     }
   }, [loading, students]);
 
-  // Função para forçar importação completa dos dados da planilha para o banco
+  // Function to force importing data
   const handleForceImport = async () => {
     if (!selectedMonth) {
       toast.error("Selecione um mês antes de importar os dados");
@@ -58,7 +58,7 @@ const Index = () => {
       setIsImporting(true);
       toast.info(`Iniciando importação dos dados para o mês ${selectedMonth}...`);
       
-      // Busca dados diretamente da planilha
+      // Get data directly from the sheet
       const sheetsData = await getSheetData(selectedMonth);
       
       if (sheetsData.length === 0) {
@@ -69,10 +69,10 @@ const Index = () => {
       
       console.log(`Importando ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
       
-      // Salva os dados no banco de dados
+      // Save data to the database
       await saveStudents(sheetsData, selectedMonth);
       
-      // Atualiza a lista de estudantes
+      // Update the student list
       handleDataLoaded(sheetsData, "sheets");
       
       toast.success(`Importação concluída com sucesso`, {
@@ -88,8 +88,8 @@ const Index = () => {
     }
   };
 
-  // Aplicar filtros com base na seleção de cartão
-  const handleFilterChange = (filterId: string | null) => {
+  // Apply filters based on card selection
+  const handleFilterChange = useCallback((filterId: string | null) => {
     if (!filterId) {
       setFilteredStudents([]);
       setActiveFilter(null);
@@ -121,25 +121,25 @@ const Index = () => {
     
     setFilteredStudents(filtered);
     setActiveFilter(filterId);
-  };
+  }, [students]);
 
-  // Função para atualizar um estudante específico
-  const handleStudentUpdate = async (updatedStudent: Student) => {
+  // Function to update a specific student
+  const handleStudentUpdate = useCallback((updatedStudent: Student) => {
     console.log(`Atualizando estudante ${updatedStudent.id} com status ${updatedStudent.status}`);
     
-    // Atualizar o estado local primeiro
+    // Update local state first
     setStudents(prevStudents => 
       prevStudents.map(student => 
         student.id === updatedStudent.id ? updatedStudent : student
       )
     );
     
-    // Atualizar também os estudantes filtrados se o filtro estiver ativo
+    // Also update filtered students if filter is active
     if (activeFilter) {
       setFilteredStudents(prevFiltered => {
         const studentInFiltered = prevFiltered.some(s => s.id === updatedStudent.id);
         
-        // Se o estudante já estava nos filtrados, atualiza-o
+        // If student was already in filtered, update it
         if (studentInFiltered) {
           return prevFiltered.map(student => 
             student.id === updatedStudent.id ? updatedStudent : student
@@ -149,11 +149,11 @@ const Index = () => {
         return prevFiltered;
       });
     }
-  };
+  }, [activeFilter]);
 
-  // Função de renderização condicional do conteúdo
+  // Function for conditional rendering of content
   const renderContent = () => {
-    // Renderização condicional para quando não há mês selecionado
+    // Conditional rendering for when no month is selected
     if (!selectedMonth) {
       return (
         <div className="mt-8 text-center text-gray-500">
@@ -182,6 +182,11 @@ const Index = () => {
       </>
     );
   };
+
+  // Define handleLoadingChange as a callback to prevent re-renders
+  const handleLoadingChange = useCallback((isLoading: boolean) => {
+    setLoading(isLoading);
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
@@ -214,11 +219,10 @@ const Index = () => {
         </Button>
       </div>
       
-      {/* Componente invisível que cuida do carregamento de dados */}
       <DataLoader 
         selectedMonth={selectedMonth}
         onDataLoaded={handleDataLoaded}
-        onLoadingChange={setLoading}
+        onLoadingChange={handleLoadingChange}
       />
       
       {renderContent()}
