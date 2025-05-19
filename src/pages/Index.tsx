@@ -15,6 +15,7 @@ import { saveStudents } from "@/services/supabaseService";
 import { toast } from "sonner";
 
 const Index = () => {
+  // All state hooks at the beginning, never conditionally
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -32,6 +33,19 @@ const Index = () => {
     setActiveFilter(null);
     setLoadingSource(source);
   };
+
+  // Debug logging effect - placed before other effects
+  useEffect(() => {
+    if (!loading && students.length > 0) {
+      console.log("Estado atual - Total de alunos:", students.length);
+      console.log("Distribuição de status:", {
+        inadimplente: students.filter(s => s.status === "inadimplente").length,
+        mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
+        respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
+        pagamentoFeito: students.filter(s => s.status === "pagamento-feito").length
+      });
+    }
+  }, [loading, students]);
 
   // Função para forçar importação completa dos dados da planilha para o banco
   const handleForceImport = async () => {
@@ -138,36 +152,37 @@ const Index = () => {
     }
   };
 
-  // Adicionar log para debug
-  useEffect(() => {
-    if (!loading && students.length > 0) {
-      console.log("Estado atual - Total de alunos:", students.length);
-      console.log("Distribuição de status:", {
-        inadimplente: students.filter(s => s.status === "inadimplente").length,
-        mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
-        respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
-        pagamentoFeito: students.filter(s => s.status === "pagamento-feito").length
-      });
-    }
-  }, [loading, students]);
-
-  // Renderização condicional para quando não há mês selecionado
-  if (!selectedMonth) {
-    return (
-      <div className="container mx-auto p-4">
-        <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
-        <MonthSelectorWithCount
-          onMonthChange={setSelectedMonth}
-          studentsCount={0}
-          loadingSource=""
-          loading={true}
-        />
+  // Renderização do componente
+  const renderContent = () => {
+    // Renderização condicional para quando não há mês selecionado
+    if (!selectedMonth) {
+      return (
         <div className="mt-8 text-center text-gray-500">
           Selecione um mês para visualizar os dados
         </div>
-      </div>
+      );
+    }
+
+    if (loading) {
+      return <LoadingSkeletons />;
+    }
+
+    return (
+      <>
+        <Dashboard 
+          students={students} 
+          onFilterChange={handleFilterChange}
+          activeFilter={activeFilter}
+        />
+        <KanbanBoard
+          students={students}
+          filteredStudents={filteredStudents}
+          isFiltered={!!activeFilter}
+          onStudentUpdate={handleStudentUpdate}
+        />
+      </>
     );
-  }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -207,23 +222,7 @@ const Index = () => {
         onLoadingChange={setLoading}
       />
       
-      {loading ? (
-        <LoadingSkeletons />
-      ) : (
-        <>
-          <Dashboard 
-            students={students} 
-            onFilterChange={handleFilterChange}
-            activeFilter={activeFilter}
-          />
-          <KanbanBoard
-            students={students}
-            filteredStudents={filteredStudents}
-            isFiltered={!!activeFilter}
-            onStudentUpdate={handleStudentUpdate}
-          />
-        </>
-      )}
+      {renderContent()}
     </div>
   );
 };
