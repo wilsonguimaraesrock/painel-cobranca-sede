@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Student, Status } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, Info, Trash2 } from "lucide-react";
-import StudentDetailsDialog from "./StudentDetailsDialog";
+import { ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
+import StudentDetailsDialog from "@/components/StudentDetailsDialog";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -99,7 +99,10 @@ const StudentCard = ({
           "#10b981" 
       }}
     >
-      <CardContent className="p-3">
+      <CardContent 
+        className="p-3 cursor-pointer" 
+        onClick={handleOpenDetails}
+      >
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-semibold truncate mb-1" title={student.nome}>
@@ -126,6 +129,9 @@ const StudentCard = ({
                   size="icon" 
                   className="h-7 w-7 text-gray-500 hover:text-red-500"
                   title="Excluir aluno"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent opening the details dialog when clicking delete
+                  }}
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -148,16 +154,6 @@ const StudentCard = ({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7" 
-              onClick={handleOpenDetails}
-              title="Ver detalhes"
-            >
-              <Info size={16} />
-            </Button>
           </div>
         </div>
         
