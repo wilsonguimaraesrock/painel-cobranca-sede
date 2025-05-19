@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Student } from "@/types";
 import { getSheetData } from "@/lib/googleSheetsApi";
@@ -8,6 +9,9 @@ import UserStatus from "@/components/UserStatus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { saveStudents, getStudents, checkMonthData } from "@/services/supabaseService";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -18,6 +22,7 @@ const Index = () => {
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const [initialLoadDone, setInitialLoadDone] = useState<boolean>(false);
   const [databaseLoaded, setDatabaseLoaded] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   // Carregar dados quando o mês muda
   useEffect(() => {
@@ -282,14 +287,23 @@ const Index = () => {
         </div>
       </div>
       
-      <div className="flex justify-between items-center mb-8">
-        <MonthSelector onMonthChange={setSelectedMonth} />
-        {!loading && (
-          <div className="text-sm text-gray-500">
-            {students.length} alunos encontrados
-            {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha"})`}
-          </div>
-        )}
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-2">
+        <div className="flex items-center flex-grow">
+          <MonthSelector onMonthChange={setSelectedMonth} />
+          {!loading && (
+            <div className="text-sm text-gray-500 ml-4">
+              {students.length} alunos encontrados
+              {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha"})`}
+            </div>
+          )}
+        </div>
+        <Button 
+          onClick={() => navigate("/register-student")}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Cadastrar Novo Aluno
+        </Button>
       </div>
       
       {loading ? (
