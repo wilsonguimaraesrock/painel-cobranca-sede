@@ -232,7 +232,7 @@ const Index = () => {
           className="flex items-center gap-2 bg-primary text-white"
         >
           <Plus className="h-4 w-4" />
-          Register New Student
+          + Novo Aluno
         </Button>
       </div>
       
