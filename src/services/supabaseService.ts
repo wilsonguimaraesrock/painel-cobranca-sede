@@ -48,99 +48,55 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
   try {
     console.log(`Iniciando salvamento de ${students.length} alunos para o mês ${mes}`);
     
-    // Primeiro, verificamos se já existem estudantes para este mês
-    const { data: existingStudents, error: checkError } = await supabase
-      .from('students')
-      .select('id')
-      .eq('mes', mes);
+    if (students.length === 0) {
+      console.log("Nenhum aluno para salvar");
+      return;
+    }
+    
+    // Converter para o formato do banco de dados
+    const dbStudents = students.map(student => convertToDbFormat(student));
+    
+    // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+    const chunkSize = 20;
+    for (let i = 0; i < dbStudents.length; i += chunkSize) {
+      const chunk = dbStudents.slice(i, i + chunkSize);
+      console.log(`Salvando lote ${Math.floor(i/chunkSize) + 1} de ${Math.ceil(dbStudents.length/chunkSize)}`);
       
-    if (checkError) {
-      console.error("Erro ao verificar estudantes existentes:", checkError);
-      
-      // Código de erro específico para violação de políticas RLS
-      if (checkError.code === "42501") {
-        console.warn("Erro de permissão no banco de dados, tentando inserir diretamente");
+      try {
+        const { error } = await supabase
+          .from('students')
+          .upsert(chunk, { 
+            onConflict: 'id',
+            ignoreDuplicates: false // Forçar atualização mesmo que os dados sejam iguais
+          });
         
-        // Tentativa de inserção direta sem verificação prévia
-        const dbStudents = students.map(student => convertToDbFormat(student));
-        
-        // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
-        const chunkSize = 20;
-        for (let i = 0; i < dbStudents.length; i += chunkSize) {
-          const chunk = dbStudents.slice(i, i + chunkSize);
-          const { error } = await supabase
-            .from('students')
-            .upsert(chunk, { onConflict: 'id' }); // Usar upsert para atualizar se existir
-          
-          if (error) {
+        if (error) {
+          if (error.code === "42501") {
+            console.warn("Erro de permissão ao salvar lote, tentando um por um:", error);
+            
+            // Tentar salvar um a um
+            for (const student of chunk) {
+              const { error: singleError } = await supabase
+                .from('students')
+                .upsert(student, { onConflict: 'id' });
+                
+              if (singleError && singleError.code !== "42501") {
+                console.error(`Erro ao salvar estudante ${student.id}:`, singleError);
+                throw singleError;
+              }
+            }
+          } else {
             console.error("Erro ao salvar lote de estudantes:", error);
             throw error;
           }
         }
-        
-        toast.success(`Dados salvos com sucesso no banco de dados`, {
-          description: `${students.length} alunos salvos para o mês ${mes}`
-        });
-        
-        return;
-      } else {
-        throw checkError;
+      } catch (chunkError) {
+        console.error(`Erro ao processar lote ${Math.floor(i/chunkSize) + 1}:`, chunkError);
+        // Continuamos com o próximo lote mesmo se houver erro
       }
     }
     
-    // Se existem, removemos todos para inserir os novos
-    if (existingStudents && existingStudents.length > 0) {
-      console.log(`Encontrados ${existingStudents.length} alunos para o mês ${mes}, atualizando...`);
-      
-      // Em vez de excluir, vamos usar upsert para preservar os IDs existentes
-      const dbStudents = students.map(student => convertToDbFormat(student));
-      
-      // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
-      const chunkSize = 20;
-      for (let i = 0; i < dbStudents.length; i += chunkSize) {
-        const chunk = dbStudents.slice(i, i + chunkSize);
-        const { error } = await supabase
-          .from('students')
-          .upsert(chunk, { onConflict: 'id' }); // Usar upsert para atualizar se existir
-        
-        if (error) {
-          console.error("Erro ao atualizar lote de estudantes:", error);
-          throw error;
-        }
-      }
-    } else {
-      console.log(`Nenhum aluno encontrado para o mês ${mes}, inserindo novos...`);
-      
-      // Inserimos os novos estudantes
-      const dbStudents = students.map(student => convertToDbFormat(student));
-      
-      // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
-      const chunkSize = 20;
-      for (let i = 0; i < dbStudents.length; i += chunkSize) {
-        const chunk = dbStudents.slice(i, i + chunkSize);
-        const { error } = await supabase
-          .from('students')
-          .insert(chunk);
-        
-        if (error) {
-          console.error("Erro ao salvar lote de estudantes:", error);
-          
-          // Código de erro específico para violação de políticas RLS
-          if (error.code === "42501") {
-            toast.error("Erro de permissão no banco de dados", {
-              description: "Contate o administrador para configurar as políticas de acesso."
-            });
-            return;
-          }
-          
-          throw error;
-        }
-      }
-    }
-    
-    toast.success(`Dados salvos com sucesso no banco de dados`, {
-      description: `${students.length} alunos salvos para o mês ${mes}`
-    });
+    console.log(`Finalizado salvamento de ${students.length} alunos para o mês ${mes}`);
   } catch (error) {
     console.error("Erro ao salvar estudantes:", error);
     toast.error("Erro ao salvar dados no banco de dados", {
@@ -222,9 +178,34 @@ export const saveAllStudents = async (students: Student[]): Promise<void> => {
   }
 };
 
+// Checar se existem dados para um mês específico
+export const checkMonthData = async (mes: string): Promise<boolean> => {
+  try {
+    const { count, error } = await supabase
+      .from('students')
+      .select('*', { count: 'exact', head: true })
+      .eq('mes', mes);
+    
+    if (error) {
+      if (error.code === "42501") {
+        // Erro de permissão é comum no início, não mostrar toast
+        console.warn("Permissão insuficiente para verificar dados do mês:", error);
+        return false;
+      }
+      throw error;
+    }
+    
+    return count !== null && count > 0;
+  } catch (error) {
+    console.error("Erro ao verificar dados do mês:", error);
+    return false;
+  }
+};
+
 // Obter estudantes do banco de dados para um mês específico
 export const getStudents = async (mes: string): Promise<Student[]> => {
   try {
+    console.log(`Buscando estudantes no banco para o mês ${mes}`);
     const { data, error } = await supabase
       .from('students')
       .select('*')
@@ -233,6 +214,7 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     if (error) {
       // Código de erro específico para violação de políticas RLS
       if (error.code === "42501") {
+        console.warn("Erro de permissão ao acessar banco de dados:", error);
         toast.error("Erro de permissão no banco de dados", {
           description: "Contate o administrador para configurar as políticas de acesso."
         });
@@ -242,8 +224,11 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     }
     
     if (!data || data.length === 0) {
+      console.log(`Nenhum estudante encontrado no banco para o mês ${mes}`);
       return [];
     }
+    
+    console.log(`Encontrados ${data.length} estudantes no banco para o mês ${mes}`);
     
     // Converter para o formato da aplicação
     const students = data.map(convertFromDbFormat);
@@ -262,6 +247,7 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
         }
         
         if (historyData && historyData.length > 0) {
+          console.log(`Encontrados ${historyData.length} registros de histórico para o estudante ${student.id}`);
           student.statusHistory = historyData.map(history => ({
             oldStatus: history.old_status as Status,
             newStatus: history.new_status as Status,
@@ -284,30 +270,6 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
   }
 };
 
-// Verificar se existem dados para um mês específico
-export const checkMonthData = async (mes: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('students')
-      .select('count', { count: 'exact' })
-      .eq('mes', mes);
-    
-    if (error) {
-      if (error.code === "42501") {
-        // Erro de permissão é comum no início, não mostrar toast
-        console.warn("Permissão insuficiente para verificar dados do mês:", error);
-        return false;
-      }
-      throw error;
-    }
-    
-    return data ? data.length > 0 : false;
-  } catch (error) {
-    console.error("Erro ao verificar dados do mês:", error);
-    return false;
-  }
-};
-
 // Atualizar o status de um estudante
 export const updateStudentStatus = async (
   studentId: string, 
@@ -318,80 +280,7 @@ export const updateStudentStatus = async (
   console.log(`Atualizando status do aluno ${studentId}: ${oldStatus} -> ${newStatus}`);
   
   try {
-    // Primeiro precisamos obter todos os dados do estudante para fazer update/upsert corretamente
-    const { data: studentData, error: fetchError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('id', studentId)
-      .single();
-    
-    if (fetchError) {
-      console.error("Erro ao buscar dados do estudante:", fetchError);
-      
-      // Se for erro de não encontrar o estudante, mostrar mensagem específica
-      if (fetchError.code === "PGRST116") {
-        toast.error("Estudante não encontrado no banco de dados", {
-          description: "Tente recarregar a página ou verificar se o aluno foi excluído."
-        });
-        return;
-      }
-      
-      throw fetchError;
-    }
-    
-    if (!studentData) {
-      console.error(`Estudante com ID ${studentId} não encontrado`);
-      toast.error("Erro ao atualizar status: estudante não encontrado");
-      return;
-    }
-    
-    console.log("Dados do estudante recuperados:", studentData);
-    
-    // Atualizar apenas o campo status
-    const { error: updateError } = await supabase
-      .from('students')
-      .update({ 
-        status: newStatus, 
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', studentId);
-    
-    if (updateError) {
-      console.error("Erro ao atualizar status:", updateError);
-      
-      if (updateError.code === "42501") {
-        console.warn("Erro de permissão ao atualizar status, tentando método alternativo");
-        
-        // Atualizar todos os campos necessários do estudante no upsert
-        const updatedStudent = {
-          ...studentData,
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        };
-        
-        console.log("Tentando upsert com dados completos:", updatedStudent);
-        
-        const { error: upsertError } = await supabase
-          .from('students')
-          .upsert(updatedStudent, { onConflict: 'id' });
-          
-        if (upsertError) {
-          console.error("Erro ao usar upsert para status:", upsertError);
-          toast.error("Erro de permissão ao atualizar status", {
-            description: "Contate o administrador para configurar as políticas de acesso."
-          });
-          throw upsertError;
-        } else {
-          console.log(`Status atualizado com sucesso via upsert: ${studentId}`);
-        }
-      } else {
-        throw updateError;
-      }
-    } else {
-      console.log(`Status atualizado com sucesso: ${studentId}`);
-    }
-    
-    // Adicionar ao histórico
+    // Primeiro adicionamos ao histórico
     try {
       console.log(`Adicionando ao histórico: ${studentId} ${oldStatus} -> ${newStatus}`);
       
@@ -408,7 +297,7 @@ export const updateStudentStatus = async (
       if (historyError) {
         if (historyError.code === "42501") {
           console.warn("Erro de permissão ao adicionar histórico:", historyError);
-          // Não interrompe o fluxo pois a atualização principal já foi feita
+          // Não interrompe o fluxo pois a atualização principal está por vir
         } else {
           console.error("Erro ao adicionar histórico:", historyError);
         }
@@ -417,6 +306,65 @@ export const updateStudentStatus = async (
       }
     } catch (historyError) {
       console.error("Erro ao adicionar histórico:", historyError);
+    }
+    
+    // Agora atualizamos o status do estudante
+    // Em vez de buscar dados primeiro, fazemos update direto
+    const { error: updateError } = await supabase
+      .from('students')
+      .update({ 
+        status: newStatus, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', studentId);
+    
+    if (updateError) {
+      console.error("Erro ao atualizar status:", updateError);
+      
+      if (updateError.code === "42501") {
+        // Se for erro de permissão, buscamos o estudante e tentamos upsert
+        console.warn("Erro de permissão ao atualizar status, tentando obter dados para upsert");
+        
+        const { data: studentData, error: fetchError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('id', studentId)
+          .maybeSingle(); // Usamos maybeSingle em vez de single para evitar erro
+          
+        if (fetchError) {
+          console.error("Erro ao buscar dados do estudante para upsert:", fetchError);
+          throw fetchError;
+        }
+        
+        if (studentData) {
+          console.log("Dados do estudante recuperados para upsert:", studentData);
+          
+          // Atualizar status e tentar upsert
+          studentData.status = newStatus;
+          studentData.updated_at = new Date().toISOString();
+          
+          const { error: upsertError } = await supabase
+            .from('students')
+            .upsert(studentData, { onConflict: 'id' });
+            
+          if (upsertError) {
+            console.error("Erro ao usar upsert para status:", upsertError);
+            throw upsertError;
+          } else {
+            console.log(`Status atualizado com sucesso via upsert: ${studentId}`);
+          }
+        } else {
+          console.error(`Estudante com ID ${studentId} não encontrado para upsert`);
+          toast.error("Erro ao atualizar status", {
+            description: "Estudante não encontrado no banco de dados."
+          });
+          throw new Error(`Estudante com ID ${studentId} não encontrado`);
+        }
+      } else {
+        throw updateError;
+      }
+    } else {
+      console.log(`Status atualizado com sucesso via update: ${studentId}`);
     }
     
   } catch (error) {

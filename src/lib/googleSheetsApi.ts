@@ -1,3 +1,4 @@
+
 import { Student, SheetData, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -147,9 +148,14 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         }
       }
       
-      // Criar o objeto aluno - IMPORTANTE: Gerar um UUID válido para o ID
+      // Gerar um ID estável baseado nos dados do aluno para consistência entre carregamentos
+      // Isso ajuda a manter o mesmo ID entre recargas da página quando os dados são os mesmos
+      const stableIdBase = `${nome}-${valor}-${row[2] || ""}-${sheetName}`;
+      const stableId = uuidv4({ name: stableIdBase });
+      
+      // Criar o objeto aluno com ID estável
       const student: Student = {
-        id: uuidv4(), // Gerando UUID válido para uso com Supabase
+        id: stableId, // ID estável baseado nos dados do aluno
         nome: nome,
         curso: "", // Não temos essa informação na planilha
         valor: isNaN(valor) ? 0 : valor,
