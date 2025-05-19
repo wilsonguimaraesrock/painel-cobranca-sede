@@ -22,10 +22,49 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   
-  // Sincronizar o estado local com as props
+  // Sincronizar o estado local com as props e calcular dias de atraso
   useEffect(() => {
     const studentsToShow = isFiltered && filteredStudents ? filteredStudents : students;
-    setLocalStudents(studentsToShow);
+    
+    // Calcular dias em atraso para cada estudante
+    const updatedStudents = studentsToShow.map(student => {
+      const updatedStudent = { ...student };
+      
+      // Calcular dias em atraso baseado na data atual e data de vencimento
+      if (student.dataVencimento) {
+        try {
+          // Formato esperado: DD/MM/YYYY
+          const parts = student.dataVencimento.split('/');
+          if (parts.length === 3) {
+            const vencimentoDate = new Date(
+              parseInt(parts[2]), 
+              parseInt(parts[1]) - 1, 
+              parseInt(parts[0])
+            );
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Remover horas para comparar apenas datas
+            
+            // Calcular a diferença em dias
+            const diffTime = today.getTime() - vencimentoDate.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Apenas atualizar se estiver em atraso (dias positivos)
+            if (diffDays > 0) {
+              updatedStudent.diasAtraso = diffDays;
+            } else {
+              updatedStudent.diasAtraso = 0;
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao calcular dias em atraso:", error);
+        }
+      }
+      
+      return updatedStudent;
+    });
+    
+    setLocalStudents(updatedStudents);
   }, [students, filteredStudents, isFiltered]);
   
   // Usar os estudantes locais para exibição

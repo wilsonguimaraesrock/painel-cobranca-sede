@@ -14,6 +14,7 @@ export interface Student {
   statusHistory?: StatusHistory[];
   primeiroContato?: string;
   ultimoContato?: string;
+  dataPagamento?: string;
   mes: string;
 }
 

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 interface StudentCardProps {
@@ -65,18 +66,42 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   };
 
   // Verificar se pode avançar para o próximo status
-  // Verifica se o campo follow up está preenchido
-  const canAdvance = student.followUp?.trim() !== "";
+  // Para pagamento-feito, verificamos se dataPagamento está preenchido
+  const canAdvance = () => {
+    // Se está indo para pagamento-feito, precisa ter data de pagamento
+    if (student.status === "resposta-recebida") {
+      return student.followUp?.trim() !== "" && editedStudent.dataPagamento?.trim() !== "";
+    }
+    
+    // Para outros status, apenas verifica o followUp
+    return student.followUp?.trim() !== "";
+  };
   
   const handleMoveNext = () => {
-    if (!canAdvance) {
-      toast.error("O campo 'Follow Up' precisa ser preenchido");
+    if (!canAdvance()) {
+      if (student.status === "resposta-recebida") {
+        toast.error("Os campos 'Follow Up' e 'Data de Pagamento' precisam ser preenchidos");
+      } else {
+        toast.error("O campo 'Follow Up' precisa ser preenchido");
+      }
       return;
     }
     
     const nextStatus = nextStatusMap[student.status];
     if (nextStatus !== student.status) {
       console.log(`Movendo aluno ${student.id} para ${nextStatus}`);
+      
+      // Se estiver movendo para pagamento-feito, deve ter data de pagamento
+      if (nextStatus === "pagamento-feito" && !editedStudent.dataPagamento) {
+        toast.error("É necessário preencher a Data de Pagamento");
+        return;
+      }
+      
+      // Atualizar dados do estudante antes de mudar o status
+      if (onStudentUpdate) {
+        onStudentUpdate(editedStudent);
+      }
+      
       onStatusChange(student.id, nextStatus);
     }
   };
@@ -275,13 +300,16 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
             )}
           </div>
           
-          {!canAdvance && student.status !== "pagamento-feito" && (
+          {!canAdvance() && student.status !== "pagamento-feito" && (
             <div className="mt-2 text-xs text-red-500">
-              Preencha o campo "follow up" para mover este aluno.
+              {student.status === "resposta-recebida" 
+                ? "Preencha os campos 'follow up' e 'data de pagamento' para mover este aluno."
+                : "Preencha o campo 'follow up' para mover este aluno."
+              }
             </div>
           )}
           
-          {canAdvance && student.status !== "pagamento-feito" && (
+          {canAdvance() && student.status !== "pagamento-feito" && (
             <div className="mt-2 text-xs text-blue-500 flex items-center justify-end">
               <span>Clique para detalhes</span>
               <Eye className="h-4 w-4 ml-1" />
@@ -354,6 +382,22 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
                 </div>
               </div>
               
+              {/* Nova seção para data de pagamento */}
+              <div className="col-span-2">
+                <div className="text-sm text-muted-foreground">Data de Pagamento</div>
+                <Input 
+                  value={editedStudent.dataPagamento || ""} 
+                  onChange={(e) => setEditedStudent({...editedStudent, dataPagamento: e.target.value})}
+                  placeholder="Informar data de pagamento (dd/mm/aaaa)"
+                  className={student.status === "resposta-recebida" ? "border-orange-300" : ""}
+                />
+                {student.status === "resposta-recebida" && !editedStudent.dataPagamento && (
+                  <p className="text-xs text-orange-500 mt-1">
+                    *Obrigatório para mover para "Pagamento Realizado"
+                  </p>
+                )}
+              </div>
+              
               <div className="col-span-2">
                 <div className="text-sm text-muted-foreground">Follow up</div>
                 <Input 
@@ -363,16 +407,15 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
                 />
               </div>
               
-              {student.observacoes && (
-                <div className="col-span-2">
-                  <div className="text-sm text-muted-foreground">Observações</div>
-                  <Input 
-                    value={editedStudent.observacoes || ""} 
-                    onChange={(e) => setEditedStudent({...editedStudent, observacoes: e.target.value})}
-                    placeholder="Adicione observações"
-                  />
-                </div>
-              )}
+              <div className="col-span-2">
+                <div className="text-sm text-muted-foreground">Observações</div>
+                <Textarea 
+                  value={editedStudent.observacoes || ""} 
+                  onChange={(e) => setEditedStudent({...editedStudent, observacoes: e.target.value})}
+                  placeholder="Adicione observações"
+                  rows={3}
+                />
+              </div>
             </div>
             
             <div className="flex justify-between pt-4 gap-4">
@@ -392,10 +435,11 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
               </Button>
             </div>
             
-            {canAdvance && student.status !== "pagamento-feito" && (
+            {student.status !== "pagamento-feito" && (
               <div className="pt-2">
                 <Button 
                   className="w-full" 
+                  disabled={!canAdvance()}
                   onClick={() => {
                     handleMoveNext();
                     setIsDetailsOpen(false);
