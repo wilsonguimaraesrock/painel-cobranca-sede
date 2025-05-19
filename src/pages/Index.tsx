@@ -1,17 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { Student } from "@/types";
-import { getSheetData } from "@/lib/googleSheetsApi";
-import MonthSelector from "@/components/MonthSelector";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
-import UserStatus from "@/components/UserStatus";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { saveStudents, getStudents, checkMonthData } from "@/services/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import DataLoader from "@/components/DataLoader";
+import LoadingSkeletons from "@/components/LoadingSkeletons";
+import PageHeader from "@/components/PageHeader";
+import MonthSelectorWithCount from "@/components/MonthSelectorWithCount";
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -20,87 +18,15 @@ const Index = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
-  const [initialLoadDone, setInitialLoadDone] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Carregar dados quando o mês muda
-  useEffect(() => {
-    if (!selectedMonth) return;
-    
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        console.log(`Carregando dados para o mês: ${selectedMonth}`);
-        
-        // SEMPRE verificar primeiro se existem dados no banco para este mês
-        const hasData = await checkMonthData(selectedMonth);
-        console.log(`Dados existentes no banco para o mês ${selectedMonth}: ${hasData}`);
-        
-        if (hasData) {
-          // Se existem dados no banco, carregamos APENAS eles
-          setLoadingSource("database");
-          const dbStudents = await getStudents(selectedMonth);
-          console.log(`Carregados ${dbStudents.length} alunos do banco para o mês ${selectedMonth}`);
-          
-          if (dbStudents.length > 0) {
-            setStudents(dbStudents);
-            toast.success(`Dados carregados do banco de dados`, {
-              description: `${dbStudents.length} alunos para o mês ${selectedMonth}`
-            });
-          } else {
-            // Se o banco retornou vazio (pode ser erro), tentamos carregar da planilha
-            await loadFromSheets(selectedMonth);
-          }
-        } else {
-          // Se não existem dados no banco, carregamos da planilha
-          await loadFromSheets(selectedMonth);
-        }
-        
-        setFilteredStudents([]);
-        setActiveFilter(null);
-        setInitialLoadDone(true);
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados", {
-          description: "Verifique sua conexão e tente novamente."
-        });
-      } finally {
-        setLoading(false);
-        setLoadingSource("");
-      }
-    };
-
-    // Função auxiliar para carregar dados da planilha do Google
-    const loadFromSheets = async (month: string) => {
-      try {
-        setLoadingSource("sheets");
-        const sheetsData = await getSheetData(month);
-        
-        if (sheetsData.length === 0) {
-          toast.error(`Não foram encontrados alunos na planilha para o mês ${month}`);
-          return;
-        }
-        
-        console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${month}`);
-        setStudents(sheetsData);
-        
-        // Salvamos os dados da planilha no banco para uso futuro
-        console.log(`Salvando ${sheetsData.length} alunos carregados da planilha no banco de dados...`);
-        await saveStudents(sheetsData, month);
-        
-        toast.success(`Dados carregados da planilha e salvos no banco`, {
-          description: `${sheetsData.length} alunos para o mês ${month}`
-        });
-      } catch (error) {
-        console.error("Erro ao carregar e salvar dados da planilha:", error);
-        toast.error("Erro ao salvar dados no banco de dados", {
-          description: "Os dados foram carregados, mas não foi possível salvá-los."
-        });
-      }
-    };
-
-    fetchData();
-  }, [selectedMonth]);
+  // Função para lidar com os dados carregados
+  const handleDataLoaded = (loadedStudents: Student[], source: "sheets" | "database" | "") => {
+    setStudents(loadedStudents);
+    setFilteredStudents([]);
+    setActiveFilter(null);
+    setLoadingSource(source);
+  };
 
   // Aplicar filtros com base na seleção de cartão
   const handleFilterChange = (filterId: string | null) => {
@@ -136,10 +62,6 @@ const Index = () => {
     
     setFilteredStudents(filtered);
     setActiveFilter(filterId);
-    
-    toast.info(`Filtro aplicado: ${filterId}`, {
-      description: `Exibindo ${filtered.length} alunos`
-    });
   };
 
   // Função para atualizar um estudante específico
@@ -168,34 +90,19 @@ const Index = () => {
         return prevFiltered;
       });
     }
-    
-    // Salvar no banco de dados
-    try {
-      console.log(`Salvando atualização do estudante ${updatedStudent.id} no banco`);
-      await saveStudents([updatedStudent], selectedMonth);
-      console.log(`Estudante ${updatedStudent.id} salvo com sucesso`);
-      
-      // Notificar o usuário que a atualização foi salva
-      toast.success(`Dados do aluno ${updatedStudent.nome} salvos com sucesso`);
-    } catch (error) {
-      console.error("Erro ao salvar alterações no banco de dados:", error);
-      toast.error("Erro ao salvar alterações", {
-        description: "Não foi possível salvar as alterações no banco de dados."
-      });
-    }
   };
 
   // Renderizar estados de carregamento
   if (!selectedMonth) {
     return (
       <div className="container mx-auto p-4">
-        <div className="w-full bg-primary text-primary-foreground py-4 mb-8 rounded-md shadow-md">
-          <div className="flex justify-between items-center px-4">
-            <h1 className="text-3xl font-bold">CRM de Cobrança - Rockfeller Navegantes</h1>
-            <UserStatus />
-          </div>
-        </div>
-        <MonthSelector onMonthChange={setSelectedMonth} />
+        <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
+        <MonthSelectorWithCount
+          onMonthChange={setSelectedMonth}
+          studentsCount={0}
+          loadingSource=""
+          loading={true}
+        />
         <div className="mt-8 text-center text-gray-500">
           Selecione um mês para visualizar os dados
         </div>
@@ -205,23 +112,15 @@ const Index = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="w-full bg-primary text-primary-foreground py-4 mb-4 rounded-md shadow-md">
-        <div className="flex justify-between items-center px-4">
-          <h1 className="text-3xl font-bold">CRM de Cobrança - Rockfeller Navegantes</h1>
-          <UserStatus />
-        </div>
-      </div>
+      <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
       
       <div className="flex justify-between items-center mb-8 flex-wrap gap-2">
-        <div className="flex items-center flex-grow">
-          <MonthSelector onMonthChange={setSelectedMonth} />
-          {!loading && (
-            <div className="text-sm text-gray-500 ml-4">
-              {students.length} alunos encontrados
-              {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha e salvos no banco"})`}
-            </div>
-          )}
-        </div>
+        <MonthSelectorWithCount
+          onMonthChange={setSelectedMonth}
+          studentsCount={students.length}
+          loadingSource={loadingSource}
+          loading={loading}
+        />
         <Button 
           onClick={() => navigate("/register-student")}
           className="flex items-center gap-2"
@@ -231,24 +130,15 @@ const Index = () => {
         </Button>
       </div>
       
+      {/* Componente invisível que cuida do carregamento de dados */}
+      <DataLoader 
+        selectedMonth={selectedMonth}
+        onDataLoaded={handleDataLoaded}
+        onLoadingChange={setLoading}
+      />
+      
       {loading ? (
-        <>
-          <div className="mb-8">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array(4).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-32" />
-              ))}
-            </div>
-          </div>
-          
-          <Skeleton className="h-8 w-64 mb-4" />
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {Array(4).fill(0).map((_, i) => (
-              <Skeleton key={i} className="flex-shrink-0 w-72 h-[500px]" />
-            ))}
-          </div>
-        </>
+        <LoadingSkeletons />
       ) : (
         <>
           <Dashboard 
