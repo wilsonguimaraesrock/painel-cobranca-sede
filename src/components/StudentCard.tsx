@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/googleSheetsApi";
-import { ChevronLeft, ChevronRight, History, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Eye, Calendar } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -22,16 +22,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface StudentCardProps {
   student: Student;
   onStatusChange: (studentId: string, newStatus: Status) => void;
   onReturnToPrevious: (studentId: string) => void;
+  onStudentUpdate?: (updatedStudent: Student) => void;
 }
 
-const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCardProps) => {
+const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpdate }: StudentCardProps) => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [editedStudent, setEditedStudent] = useState<Student>({...student});
   
   // Mapeia os status para os próximos status possíveis
   const nextStatusMap: Record<Status, Status> = {
@@ -57,7 +61,7 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
 
   // Verificar se pode avançar para o próximo status
   // Verifica se o campo follow up está preenchido
-  const canAdvance = student.followUp.trim() !== "";
+  const canAdvance = student.followUp?.trim() !== "";
   
   const handleMoveNext = () => {
     if (!canAdvance) {
@@ -97,10 +101,41 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
     }).format(new Date(date));
   };
 
+  // Função para atualizar os dados do aluno
+  const handleUpdateStudentData = () => {
+    if (onStudentUpdate) {
+      onStudentUpdate(editedStudent);
+      toast.success("Dados do aluno atualizados");
+      setIsDetailsOpen(false);
+    }
+  };
+
+  // Função para registrar contato
+  const handleRegisterContact = (type: 'primeiro' | 'ultimo') => {
+    const now = new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date());
+    
+    const updatedStudent = {...editedStudent};
+    
+    if (type === 'primeiro' && !updatedStudent.primeiroContato) {
+      updatedStudent.primeiroContato = now;
+    } else if (type === 'ultimo') {
+      updatedStudent.ultimoContato = now;
+    }
+    
+    setEditedStudent(updatedStudent);
+  };
+
   const hasHistory = student.statusHistory && student.statusHistory.length > 0;
 
   // Handle card click - we want to either show details or advance status
   const handleCardClick = () => {
+    setEditedStudent({...student});
     setIsDetailsOpen(true);
   };
 
@@ -262,33 +297,84 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
                 <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
               </div>
               
-              <div>
+              <div className="relative">
                 <div className="text-sm text-muted-foreground">Primeiro contato</div>
-                <div className="font-medium">{student.primeiroContato || "Não registrado"}</div>
+                <div className="flex items-center">
+                  <div className="font-medium flex-1">
+                    {editedStudent.primeiroContato || "Não registrado"}
+                  </div>
+                  {!editedStudent.primeiroContato && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleRegisterContact('primeiro')}
+                      title="Registrar primeiro contato"
+                      className="ml-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <div>
                 <div className="text-sm text-muted-foreground">Último contato</div>
-                <div className="font-medium">{student.ultimoContato || "Não registrado"}</div>
+                <div className="flex items-center">
+                  <div className="font-medium flex-1">
+                    {editedStudent.ultimoContato || "Não registrado"}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleRegisterContact('ultimo')}
+                    title="Registrar último contato"
+                    className="ml-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               
               <div className="col-span-2">
                 <div className="text-sm text-muted-foreground">Follow up</div>
-                <div className={`font-medium ${!student.followUp ? 'text-destructive italic' : ''}`}>
-                  {student.followUp || "Pendente"}
-                </div>
+                <Input 
+                  value={editedStudent.followUp || ""} 
+                  onChange={(e) => setEditedStudent({...editedStudent, followUp: e.target.value})}
+                  placeholder="Adicione informações de follow up"
+                />
               </div>
               
               {student.observacoes && (
                 <div className="col-span-2">
                   <div className="text-sm text-muted-foreground">Observações</div>
-                  <div className="font-medium">{student.observacoes}</div>
+                  <Input 
+                    value={editedStudent.observacoes || ""} 
+                    onChange={(e) => setEditedStudent({...editedStudent, observacoes: e.target.value})}
+                    placeholder="Adicione observações"
+                  />
                 </div>
               )}
             </div>
             
+            <div className="flex justify-between pt-4 gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDetailsOpen(false)}
+                className="w-1/2"
+              >
+                Cancelar
+              </Button>
+              
+              <Button 
+                onClick={handleUpdateStudentData}
+                className="w-1/2"
+              >
+                Salvar alterações
+              </Button>
+            </div>
+            
             {canAdvance && student.status !== "pagamento-feito" && (
-              <div className="pt-4">
+              <div className="pt-2">
                 <Button 
                   className="w-full" 
                   onClick={() => {

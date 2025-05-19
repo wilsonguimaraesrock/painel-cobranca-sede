@@ -1,3 +1,4 @@
+
 export interface Student {
   id: string;
   nome: string;
@@ -11,6 +12,8 @@ export interface Student {
   observacoes: string;
   status: Status;
   statusHistory?: StatusHistory[];
+  primeiroContato?: string;
+  ultimoContato?: string;
 }
 
 export type Status = "inadimplente" | "mensagem-enviada" | "resposta-recebida" | "pagamento-feito";
