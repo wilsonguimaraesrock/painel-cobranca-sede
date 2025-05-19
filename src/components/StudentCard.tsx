@@ -1,3 +1,4 @@
+
 import { Student, Status, StatusHistory } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,9 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
       if (hasChanges) {
         onStudentUpdate(editedStudent);
         toast.success("Dados do aluno atualizados");
+        toast.info("Clique em 'Salvar Alterações' para persistir as mudanças no banco de dados", {
+          duration: 5000
+        });
       } else {
         toast.info("Nenhuma mudança detectada");
       }

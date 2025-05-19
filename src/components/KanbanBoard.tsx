@@ -4,7 +4,9 @@ import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateStudentStatus } from "@/services/supabaseService";
+import { updateStudentStatus, saveAllStudents } from "@/services/supabaseService";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 interface KanbanBoardProps {
   students: Student[];
@@ -17,6 +19,8 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
   const { username } = useAuth();
   const [processingStudentId, setProcessingStudentId] = useState<string | null>(null);
   const [localStudents, setLocalStudents] = useState<Student[]>([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
   
   // Sincronizar o estado local com as props
   useEffect(() => {
@@ -62,6 +66,36 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         student.id === updatedStudent.id ? updatedStudent : student
       )
     );
+    setHasChanges(true);
+  };
+
+  // Função para salvar todas as alterações no banco de dados
+  const handleSaveChanges = async () => {
+    if (!hasChanges) {
+      toast.info("Não há alterações para salvar");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      console.log("Salvando todas as alterações no banco de dados...");
+      
+      // Chamar a função de salvar todos os estudantes
+      await saveAllStudents(localStudents);
+      
+      toast.success("Todas as alterações foram salvas com sucesso", {
+        description: "Os dados foram persistidos no banco de dados."
+      });
+      
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Erro ao salvar alterações:", error);
+      toast.error("Erro ao salvar alterações", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Função para alterar o status de um aluno para o próximo
@@ -246,11 +280,23 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     <div className="w-full overflow-hidden">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Quadro de Cobrança</h2>
-        {isFiltered && (
-          <div className="text-sm text-gray-500">
-            Exibindo {studentsToShow.length} de {students.length} alunos
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {hasChanges && (
+            <Button 
+              onClick={handleSaveChanges} 
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              <Save size={16} />
+              {isSaving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          )}
+          {isFiltered && (
+            <div className="text-sm text-gray-500">
+              Exibindo {studentsToShow.length} de {students.length} alunos
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-4">
         {columns.map(column => (

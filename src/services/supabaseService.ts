@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Student, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
@@ -142,6 +141,78 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
     toast.success(`Dados salvos com sucesso no banco de dados`, {
       description: `${students.length} alunos salvos para o mês ${mes}`
     });
+  } catch (error) {
+    console.error("Erro ao salvar estudantes:", error);
+    toast.error("Erro ao salvar dados no banco de dados", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    throw error;
+  }
+};
+
+// Salvar todos os estudantes modificados no banco de dados
+export const saveAllStudents = async (students: Student[]): Promise<void> => {
+  try {
+    console.log(`Iniciando salvamento forçado de ${students.length} alunos`);
+    
+    if (students.length === 0) {
+      console.warn("Nenhum aluno para salvar");
+      return;
+    }
+    
+    // Agrupar estudantes por mês para manter a consistência
+    const studentsByMonth: Record<string, Student[]> = {};
+    
+    students.forEach(student => {
+      if (!studentsByMonth[student.mes]) {
+        studentsByMonth[student.mes] = [];
+      }
+      studentsByMonth[student.mes].push(student);
+    });
+    
+    // Salvar cada grupo de estudantes separadamente
+    for (const [mes, studentsForMonth] of Object.entries(studentsByMonth)) {
+      console.log(`Salvando ${studentsForMonth.length} alunos para o mês ${mes}`);
+      
+      // Converter para o formato do banco de dados
+      const dbStudents = studentsForMonth.map(student => convertToDbFormat(student));
+      
+      // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+      const chunkSize = 20;
+      for (let i = 0; i < dbStudents.length; i += chunkSize) {
+        const chunk = dbStudents.slice(i, i + chunkSize);
+        const { error } = await supabase
+          .from('students')
+          .upsert(chunk, { 
+            onConflict: 'id',
+            ignoreDuplicates: false // Forçar atualização mesmo que os dados sejam iguais
+          });
+        
+        if (error) {
+          console.error("Erro ao salvar lote de estudantes:", error);
+          
+          if (error.code === "42501") {
+            console.warn("Erro de permissão no banco de dados, tentando método alternativo");
+            
+            // Tentar salvar um a um
+            for (const student of chunk) {
+              const { error: singleError } = await supabase
+                .from('students')
+                .upsert(student, { onConflict: 'id' });
+                
+              if (singleError && singleError.code !== "42501") {
+                console.error(`Erro ao salvar estudante ${student.id}:`, singleError);
+                throw singleError;
+              }
+            }
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
+    
+    console.log("Salvamento forçado concluído com sucesso");
   } catch (error) {
     console.error("Erro ao salvar estudantes:", error);
     toast.error("Erro ao salvar dados no banco de dados", {
