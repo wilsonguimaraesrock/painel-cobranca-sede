@@ -99,15 +99,31 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
           .replace(",", ".")
       );
       
-      // Calcular dias de atraso
+      // Calcular dias de atraso com o ano atual
       let diasAtraso = 0;
       if (row[2]) { // Data de vencimento
         const partesData = row[2].toString().split('/');
+        
         if (partesData.length === 2) {
           const dia = parseInt(partesData[0]);
           const mes = parseInt(partesData[1]) - 1; // 0-based em JS
-          const dataVencimento = new Date(2023, mes, dia);
           const hoje = new Date();
+          const anoAtual = hoje.getFullYear();
+          
+          // Criar data de vencimento com o ano atual
+          const dataVencimento = new Date(anoAtual, mes, dia);
+          
+          // Se o mês de vencimento já passou (estamos em dezembro e o vencimento é de janeiro)
+          // assumimos que é do próximo ano
+          if (mes < hoje.getMonth() && hoje.getMonth() > 10) {
+            dataVencimento.setFullYear(anoAtual + 1);
+          }
+          
+          // Se o mês atual é janeiro e o vencimento é de dezembro, assumimos que o vencimento foi no ano anterior
+          if (mes > hoje.getMonth() && hoje.getMonth() < 1) {
+            dataVencimento.setFullYear(anoAtual - 1);
+          }
+          
           const diff = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diff / (1000 * 60 * 60 * 24));
           if (diasAtraso < 0) diasAtraso = 0;
