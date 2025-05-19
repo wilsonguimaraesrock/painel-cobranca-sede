@@ -30,7 +30,7 @@ export async function getAvailableSheets(): Promise<string[]> {
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
     // Intervalo para o cabeçalho (linha 2) e os dados dos alunos (linhas 3 a 30)
-    const range = `${sheetName}!A2:J30`;
+    const range = `${sheetName}!A3:J30`;
     
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
@@ -46,14 +46,11 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
       return [];
     }
 
-    // Primeira linha contém os cabeçalhos (linha 2 da planilha)
-    const headers = data.values[0];
-    
-    // Converter dados da planilha para objetos Student (a partir da linha 3 da planilha, índice 1 no array)
+    // Converter dados da planilha para objetos Student
     const students: Student[] = [];
     
-    // Começamos a partir do índice 1, que corresponde à linha 3 da planilha
-    for (let i = 1; i < data.values.length; i++) {
+    // Processar cada linha como um estudante (todas as linhas são estudantes agora)
+    for (let i = 0; i < data.values.length; i++) {
       const row = data.values[i];
       if (!row || !row[0]) continue; // Pula linhas vazias
       
