@@ -11,8 +11,8 @@ interface DataLoaderProps {
 }
 
 const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoaderProps) => {
-  // Move all hooks to the top
-  const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">(""); 
+  // Hooks at the top
+  const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const isMountedRef = useRef(true);
   
   // Effect for cleanup when unmounting
@@ -24,50 +24,54 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
   
   // Effect for loading data when month changes
   useEffect(() => {
+    // Skip loading if no month selected
     if (!selectedMonth) {
       onLoadingChange(false);
       return;
     }
     
     const fetchData = async () => {
+      if (!isMountedRef.current) return;
+      
       try {
+        // Start loading
         onLoadingChange(true);
-        console.log(`Carregando dados para o mês: ${selectedMonth}`);
+        console.log(`Loading data for month: ${selectedMonth}`);
         
-        // Check if data exists in the database for this month
+        // Check if data exists in database
         const hasData = await checkMonthData(selectedMonth);
-        console.log(`Dados existentes no banco para o mês ${selectedMonth}: ${hasData}`);
+        console.log(`Data exists in database for month ${selectedMonth}: ${hasData}`);
         
         // Return early if component unmounted
         if (!isMountedRef.current) return;
         
         if (hasData) {
-          // Load only from database
+          // Load from database
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
           
           // Return early if component unmounted
           if (!isMountedRef.current) return;
           
-          console.log(`Carregados ${dbStudents.length} alunos do banco para o mês ${selectedMonth}`);
+          console.log(`Loaded ${dbStudents.length} students from database for month ${selectedMonth}`);
           
           if (dbStudents.length > 0) {
             onDataLoaded(dbStudents, "database");
-            toast.success(`Dados carregados do banco de dados`, {
-              description: `${dbStudents.length} alunos para o mês ${selectedMonth}`
+            toast.success(`Data loaded from database`, {
+              description: `${dbStudents.length} students for month ${selectedMonth}`
             });
           } else {
-            toast.info(`Nenhum aluno encontrado no banco de dados para o mês ${selectedMonth}`, {
-              description: "Você pode usar o botão 'Importar da Planilha' para importar os dados"
+            toast.info(`No students found in database for month ${selectedMonth}`, {
+              description: "You can use the 'Import from Spreadsheet' button to import data"
             });
             onDataLoaded([], "database");
           }
         } else {
-          // Return early if component unmounted
+          // No data in database
           if (!isMountedRef.current) return;
           
-          toast.info(`Nenhum dado encontrado para o mês ${selectedMonth}`, {
-            description: "Você pode usar o botão 'Importar da Planilha' para importar os dados"
+          toast.info(`No data found for month ${selectedMonth}`, {
+            description: "You can use the 'Import from Spreadsheet' button to import data"
           });
           onDataLoaded([], "");
         }
@@ -75,9 +79,9 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
         // Return early if component unmounted
         if (!isMountedRef.current) return;
         
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados", {
-          description: "Verifique sua conexão e tente novamente."
+        console.error("Error loading data:", error);
+        toast.error("Error loading data", {
+          description: "Check your connection and try again."
         });
         onDataLoaded([], "");
       } finally {
@@ -88,9 +92,11 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
       }
     };
 
+    // Start fetching data
     fetchData();
   }, [selectedMonth, onDataLoaded, onLoadingChange]);
 
+  // This component doesn't render anything
   return null;
 };
 

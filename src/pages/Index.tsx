@@ -25,20 +25,20 @@ const Index = () => {
   const [isImporting, setIsImporting] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Use useCallback for functions that are passed as props
+  // Handle data loaded from DataLoader component
   const handleDataLoaded = useCallback((loadedStudents: Student[], source: "sheets" | "database" | "") => {
-    console.log("Dados carregados:", loadedStudents.length, "alunos da fonte:", source);
+    console.log("Data loaded:", loadedStudents.length, "students from source:", source);
     setStudents(loadedStudents);
     setFilteredStudents([]);
     setActiveFilter(null);
     setLoadingSource(source);
   }, []);
 
-  // Debug logging effect
+  // Debug logging
   useEffect(() => {
     if (!loading && students.length > 0) {
-      console.log("Estado atual - Total de alunos:", students.length);
-      console.log("Distribuição de status:", {
+      console.log("Current state - Total students:", students.length);
+      console.log("Status distribution:", {
         inadimplente: students.filter(s => s.status === "inadimplente").length,
         mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
         respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
@@ -47,41 +47,41 @@ const Index = () => {
     }
   }, [loading, students]);
 
-  // Function to force importing data
+  // Force import from sheet
   const handleForceImport = async () => {
     if (!selectedMonth) {
-      toast.error("Selecione um mês antes de importar os dados");
+      toast.error("Select a month before importing data");
       return;
     }
     
     try {
       setIsImporting(true);
-      toast.info(`Iniciando importação dos dados para o mês ${selectedMonth}...`);
+      toast.info(`Starting data import for month ${selectedMonth}...`);
       
-      // Get data directly from the sheet
+      // Get data directly from sheet
       const sheetsData = await getSheetData(selectedMonth);
       
       if (sheetsData.length === 0) {
-        toast.error(`Não foram encontrados alunos na planilha para o mês ${selectedMonth}`);
+        toast.error(`No students found in spreadsheet for month ${selectedMonth}`);
         setIsImporting(false);
         return;
       }
       
-      console.log(`Importando ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
+      console.log(`Importing ${sheetsData.length} students from spreadsheet for month ${selectedMonth}`);
       
-      // Save data to the database
+      // Save to database
       await saveStudents(sheetsData, selectedMonth);
       
-      // Update the student list
+      // Update student list
       handleDataLoaded(sheetsData, "sheets");
       
-      toast.success(`Importação concluída com sucesso`, {
-        description: `${sheetsData.length} alunos foram importados para o banco de dados`
+      toast.success(`Import completed successfully`, {
+        description: `${sheetsData.length} students were imported to the database`
       });
     } catch (error) {
-      console.error("Erro ao importar dados:", error);
-      toast.error("Erro ao importar dados da planilha", {
-        description: "Verifique sua conexão e tente novamente."
+      console.error("Error importing data:", error);
+      toast.error("Error importing data from spreadsheet", {
+        description: "Check your connection and try again."
       });
     } finally {
       setIsImporting(false);
@@ -125,9 +125,9 @@ const Index = () => {
 
   // Function to update a specific student
   const handleStudentUpdate = useCallback((updatedStudent: Student) => {
-    console.log(`Atualizando estudante ${updatedStudent.id} com status ${updatedStudent.status}`);
+    console.log(`Updating student ${updatedStudent.id} with status ${updatedStudent.status}`);
     
-    // Update local state first
+    // Update local state first to reflect changes immediately
     setStudents(prevStudents => 
       prevStudents.map(student => 
         student.id === updatedStudent.id ? updatedStudent : student
@@ -139,7 +139,6 @@ const Index = () => {
       setFilteredStudents(prevFiltered => {
         const studentInFiltered = prevFiltered.some(s => s.id === updatedStudent.id);
         
-        // If student was already in filtered, update it
         if (studentInFiltered) {
           return prevFiltered.map(student => 
             student.id === updatedStudent.id ? updatedStudent : student
@@ -151,13 +150,12 @@ const Index = () => {
     }
   }, [activeFilter]);
 
-  // Function for conditional rendering of content
+  // Render content based on loading state and selected month
   const renderContent = () => {
-    // Conditional rendering for when no month is selected
     if (!selectedMonth) {
       return (
         <div className="mt-8 text-center text-gray-500">
-          Selecione um mês para visualizar os dados
+          Select a month to view data
         </div>
       );
     }
@@ -183,7 +181,7 @@ const Index = () => {
     );
   };
 
-  // Define handleLoadingChange as a callback to prevent re-renders
+  // Handle loading state changes
   const handleLoadingChange = useCallback((isLoading: boolean) => {
     setLoading(isLoading);
   }, []);
@@ -207,7 +205,7 @@ const Index = () => {
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            {isImporting ? "Importando..." : "Importar da Planilha"}
+            {isImporting ? "Importing..." : "Import from Spreadsheet"}
           </Button>
         </div>
         <Button 
@@ -215,7 +213,7 @@ const Index = () => {
           className="flex items-center gap-2 bg-primary text-white"
         >
           <Plus className="h-4 w-4" />
-          Cadastrar Novo Aluno
+          Register New Student
         </Button>
       </div>
       
