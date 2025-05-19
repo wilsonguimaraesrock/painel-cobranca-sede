@@ -14,9 +14,11 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
 
   useEffect(() => {
-    if (!selectedMonth) return;
+    let isMounted = true;
     
     const fetchData = async () => {
+      if (!selectedMonth) return;
+      
       try {
         onLoadingChange(true);
         console.log(`Carregando dados para o mês: ${selectedMonth}`);
@@ -25,10 +27,15 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
         const hasData = await checkMonthData(selectedMonth);
         console.log(`Dados existentes no banco para o mês ${selectedMonth}: ${hasData}`);
         
+        if (!isMounted) return;
+        
         if (hasData) {
           // Carregamos apenas do banco de dados
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
+          
+          if (!isMounted) return;
+          
           console.log(`Carregados ${dbStudents.length} alunos do banco para o mês ${selectedMonth}`);
           
           if (dbStudents.length > 0) {
@@ -43,27 +50,38 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
             onDataLoaded([], "database");
           }
         } else {
+          if (!isMounted) return;
+          
           toast.info(`Nenhum dado encontrado para o mês ${selectedMonth}`, {
             description: "Você pode usar o botão 'Importar da Planilha' para importar os dados"
           });
           onDataLoaded([], "");
         }
       } catch (error) {
+        if (!isMounted) return;
+        
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados", {
           description: "Verifique sua conexão e tente novamente."
         });
         onDataLoaded([], "");
       } finally {
-        onLoadingChange(false);
-        setLoadingSource("");
+        if (isMounted) {
+          onLoadingChange(false);
+          setLoadingSource("");
+        }
       }
     };
 
     fetchData();
+    
+    // Cleanup function to prevent state updates after unmounting
+    return () => {
+      isMounted = false;
+    };
   }, [selectedMonth, onDataLoaded, onLoadingChange]);
 
-  return null; // Este é um componente funcional que não renderiza nada
+  return null;
 };
 
 export default DataLoader;

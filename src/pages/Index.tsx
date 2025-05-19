@@ -138,7 +138,20 @@ const Index = () => {
     }
   };
 
-  // Renderizar estados de carregamento
+  // Adicionar log para debug
+  useEffect(() => {
+    if (!loading && students.length > 0) {
+      console.log("Estado atual - Total de alunos:", students.length);
+      console.log("Distribuição de status:", {
+        inadimplente: students.filter(s => s.status === "inadimplente").length,
+        mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
+        respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
+        pagamentoFeito: students.filter(s => s.status === "pagamento-feito").length
+      });
+    }
+  }, [loading, students]);
+
+  // Renderização condicional para quando não há mês selecionado
   if (!selectedMonth) {
     return (
       <div className="container mx-auto p-4">
@@ -155,19 +168,6 @@ const Index = () => {
       </div>
     );
   }
-
-  // Adicionar log para debug
-  useEffect(() => {
-    if (!loading && students.length > 0) {
-      console.log("Estado atual - Total de alunos:", students.length);
-      console.log("Distribuição de status:", {
-        inadimplente: students.filter(s => s.status === "inadimplente").length,
-        mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
-        respostaRecebida: students.filter(s => s.status === "resposta-recebida").length,
-        pagamentoFeito: students.filter(s => s.status === "pagamento-feito").length
-      });
-    }
-  }, [loading, students]);
 
   return (
     <div className="container mx-auto p-4">
