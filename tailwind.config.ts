@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				kanban: {
+					overdue: '#ef4444',
+					sent: '#f97316',
+					replied: '#3b82f6',
+					paid: '#22c55e'
 				}
 			},
 			borderRadius: {
@@ -84,11 +91,25 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'card-move': {
+					'0%': {
+						transform: 'translateY(10px)',
+						opacity: '0.5'
+					},
+					'100%': {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'card-move': 'card-move 0.3s ease-out'
+			},
+			fontFamily: {
+				sans: ['Roboto', 'sans-serif']
 			}
 		}
 	},
