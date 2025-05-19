@@ -39,7 +39,8 @@ const convertFromDbFormat = (dbStudent: any): Student => {
     status: dbStudent.status as Status,
     primeiroContato: dbStudent.primeiro_contato || "",
     ultimoContato: dbStudent.ultimo_contato || "",
-    mes: dbStudent.mes
+    mes: dbStudent.mes,
+    statusHistory: [] // Inicializa o histórico vazio para ser preenchido depois
   };
 };
 
@@ -47,17 +48,36 @@ const convertFromDbFormat = (dbStudent: any): Student => {
 export const saveStudents = async (students: Student[], mes: string): Promise<void> => {
   try {
     // Primeiro, verificamos se já existem estudantes para este mês
-    const { data: existingStudents } = await supabase
+    const { data: existingStudents, error: checkError } = await supabase
       .from('students')
       .select('id')
       .eq('mes', mes);
       
+    if (checkError) {
+      console.error("Erro ao verificar estudantes existentes:", checkError);
+      
+      // Código de erro específico para violação de políticas RLS
+      if (checkError.code === "42501") {
+        toast.error("Erro de permissão no banco de dados", {
+          description: "Contate o administrador para configurar as políticas de acesso."
+        });
+      } else {
+        throw checkError;
+      }
+      return;
+    }
+    
     // Se existem, removemos todos para inserir os novos
     if (existingStudents && existingStudents.length > 0) {
-      await supabase
+      const { error: deleteError } = await supabase
         .from('students')
         .delete()
         .eq('mes', mes);
+        
+      if (deleteError) {
+        console.error("Erro ao remover estudantes existentes:", deleteError);
+        throw deleteError;
+      }
     }
     
     // Inserimos os novos estudantes
@@ -73,6 +93,15 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
       
       if (error) {
         console.error("Erro ao salvar lote de estudantes:", error);
+        
+        // Código de erro específico para violação de políticas RLS
+        if (error.code === "42501") {
+          toast.error("Erro de permissão no banco de dados", {
+            description: "Contate o administrador para configurar as políticas de acesso."
+          });
+          return;
+        }
+        
         throw error;
       }
     }
@@ -97,7 +126,16 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
       .select('*')
       .eq('mes', mes);
     
-    if (error) throw error;
+    if (error) {
+      // Código de erro específico para violação de políticas RLS
+      if (error.code === "42501") {
+        toast.error("Erro de permissão no banco de dados", {
+          description: "Contate o administrador para configurar as políticas de acesso."
+        });
+        return [];
+      }
+      throw error;
+    }
     
     if (!data || data.length === 0) {
       return [];
@@ -108,18 +146,27 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     
     // Obter o histórico de status para cada estudante
     for (const student of students) {
-      const { data: historyData } = await supabase
-        .from('status_history')
-        .select('*')
-        .eq('student_id', student.id);
-      
-      if (historyData && historyData.length > 0) {
-        student.statusHistory = historyData.map(history => ({
-          oldStatus: history.old_status as Status,
-          newStatus: history.new_status as Status,
-          changedBy: history.changed_by,
-          changedAt: new Date(history.changed_at)
-        }));
+      try {
+        const { data: historyData, error: historyError } = await supabase
+          .from('status_history')
+          .select('*')
+          .eq('student_id', student.id);
+        
+        if (historyError) {
+          console.error("Erro ao obter histórico de status:", historyError);
+          continue; // Continua com o próximo estudante mesmo se houver erro
+        }
+        
+        if (historyData && historyData.length > 0) {
+          student.statusHistory = historyData.map(history => ({
+            oldStatus: history.old_status as Status,
+            newStatus: history.new_status as Status,
+            changedBy: history.changed_by,
+            changedAt: new Date(history.changed_at)
+          }));
+        }
+      } catch (innerError) {
+        console.error("Erro ao processar histórico:", innerError);
       }
     }
     
@@ -129,7 +176,7 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     toast.error("Erro ao carregar dados do banco de dados", {
       description: "Verifique sua conexão e tente novamente."
     });
-    throw error;
+    return [];
   }
 };
 
@@ -141,7 +188,14 @@ export const checkMonthData = async (mes: string): Promise<boolean> => {
       .select('count', { count: 'exact' })
       .eq('mes', mes);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === "42501") {
+        // Erro de permissão é comum no início, não mostrar toast
+        console.warn("Permissão insuficiente para verificar dados do mês:", error);
+        return false;
+      }
+      throw error;
+    }
     
     return data ? data.length > 0 : false;
   } catch (error) {
@@ -164,19 +218,38 @@ export const updateStudentStatus = async (
       .update({ status: newStatus })
       .eq('id', studentId);
     
-    if (updateError) throw updateError;
+    if (updateError) {
+      if (updateError.code === "42501") {
+        toast.error("Erro de permissão ao atualizar status", {
+          description: "Contate o administrador para configurar as políticas de acesso."
+        });
+        return;
+      }
+      throw updateError;
+    }
     
     // Adicionar ao histórico
-    const { error: historyError } = await supabase
-      .from('status_history')
-      .insert({
-        student_id: studentId,
-        old_status: oldStatus,
-        new_status: newStatus,
-        changed_by: changedBy
-      });
-    
-    if (historyError) throw historyError;
+    try {
+      const { error: historyError } = await supabase
+        .from('status_history')
+        .insert({
+          student_id: studentId,
+          old_status: oldStatus,
+          new_status: newStatus,
+          changed_by: changedBy
+        });
+      
+      if (historyError) {
+        if (historyError.code === "42501") {
+          console.warn("Erro de permissão ao adicionar histórico:", historyError);
+          // Não interrompe o fluxo pois a atualização principal já foi feita
+        } else {
+          console.error("Erro ao adicionar histórico:", historyError);
+        }
+      }
+    } catch (historyError) {
+      console.error("Erro ao adicionar histórico:", historyError);
+    }
     
   } catch (error) {
     console.error("Erro ao atualizar status:", error);

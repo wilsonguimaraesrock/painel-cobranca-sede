@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
+// Criando instância do QueryClient fora do componente App
 const queryClient = new QueryClient();
 
 const App = () => (

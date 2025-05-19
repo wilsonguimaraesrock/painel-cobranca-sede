@@ -15,6 +15,7 @@ interface KanbanBoardProps {
 
 const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }: KanbanBoardProps) => {
   const { username } = useAuth();
+  const [processingStudentId, setProcessingStudentId] = useState<string | null>(null);
   
   // Usar os estudantes filtrados ou todos os estudantes
   const studentsToShow = isFiltered && filteredStudents ? filteredStudents : students;
@@ -49,15 +50,24 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
 
   // Função para alterar o status de um aluno para o próximo
   const handleStatusChange = async (studentId: string, newStatus: Status) => {
+    // Evitar múltiplas chamadas simultâneas para o mesmo estudante
+    if (processingStudentId === studentId) return;
+    
+    setProcessingStudentId(studentId);
+    
     const student = students.find(s => s.id === studentId);
     
-    if (!student) return;
+    if (!student) {
+      setProcessingStudentId(null);
+      return;
+    }
     
     // Verificar se o campo follow up está preenchido
     if (student.followUp.trim() === "" && student.status !== "pagamento-feito") {
       toast.error("O campo 'Follow Up' precisa ser preenchido para mover o aluno", {
         description: "Atualize o campo na planilha e tente novamente."
       });
+      setProcessingStudentId(null);
       return;
     }
     
@@ -65,15 +75,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       // Salvar o status antigo para o histórico
       const oldStatus = student.status;
       
-      // Atualizar o status no Supabase
-      await updateStudentStatus(
-        studentId, 
-        oldStatus, 
-        newStatus, 
-        username || 'Usuário não identificado'
-      );
-      
-      // Adicionar entrada ao histórico
+      // Adicionar entrada ao histórico localmente primeiro
       const statusHistory = student.statusHistory || [];
       const historyEntry = {
         oldStatus: student.status,
@@ -82,38 +84,66 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         changedAt: new Date()
       };
       
-      // Atualizar o status local
+      // Atualizar o status local imediatamente para feedback imediato ao usuário
       const updatedStudent = { 
         ...student, 
         status: newStatus,
         statusHistory: [...statusHistory, historyEntry]
       };
       
+      // Atualizar a UI primeiro para feedback imediato
       onStudentUpdate(updatedStudent);
+      
+      // Agora atualizar no banco de dados
+      await updateStudentStatus(
+        studentId, 
+        oldStatus, 
+        newStatus, 
+        username || 'Usuário não identificado'
+      );
       
       // Mensagem de confirmação
       toast.success(`Aluno movido com sucesso`, {
         description: `${student.nome} foi movido para ${columns.find(c => c.id === newStatus)?.title}`
       });
+      
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
+      
+      // Reverter para o status anterior no caso de erro
+      const originalStudent = students.find(s => s.id === studentId);
+      if (originalStudent) {
+        onStudentUpdate({...originalStudent});
+      }
+      
       toast.error("Erro ao mover o aluno", {
         description: "Verifique sua conexão e tente novamente."
       });
+    } finally {
+      setProcessingStudentId(null);
     }
   };
 
   // Função para retornar o aluno para o status anterior
   const handleReturnToPreviousStatus = async (studentId: string) => {
+    // Evitar múltiplas chamadas simultâneas para o mesmo estudante
+    if (processingStudentId === studentId) return;
+    
+    setProcessingStudentId(studentId);
+    
     const student = students.find(s => s.id === studentId);
     
-    if (!student) return;
+    if (!student) {
+      setProcessingStudentId(null);
+      return;
+    }
     
     // Se já está no primeiro status, não faz nada
     if (student.status === "inadimplente") {
       toast.info("Aluno já está no primeiro estágio", {
         description: "Não é possível retornar mais."
       });
+      setProcessingStudentId(null);
       return;
     }
     
@@ -121,15 +151,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       // Obter o status anterior
       const previousStatus = previousStatusMap[student.status];
       
-      // Atualizar o status no Supabase
-      await updateStudentStatus(
-        studentId, 
-        student.status, 
-        previousStatus, 
-        username || 'Usuário não identificado'
-      );
-      
-      // Adicionar entrada ao histórico
+      // Adicionar entrada ao histórico localmente primeiro
       const statusHistory = student.statusHistory || [];
       const historyEntry = {
         oldStatus: student.status,
@@ -138,14 +160,23 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         changedAt: new Date()
       };
       
-      // Atualizar o status local
+      // Atualizar o status local imediatamente
       const updatedStudent = { 
         ...student, 
         status: previousStatus,
         statusHistory: [...statusHistory, historyEntry]
       };
       
+      // Atualizar a UI primeiro para feedback imediato
       onStudentUpdate(updatedStudent);
+      
+      // Agora atualizar no banco de dados
+      await updateStudentStatus(
+        studentId, 
+        student.status, 
+        previousStatus, 
+        username || 'Usuário não identificado'
+      );
       
       // Mensagem de confirmação
       toast.success(`Aluno retornado com sucesso`, {
@@ -153,9 +184,18 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       });
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
+      
+      // Reverter para o status anterior no caso de erro
+      const originalStudent = students.find(s => s.id === studentId);
+      if (originalStudent) {
+        onStudentUpdate({...originalStudent});
+      }
+      
       toast.error("Erro ao mover o aluno", {
         description: "Verifique sua conexão e tente novamente."
       });
+    } finally {
+      setProcessingStudentId(null);
     }
   };
 
