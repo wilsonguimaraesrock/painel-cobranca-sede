@@ -18,6 +18,14 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
     { id: "pagamento-feito", title: "Pagamento Realizado", color: "bg-kanban-paid" }
   ];
 
+  // Mapeamento do status para o status anterior
+  const previousStatusMap: Record<Status, Status> = {
+    "inadimplente": "inadimplente", // Primeiro status, não tem anterior
+    "mensagem-enviada": "inadimplente",
+    "resposta-recebida": "mensagem-enviada",
+    "pagamento-feito": "resposta-recebida"
+  };
+
   // Agrupar estudantes por status
   const studentsByStatus: Record<Status, Student[]> = {
     "inadimplente": [],
@@ -30,7 +38,7 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
     studentsByStatus[student.status].push(student);
   });
 
-  // Função para alterar o status de um aluno
+  // Função para alterar o status de um aluno para o próximo
   const handleStatusChange = (studentId: string, newStatus: Status) => {
     const student = students.find(s => s.id === studentId);
     
@@ -51,6 +59,33 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
     // Mensagem de confirmação
     toast.success(`Aluno movido com sucesso`, {
       description: `${student.nome} foi movido para ${columns.find(c => c.id === newStatus)?.title}`
+    });
+  };
+
+  // Função para retornar o aluno para o status anterior
+  const handleReturnToPreviousStatus = (studentId: string) => {
+    const student = students.find(s => s.id === studentId);
+    
+    if (!student) return;
+    
+    // Se já está no primeiro status, não faz nada
+    if (student.status === "inadimplente") {
+      toast.info("Aluno já está no primeiro estágio", {
+        description: "Não é possível retornar mais."
+      });
+      return;
+    }
+    
+    // Obter o status anterior
+    const previousStatus = previousStatusMap[student.status];
+    
+    // Atualizar o status
+    const updatedStudent = { ...student, status: previousStatus };
+    onStudentUpdate(updatedStudent);
+    
+    // Mensagem de confirmação
+    toast.success(`Aluno retornado com sucesso`, {
+      description: `${student.nome} foi movido para ${columns.find(c => c.id === previousStatus)?.title}`
     });
   };
 
@@ -79,6 +114,7 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
                     key={student.id} 
                     student={student}
                     onStatusChange={handleStatusChange}
+                    onReturnToPrevious={handleReturnToPreviousStatus}
                   />
                 ))
               ) : (
