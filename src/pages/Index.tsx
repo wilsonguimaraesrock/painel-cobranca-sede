@@ -72,23 +72,31 @@ const Index = () => {
 
     // Função auxiliar para carregar dados da planilha do Google
     const loadFromSheets = async (month: string) => {
-      setLoadingSource("sheets");
-      const sheetsData = await getSheetData(month);
-      
-      if (sheetsData.length === 0) {
-        toast.error(`Não foram encontrados alunos na planilha para o mês ${month}`);
-        return;
+      try {
+        setLoadingSource("sheets");
+        const sheetsData = await getSheetData(month);
+        
+        if (sheetsData.length === 0) {
+          toast.error(`Não foram encontrados alunos na planilha para o mês ${month}`);
+          return;
+        }
+        
+        console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${month}`);
+        setStudents(sheetsData);
+        
+        // Salvamos os dados da planilha no banco para uso futuro
+        console.log(`Salvando ${sheetsData.length} alunos carregados da planilha no banco de dados...`);
+        await saveStudents(sheetsData, month);
+        
+        toast.success(`Dados carregados da planilha e salvos no banco`, {
+          description: `${sheetsData.length} alunos para o mês ${month}`
+        });
+      } catch (error) {
+        console.error("Erro ao carregar e salvar dados da planilha:", error);
+        toast.error("Erro ao salvar dados no banco de dados", {
+          description: "Os dados foram carregados, mas não foi possível salvá-los."
+        });
       }
-      
-      console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${month}`);
-      setStudents(sheetsData);
-      
-      // Salvamos os dados da planilha no banco para uso futuro
-      await saveStudents(sheetsData, month);
-      
-      toast.success(`Dados carregados da planilha e salvos no banco`, {
-        description: `${sheetsData.length} alunos para o mês ${month}`
-      });
     };
 
     fetchData();
@@ -210,7 +218,7 @@ const Index = () => {
           {!loading && (
             <div className="text-sm text-gray-500 ml-4">
               {students.length} alunos encontrados
-              {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha"})`}
+              {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha e salvos no banco"})`}
             </div>
           )}
         </div>
@@ -225,7 +233,6 @@ const Index = () => {
       
       {loading ? (
         <>
-          {/* Skeleton para o Dashboard */}
           <div className="mb-8">
             <Skeleton className="h-8 w-64 mb-4" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -235,7 +242,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Skeleton para o Kanban */}
           <Skeleton className="h-8 w-64 mb-4" />
           <div className="flex gap-4 overflow-x-auto pb-4">
             {Array(4).fill(0).map((_, i) => (
