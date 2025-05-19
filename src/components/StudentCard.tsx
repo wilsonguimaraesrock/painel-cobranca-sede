@@ -33,6 +33,7 @@ const StudentCard = ({ student, onStatusChange }: StudentCardProps) => {
   };
 
   // Verificar se pode avançar para o próximo status
+  // Verifica se o campo follow up está preenchido
   const canAdvance = student.followUp.trim() !== "";
   
   const handleMoveNext = () => {

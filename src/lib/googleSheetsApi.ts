@@ -18,7 +18,9 @@ export async function getAvailableSheets(): Promise<string[]> {
     }
     
     const data = await response.json();
-    return data.sheets.map((sheet: any) => sheet.properties.title);
+    return data.sheets
+      .filter((sheet: any) => !sheet.properties.hidden)
+      .map((sheet: any) => sheet.properties.title);
   } catch (error) {
     console.error("Erro ao obter abas da planilha:", error);
     toast.error("Erro ao obter abas da planilha");
@@ -29,8 +31,8 @@ export async function getAvailableSheets(): Promise<string[]> {
 // Obtém dados da planilha para o mês selecionado
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
-    // Buscamos diretamente as linhas relevantes (a partir da linha 3)
-    const range = `${sheetName}!A1:H50`;
+    // Buscamos um range maior para garantir que todos os alunos sejam pegos
+    const range = `${sheetName}!A1:H100`;
     
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
@@ -42,46 +44,67 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
     
     const data: SheetData = await response.json();
     
-    if (!data.values || data.values.length < 3) { // Pelo menos linha 1, 2 (cabeçalho) e 3 (primeiro aluno)
+    if (!data.values || data.values.length < 3) {
       console.log("Dados insuficientes na planilha");
       return [];
     }
 
     console.log("Dados recebidos da API:", data.values);
     
-    // Converter dados da planilha para objetos Student, começando da linha 3
-    // Sabemos que a linha 1 tem o título "INADIMPLENCIAS" 
-    // Linha 2 tem cabeçalhos: NOME, VALOR, VENCIMEN., etc
-    // Linha 3 em diante tem os dados dos alunos
+    // Array para armazenar os alunos
     const students: Student[] = [];
     
-    // Começar da linha 3 (índice 2 no array)
-    for (let i = 2; i < data.values.length; i++) {
+    // Encontrar a linha que contém os cabeçalhos corretos (NOME, VALOR, VENCIMEN.)
+    let headerIndex = -1;
+    for (let i = 0; i < data.values.length; i++) {
+      const row = data.values[i];
+      if (row && row[0] === "NOME" && row[1] === "VALOR" && row[2]?.includes("VENCIMEN")) {
+        headerIndex = i;
+        break;
+      }
+    }
+    
+    // Se não encontramos o cabeçalho, retornar lista vazia
+    if (headerIndex === -1) {
+      console.error("Cabeçalhos não encontrados na planilha");
+      return [];
+    }
+    
+    // Começar a processar a partir da linha após o cabeçalho
+    for (let i = headerIndex + 1; i < data.values.length; i++) {
       const row = data.values[i];
       
-      // Verificar se a linha tem dados relevantes (ou seja, tem um nome)
-      if (!row || !row[0] || row[0].trim() === "") continue;
+      // Verificar se a linha tem dados válidos (nome e valor)
+      if (!row || !row[0] || row[0].trim() === "" || !row[1]) {
+        continue;
+      }
       
-      // Verificar se chegamos ao fim da lista de alunos
-      // Muitas planilhas têm linhas em branco depois dos dados
-      if (i > 2 && (!row[1] || row[1].trim() === "")) continue;
+      // Se a linha contém RETIRADOS DA PLANILHA ou algum outro marcador, pula
+      if (row[0].includes("RETIRADOS") || row[0].includes("Bonificação")) {
+        continue;
+      }
       
-      // Identificar o status inicial (por padrão, são inadimplentes)
-      let status: Status = "inadimplente";
+      // Validar que é uma linha de aluno (tem nome e dados financeiros)
+      const valorString = row[1]?.toString() || "";
+      if (!valorString.includes("R$") && !valorString.includes("$")) {
+        continue;
+      }
       
-      // Extrair o valor e formatar corretamente
-      const valorString = row[1] || "";
-      const valor = valorString.replace(/[^\d,]/g, "").replace(",", ".");
+      // Extrair o valor formatado corretamente
+      const valor = parseFloat(
+        valorString
+          .replace(/[^\d,\.]/g, "")
+          .replace(",", ".")
+      );
       
-      // Extrair dias de atraso (se aplicável)
+      // Calcular dias de atraso
       let diasAtraso = 0;
-      if (row[0] && row[2]) {
-        // Calcular dias de atraso com base na data atual e data de vencimento
-        const partes = row[2]?.toString().split('/') || [];
-        if (partes.length === 2) {
-          const dia = parseInt(partes[0]);
-          const mes = parseInt(partes[1]) - 1; // Mês em JS é 0-based
-          const dataVencimento = new Date(2023, mes, dia); // Assumindo 2023
+      if (row[2]) { // Data de vencimento
+        const partesData = row[2].toString().split('/');
+        if (partesData.length === 2) {
+          const dia = parseInt(partesData[0]);
+          const mes = parseInt(partesData[1]) - 1; // 0-based em JS
+          const dataVencimento = new Date(2023, mes, dia);
           const hoje = new Date();
           const diff = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -89,18 +112,19 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         }
       }
       
+      // Criar o objeto aluno
       const student: Student = {
         id: `student-${i}`,
-        nome: row[0] || "",
-        curso: "", // Não temos o curso no exemplo da planilha
-        valor: parseFloat(valor) || 0,
+        nome: row[0],
+        curso: "", // Não temos essa informação na planilha
+        valor: isNaN(valor) ? 0 : valor,
         dataVencimento: row[2] || "",
         diasAtraso: diasAtraso,
         followUp: row[7] || "", // DATA DO FOLLOW está na coluna H (índice 7)
-        email: "", // Não temos o email na planilha atual
-        telefone: "", // Não temos o telefone na planilha atual
+        email: "", // Não temos na planilha
+        telefone: "", // Não temos na planilha
         observacoes: row[6] || "", // OBSERVAÇÃO está na coluna G (índice 6)
-        status
+        status: "inadimplente" as Status
       };
       
       console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}`);
