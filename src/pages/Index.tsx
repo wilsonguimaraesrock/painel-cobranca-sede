@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Student } from "@/types";
 import { getSheetData } from "@/lib/googleSheetsApi";
@@ -18,6 +17,7 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const [initialLoadDone, setInitialLoadDone] = useState<boolean>(false);
+  const [databaseLoaded, setDatabaseLoaded] = useState<boolean>(false);
 
   // Carregar dados quando o mês muda
   useEffect(() => {
@@ -40,26 +40,24 @@ const Index = () => {
           
           if (dbStudents.length > 0) {
             setStudents(dbStudents);
+            setDatabaseLoaded(true);
             toast.success(`Dados carregados do banco de dados`, {
               description: `${dbStudents.length} alunos para o mês ${selectedMonth}`
             });
 
             // Depois carregamos dados da planilha apenas para complementar informações, 
-            // mantendo os status e outras alterações do banco
+            // sem sobrescrever status ou histórico do banco
             setLoadingSource("sheets");
             const sheetsData = await getSheetData(selectedMonth);
             console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
             
             // Mesclar apenas dados da planilha que não existem no banco ou precisam de atualização
             if (sheetsData.length > 0) {
-              // Criar um mapa dos estudantes do banco pelo ID
-              const dbStudentsMap = new Map(dbStudents.map(s => [s.id, s]));
-              
-              // Criar um mapa também pelo nome+valor+vencimento para identificar correspondências
-              const dbStudentsByDetails = new Map();
+              // Criar um mapa dos estudantes do banco pelo nome para identificar correspondências
+              const dbStudentsByName = new Map();
               dbStudents.forEach(s => {
-                const key = `${s.nome}-${s.valor}-${s.dataVencimento}`.toLowerCase();
-                dbStudentsByDetails.set(key, s);
+                // Usar o nome como chave principal para correspondência
+                dbStudentsByName.set(s.nome.toLowerCase().trim(), s);
               });
               
               // Atualizar estudantes existentes e adicionar novos
@@ -67,19 +65,13 @@ const Index = () => {
               const newStudents: Student[] = [];
               
               sheetsData.forEach(sheetStudent => {
-                // Tentar encontrar correspondência por ID
-                let existingStudent = dbStudentsMap.get(sheetStudent.id);
-                
-                // Se não encontrou por ID, tenta por nome+valor+vencimento
-                if (!existingStudent) {
-                  const key = `${sheetStudent.nome}-${sheetStudent.valor}-${sheetStudent.dataVencimento}`.toLowerCase();
-                  existingStudent = dbStudentsByDetails.get(key);
-                }
+                // Tentar encontrar correspondência por nome
+                const existingStudent = dbStudentsByName.get(sheetStudent.nome.toLowerCase().trim());
                 
                 if (existingStudent) {
                   // Atualiza apenas os campos da planilha, mantendo os dados do banco
                   // Especialmente status e historico
-                  const updatedIndex = updatedStudents.findIndex(s => s.id === existingStudent!.id);
+                  const updatedIndex = updatedStudents.findIndex(s => s.id === existingStudent.id);
                   if (updatedIndex >= 0) {
                     updatedStudents[updatedIndex] = {
                       ...existingStudent,
@@ -91,7 +83,7 @@ const Index = () => {
                       observacoes: sheetStudent.observacoes || existingStudent.observacoes,
                       primeiroContato: existingStudent.primeiroContato || sheetStudent.primeiroContato,
                       ultimoContato: existingStudent.ultimoContato || sheetStudent.ultimoContato,
-                      // Mantemos o status e histórico do banco
+                      // Mantemos o status e histórico do banco - IMPORTANTE!
                       status: existingStudent.status,
                       statusHistory: existingStudent.statusHistory
                     };
@@ -113,13 +105,13 @@ const Index = () => {
               // Atualizar estado
               setStudents(updatedStudents);
               
-              // Salvar alterações no banco
+              // Salvar novos estudantes e atualizações no banco
               if (newStudents.length > 0) {
                 await saveStudents(newStudents, selectedMonth);
               }
             }
           } else {
-            // Se o banco retornou vazio (erro ou primeira carga), carregamos da planilha
+            // Se o banco retornou vazio (pode ser erro ou primeira carga), carregamos da planilha
             setLoadingSource("sheets");
             const sheetsData = await getSheetData(selectedMonth);
             

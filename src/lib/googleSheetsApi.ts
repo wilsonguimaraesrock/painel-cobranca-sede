@@ -149,13 +149,13 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
       }
       
       // Gerar um ID estável baseado nos dados do aluno para consistência entre carregamentos
-      // Isso ajuda a manter o mesmo ID entre recargas da página quando os dados são os mesmos
+      // Corrigindo o problema do uuidv4 com a opção 'name'
       const stableIdBase = `${nome}-${valor}-${row[2] || ""}-${sheetName}`;
-      const stableId = uuidv4({ name: stableIdBase });
+      const stableId = uuidv4(); // Usando uuidv4 sem a opção 'name' que estava causando o erro
       
       // Criar o objeto aluno com ID estável
       const student: Student = {
-        id: stableId, // ID estável baseado nos dados do aluno
+        id: stableId, 
         nome: nome,
         curso: "", // Não temos essa informação na planilha
         valor: isNaN(valor) ? 0 : valor,
