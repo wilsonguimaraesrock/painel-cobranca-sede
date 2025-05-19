@@ -17,6 +17,7 @@ const Index = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
+  const [initialLoadDone, setInitialLoadDone] = useState<boolean>(false);
 
   // Carregar dados quando o mês muda
   useEffect(() => {
@@ -25,6 +26,7 @@ const Index = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log(`Carregando dados para o mês: ${selectedMonth}`);
         
         // Primeiro sempre carregamos da planilha do Google
         setLoadingSource("sheets");
@@ -105,6 +107,7 @@ const Index = () => {
         
         setFilteredStudents([]);
         setActiveFilter(null);
+        setInitialLoadDone(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados", {
@@ -191,6 +194,9 @@ const Index = () => {
       console.log(`Salvando atualização do estudante ${updatedStudent.id} no banco`);
       await saveStudents([updatedStudent], selectedMonth);
       console.log(`Estudante ${updatedStudent.id} salvo com sucesso`);
+      
+      // Notificar o usuário que a atualização foi salva
+      toast.success(`Dados do aluno ${updatedStudent.nome} salvos com sucesso`);
     } catch (error) {
       console.error("Erro ao salvar alterações no banco de dados:", error);
       toast.error("Erro ao salvar alterações", {

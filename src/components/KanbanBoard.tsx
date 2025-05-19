@@ -76,18 +76,21 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     
     setProcessingStudentId(studentId);
     
-    const student = students.find(s => s.id === studentId);
+    const student = studentsToShow.find(s => s.id === studentId);
     
     if (!student) {
       console.log(`Aluno ${studentId} não encontrado`);
       setProcessingStudentId(null);
+      toast.error("Aluno não encontrado", {
+        description: "Não foi possível encontrar o aluno para atualizar o status."
+      });
       return;
     }
     
     // Verificar se o campo follow up está preenchido
-    if (student.followUp.trim() === "" && student.status !== "pagamento-feito") {
+    if (student.followUp.trim() === "" && newStatus !== "pagamento-feito") {
       toast.error("O campo 'Follow Up' precisa ser preenchido para mover o aluno", {
-        description: "Atualize o campo na planilha e tente novamente."
+        description: "Atualize o campo na planilha ou no detalhe do aluno e tente novamente."
       });
       setProcessingStudentId(null);
       return;

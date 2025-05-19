@@ -256,6 +256,15 @@ export const updateStudentStatus = async (
     
     if (fetchError) {
       console.error("Erro ao buscar dados do estudante:", fetchError);
+      
+      // Se for erro de não encontrar o estudante, mostrar mensagem específica
+      if (fetchError.code === "PGRST116") {
+        toast.error("Estudante não encontrado no banco de dados", {
+          description: "Tente recarregar a página ou verificar se o aluno foi excluído."
+        });
+        return;
+      }
+      
       throw fetchError;
     }
     
@@ -264,6 +273,8 @@ export const updateStudentStatus = async (
       toast.error("Erro ao atualizar status: estudante não encontrado");
       return;
     }
+    
+    console.log("Dados do estudante recuperados:", studentData);
     
     // Atualizar apenas o campo status
     const { error: updateError } = await supabase
@@ -286,6 +297,8 @@ export const updateStudentStatus = async (
           status: newStatus,
           updated_at: new Date().toISOString()
         };
+        
+        console.log("Tentando upsert com dados completos:", updatedStudent);
         
         const { error: upsertError } = await supabase
           .from('students')
