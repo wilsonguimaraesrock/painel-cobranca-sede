@@ -29,8 +29,8 @@ export async function getAvailableSheets(): Promise<string[]> {
 // Obtém dados da planilha para o mês selecionado
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
-    // Buscamos um intervalo maior para examinar a estrutura completa
-    const range = `${sheetName}!A1:J50`;
+    // Buscamos diretamente as linhas relevantes (a partir da linha 3)
+    const range = `${sheetName}!A1:H50`;
     
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
@@ -42,84 +42,72 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
     
     const data: SheetData = await response.json();
     
-    if (!data.values || data.values.length === 0) {
+    if (!data.values || data.values.length < 3) { // Pelo menos linha 1, 2 (cabeçalho) e 3 (primeiro aluno)
+      console.log("Dados insuficientes na planilha");
       return [];
     }
 
-    // Converter dados da planilha para objetos Student
+    console.log("Dados recebidos da API:", data.values);
+    
+    // Converter dados da planilha para objetos Student, começando da linha 3
+    // Sabemos que a linha 1 tem o título "INADIMPLENCIAS" 
+    // Linha 2 tem cabeçalhos: NOME, VALOR, VENCIMEN., etc
+    // Linha 3 em diante tem os dados dos alunos
     const students: Student[] = [];
     
-    // Encontrar a seção de alunos - geralmente após "RETIRADOS DA PLANILHA" ou onde tiver um cabeçalho claro
-    let startIndex = -1;
-    for (let i = 0; i < data.values.length; i++) {
+    // Começar da linha 3 (índice 2 no array)
+    for (let i = 2; i < data.values.length; i++) {
       const row = data.values[i];
-      if (row && row[0] === "RETIRADOS DA PLANILHA") {
-        // A próxima linha deve conter os cabeçalhos e depois começam os alunos
-        startIndex = i + 2; // Pulamos o "RETIRADOS DA PLANILHA" e a linha de cabeçalho
-        break;
-      }
       
-      // Alternativa: buscar linha com "NOME" na primeira coluna, que indica cabeçalho
-      if (row && row[0] === "NOME") {
-        startIndex = i + 1; // A próxima linha após "NOME" contém alunos
-        break;
-      }
-    }
-    
-    // Se não encontrarmos o marcador, tentamos buscar alunos pela estrutura de dados
-    if (startIndex === -1) {
-      for (let i = 13; i < data.values.length; i++) { // Começando da linha 14 (índice 13)
-        const row = data.values[i];
-        if (row && row.length >= 7) { // Verificar se tem dados suficientes para ser um aluno
-          // Verificar se a linha parece conter dados de aluno (nome, valor, data)
-          if (row[0] && row[1] && row[2]) {
-            const valorStr = row[1]?.toString() || "";
-            // Se a linha tem nome e o segundo campo parece ser um valor monetário (contém R$)
-            if (valorStr.includes("R$")) {
-              startIndex = i;
-              break;
-            }
-          }
-        }
-      }
-    }
-    
-    // Se ainda não encontramos o início, usamos uma abordagem padrão
-    if (startIndex === -1) {
-      startIndex = 14; // Começamos da linha 15 (índice 14) por padrão
-    }
-    
-    // Processar os dados dos alunos a partir do índice de início
-    for (let i = startIndex; i < data.values.length; i++) {
-      const row = data.values[i];
-      if (!row || !row[0] || row[0].trim() === "") continue; // Pula linhas vazias
+      // Verificar se a linha tem dados relevantes (ou seja, tem um nome)
+      if (!row || !row[0] || row[0].trim() === "") continue;
       
-      // Verificar se a linha tem formato de valor monetário na segunda coluna
-      const valorStr = row[1]?.toString() || "";
-      if (!valorStr.includes("R$")) continue; // Pula se não parece ser um aluno
+      // Verificar se chegamos ao fim da lista de alunos
+      // Muitas planilhas têm linhas em branco depois dos dados
+      if (i > 2 && (!row[1] || row[1].trim() === "")) continue;
       
-      // Determinar status baseado na lógica de negócios
-      // Por padrão, começam como inadimplentes
+      // Identificar o status inicial (por padrão, são inadimplentes)
       let status: Status = "inadimplente";
       
-      // Mapear valores da planilha para o objeto Student
+      // Extrair o valor e formatar corretamente
+      const valorString = row[1] || "";
+      const valor = valorString.replace(/[^\d,]/g, "").replace(",", ".");
+      
+      // Extrair dias de atraso (se aplicável)
+      let diasAtraso = 0;
+      if (row[0] && row[2]) {
+        // Calcular dias de atraso com base na data atual e data de vencimento
+        const partes = row[2]?.toString().split('/') || [];
+        if (partes.length === 2) {
+          const dia = parseInt(partes[0]);
+          const mes = parseInt(partes[1]) - 1; // Mês em JS é 0-based
+          const dataVencimento = new Date(2023, mes, dia); // Assumindo 2023
+          const hoje = new Date();
+          const diff = hoje.getTime() - dataVencimento.getTime();
+          diasAtraso = Math.floor(diff / (1000 * 60 * 60 * 24));
+          if (diasAtraso < 0) diasAtraso = 0;
+        }
+      }
+      
       const student: Student = {
         id: `student-${i}`,
         nome: row[0] || "",
-        curso: row[1] || "",
-        valor: parseFloat(valorStr.replace("R$", "").replace(".", "").replace(",", ".")) || 0,
+        curso: "", // Não temos o curso no exemplo da planilha
+        valor: parseFloat(valor) || 0,
         dataVencimento: row[2] || "",
-        diasAtraso: parseInt(row[3] ? row[3].replace(/\D/g, "") : "0", 10) || 0,
-        followUp: row[6] || "",
-        email: row[4] || "",
-        telefone: row[5] || "",
-        observacoes: row[5] || "",
+        diasAtraso: diasAtraso,
+        followUp: row[7] || "", // DATA DO FOLLOW está na coluna H (índice 7)
+        email: "", // Não temos o email na planilha atual
+        telefone: "", // Não temos o telefone na planilha atual
+        observacoes: row[6] || "", // OBSERVAÇÃO está na coluna G (índice 6)
         status
       };
       
+      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}`);
       students.push(student);
     }
     
+    console.log(`Total de alunos extraídos: ${students.length}`);
     return students;
   } catch (error) {
     console.error("Erro ao carregar dados da planilha:", error);

@@ -63,9 +63,6 @@ const StudentCard = ({ student, onStatusChange }: StudentCardProps) => {
       </CardHeader>
       <CardContent className="p-3 pt-1 text-sm">
         <div className="grid grid-cols-2 gap-1">
-          <div className="text-muted-foreground">Curso:</div>
-          <div className="font-medium truncate" title={student.curso}>{student.curso}</div>
-          
           <div className="text-muted-foreground">Valor:</div>
           <div className="font-medium">{formatCurrency(student.valor)}</div>
           
@@ -80,27 +77,13 @@ const StudentCard = ({ student, onStatusChange }: StudentCardProps) => {
             {student.followUp || "Pendente"}
           </div>
           
-          {student.email && (
+          {student.observacoes && (
             <>
-              <div className="text-muted-foreground">Email:</div>
-              <div className="font-medium truncate" title={student.email}>{student.email}</div>
-            </>
-          )}
-          
-          {student.telefone && (
-            <>
-              <div className="text-muted-foreground">Telefone:</div>
-              <div className="font-medium">{student.telefone}</div>
+              <div className="text-muted-foreground">Observações:</div>
+              <div className="font-medium">{student.observacoes}</div>
             </>
           )}
         </div>
-        
-        {student.observacoes && (
-          <div className="mt-2 border-t pt-1">
-            <div className="text-muted-foreground text-xs mb-1">Observações:</div>
-            <div className="text-xs italic">{student.observacoes}</div>
-          </div>
-        )}
         
         {!canAdvance && student.status !== "pagamento-feito" && (
           <div className="mt-2 text-xs text-red-500">
