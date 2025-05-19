@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/googleSheetsApi";
-import { ChevronLeft, ChevronRight, History } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Eye } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StudentCardProps {
   student: Student;
@@ -30,6 +31,7 @@ interface StudentCardProps {
 
 const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCardProps) => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   // Mapeia os status para os próximos status possíveis
   const nextStatusMap: Record<Status, Status> = {
@@ -78,6 +80,12 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
     }
   };
   
+  // Truncate observações text if it's too long
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return "";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+  
   // Formatar data para exibição
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -91,125 +99,212 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
 
   const hasHistory = student.statusHistory && student.statusHistory.length > 0;
 
+  // Handle card click - we want to either show details or advance status
+  const handleCardClick = () => {
+    setIsDetailsOpen(true);
+  };
+
   return (
-    <Card 
-      className="mb-3 cursor-pointer hover:shadow-md transition-shadow animate-card-move relative"
-      onClick={canAdvance ? handleMoveNext : undefined}
-    >
-      {/* Botão para retornar ao quadro anterior */}
-      {canReturn && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="absolute -top-2 -left-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
-          onClick={handleReturnToPrevious}
-          title="Retornar para o quadro anterior"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-      )}
-      
-      {/* Botão para mostrar histórico */}
-      {hasHistory && (
-        <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute -top-2 -right-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              title="Ver histórico de alterações"
-            >
-              <History className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]" onClick={e => e.stopPropagation()}>
-            <DialogHeader>
-              <DialogTitle>Histórico de alterações - {student.nome}</DialogTitle>
-            </DialogHeader>
-            
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>De</TableHead>
-                  <TableHead>Para</TableHead>
-                  <TableHead>Alterado por</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {student.statusHistory && student.statusHistory.map((history, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{formatDate(history.changedAt)}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[history.oldStatus]}>
-                        {statusDisplay[history.oldStatus]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[history.newStatus]}>
-                        {statusDisplay[history.newStatus]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{history.changedBy}</TableCell>
+    <>
+      <Card 
+        className="mb-3 cursor-pointer hover:shadow-md transition-shadow animate-card-move relative"
+        onClick={handleCardClick}
+      >
+        {/* Botão para retornar ao quadro anterior */}
+        {canReturn && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute -top-2 -left-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
+            onClick={handleReturnToPrevious}
+            title="Retornar para o quadro anterior"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+        
+        {/* Botão para mostrar histórico */}
+        {hasHistory && (
+          <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute -top-2 -right-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                title="Ver histórico de alterações"
+              >
+                <History className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]" onClick={e => e.stopPropagation()}>
+              <DialogHeader>
+                <DialogTitle>Histórico de alterações - {student.nome}</DialogTitle>
+              </DialogHeader>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>De</TableHead>
+                    <TableHead>Para</TableHead>
+                    <TableHead>Alterado por</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      <CardHeader className="p-3 pb-1">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-base font-bold truncate" title={student.nome}>
-            {student.nome}
-          </CardTitle>
-          <Badge className={statusColors[student.status]}>
-            {statusDisplay[student.status]}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="p-3 pt-1 text-sm">
-        <div className="grid grid-cols-2 gap-1">
-          <div className="text-muted-foreground">Valor:</div>
-          <div className="font-medium">{formatCurrency(student.valor)}</div>
-          
-          <div className="text-muted-foreground">Vencimento:</div>
-          <div className="font-medium">{student.dataVencimento}</div>
-          
-          <div className="text-muted-foreground">Dias em atraso:</div>
-          <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
-          
-          <div className="text-muted-foreground">Follow up:</div>
-          <div className={`font-medium ${!student.followUp ? 'text-destructive italic' : ''}`}>
-            {student.followUp || "Pendente"}
+                </TableHeader>
+                <TableBody>
+                  {student.statusHistory && student.statusHistory.map((history, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{formatDate(history.changedAt)}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[history.oldStatus]}>
+                          {statusDisplay[history.oldStatus]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[history.newStatus]}>
+                          {statusDisplay[history.newStatus]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{history.changedBy}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DialogContent>
+          </Dialog>
+        )}
+        
+        <CardHeader className="p-3 pb-1">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base font-bold truncate" title={student.nome}>
+              {student.nome}
+            </CardTitle>
+            <Badge className={statusColors[student.status]}>
+              {statusDisplay[student.status]}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3 pt-1 text-sm">
+          <div className="grid grid-cols-2 gap-1">
+            <div className="text-muted-foreground">Valor:</div>
+            <div className="font-medium">{formatCurrency(student.valor)}</div>
+            
+            <div className="text-muted-foreground">Vencimento:</div>
+            <div className="font-medium">{student.dataVencimento}</div>
+            
+            <div className="text-muted-foreground">Dias em atraso:</div>
+            <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
+            
+            <div className="text-muted-foreground">Follow up:</div>
+            <div className={`font-medium ${!student.followUp ? 'text-destructive italic' : ''}`}>
+              {student.followUp || "Pendente"}
+            </div>
+            
+            {student.observacoes && (
+              <>
+                <div className="text-muted-foreground">Observações:</div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="font-medium truncate" style={{ maxWidth: "120px" }}>
+                        {truncateText(student.observacoes, 15)}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{student.observacoes}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
           </div>
           
-          {student.observacoes && (
-            <>
-              <div className="text-muted-foreground">Observações:</div>
-              <div className="font-medium">{student.observacoes}</div>
-            </>
+          {!canAdvance && student.status !== "pagamento-feito" && (
+            <div className="mt-2 text-xs text-red-500">
+              Preencha o campo "follow up" para mover este aluno.
+            </div>
           )}
-        </div>
-        
-        {!canAdvance && student.status !== "pagamento-feito" && (
-          <div className="mt-2 text-xs text-red-500">
-            Preencha o campo "follow up" para mover este aluno.
+          
+          {canAdvance && student.status !== "pagamento-feito" && (
+            <div className="mt-2 text-xs text-blue-500 flex items-center justify-end">
+              <span>Clique para detalhes</span>
+              <Eye className="h-4 w-4 ml-1" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog de detalhes do aluno */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">{student.nome}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <Badge className={`${statusColors[student.status]} text-base py-1 px-3`}>
+                {statusDisplay[student.status]}
+              </Badge>
+              <span className="font-bold text-xl">{formatCurrency(student.valor)}</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Vencimento</div>
+                <div className="font-medium">{student.dataVencimento}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground">Dias em atraso</div>
+                <div className="font-medium text-kanban-overdue">{student.diasAtraso} dias</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground">Primeiro contato</div>
+                <div className="font-medium">{student.primeiroContato || "Não registrado"}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground">Último contato</div>
+                <div className="font-medium">{student.ultimoContato || "Não registrado"}</div>
+              </div>
+              
+              <div className="col-span-2">
+                <div className="text-sm text-muted-foreground">Follow up</div>
+                <div className={`font-medium ${!student.followUp ? 'text-destructive italic' : ''}`}>
+                  {student.followUp || "Pendente"}
+                </div>
+              </div>
+              
+              {student.observacoes && (
+                <div className="col-span-2">
+                  <div className="text-sm text-muted-foreground">Observações</div>
+                  <div className="font-medium">{student.observacoes}</div>
+                </div>
+              )}
+            </div>
+            
+            {canAdvance && student.status !== "pagamento-feito" && (
+              <div className="pt-4">
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    handleMoveNext();
+                    setIsDetailsOpen(false);
+                  }}
+                >
+                  Avançar para {statusDisplay[nextStatusMap[student.status]]}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-        
-        {canAdvance && student.status !== "pagamento-feito" && (
-          <div className="mt-2 text-xs text-blue-500 flex items-center justify-end">
-            <span>Clique para avançar</span>
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
