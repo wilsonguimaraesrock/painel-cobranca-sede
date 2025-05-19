@@ -4,6 +4,7 @@ import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateStudentStatus } from "@/services/supabaseService";
 
 interface KanbanBoardProps {
   students: Student[];
@@ -47,7 +48,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
   });
 
   // Função para alterar o status de um aluno para o próximo
-  const handleStatusChange = (studentId: string, newStatus: Status) => {
+  const handleStatusChange = async (studentId: string, newStatus: Status) => {
     const student = students.find(s => s.id === studentId);
     
     if (!student) return;
@@ -60,32 +61,50 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       return;
     }
     
-    // Adicionar entrada ao histórico
-    const statusHistory = student.statusHistory || [];
-    const historyEntry = {
-      oldStatus: student.status,
-      newStatus: newStatus,
-      changedBy: username || 'Usuário não identificado',
-      changedAt: new Date()
-    };
-    
-    // Atualizar o status
-    const updatedStudent = { 
-      ...student, 
-      status: newStatus,
-      statusHistory: [...statusHistory, historyEntry]
-    };
-    
-    onStudentUpdate(updatedStudent);
-    
-    // Mensagem de confirmação
-    toast.success(`Aluno movido com sucesso`, {
-      description: `${student.nome} foi movido para ${columns.find(c => c.id === newStatus)?.title}`
-    });
+    try {
+      // Salvar o status antigo para o histórico
+      const oldStatus = student.status;
+      
+      // Atualizar o status no Supabase
+      await updateStudentStatus(
+        studentId, 
+        oldStatus, 
+        newStatus, 
+        username || 'Usuário não identificado'
+      );
+      
+      // Adicionar entrada ao histórico
+      const statusHistory = student.statusHistory || [];
+      const historyEntry = {
+        oldStatus: student.status,
+        newStatus: newStatus,
+        changedBy: username || 'Usuário não identificado',
+        changedAt: new Date()
+      };
+      
+      // Atualizar o status local
+      const updatedStudent = { 
+        ...student, 
+        status: newStatus,
+        statusHistory: [...statusHistory, historyEntry]
+      };
+      
+      onStudentUpdate(updatedStudent);
+      
+      // Mensagem de confirmação
+      toast.success(`Aluno movido com sucesso`, {
+        description: `${student.nome} foi movido para ${columns.find(c => c.id === newStatus)?.title}`
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao mover o aluno", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+    }
   };
 
   // Função para retornar o aluno para o status anterior
-  const handleReturnToPreviousStatus = (studentId: string) => {
+  const handleReturnToPreviousStatus = async (studentId: string) => {
     const student = students.find(s => s.id === studentId);
     
     if (!student) return;
@@ -98,31 +117,46 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       return;
     }
     
-    // Obter o status anterior
-    const previousStatus = previousStatusMap[student.status];
-    
-    // Adicionar entrada ao histórico
-    const statusHistory = student.statusHistory || [];
-    const historyEntry = {
-      oldStatus: student.status,
-      newStatus: previousStatus,
-      changedBy: username || 'Usuário não identificado',
-      changedAt: new Date()
-    };
-    
-    // Atualizar o status
-    const updatedStudent = { 
-      ...student, 
-      status: previousStatus,
-      statusHistory: [...statusHistory, historyEntry]
-    };
-    
-    onStudentUpdate(updatedStudent);
-    
-    // Mensagem de confirmação
-    toast.success(`Aluno retornado com sucesso`, {
-      description: `${student.nome} foi movido para ${columns.find(c => c.id === previousStatus)?.title}`
-    });
+    try {
+      // Obter o status anterior
+      const previousStatus = previousStatusMap[student.status];
+      
+      // Atualizar o status no Supabase
+      await updateStudentStatus(
+        studentId, 
+        student.status, 
+        previousStatus, 
+        username || 'Usuário não identificado'
+      );
+      
+      // Adicionar entrada ao histórico
+      const statusHistory = student.statusHistory || [];
+      const historyEntry = {
+        oldStatus: student.status,
+        newStatus: previousStatus,
+        changedBy: username || 'Usuário não identificado',
+        changedAt: new Date()
+      };
+      
+      // Atualizar o status local
+      const updatedStudent = { 
+        ...student, 
+        status: previousStatus,
+        statusHistory: [...statusHistory, historyEntry]
+      };
+      
+      onStudentUpdate(updatedStudent);
+      
+      // Mensagem de confirmação
+      toast.success(`Aluno retornado com sucesso`, {
+        description: `${student.nome} foi movido para ${columns.find(c => c.id === previousStatus)?.title}`
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao mover o aluno", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+    }
   };
 
   return (

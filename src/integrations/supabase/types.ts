@@ -9,7 +9,98 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      status_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          id: string
+          new_status: string
+          old_status: string
+          student_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          id?: string
+          new_status: string
+          old_status: string
+          student_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          id?: string
+          new_status?: string
+          old_status?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string | null
+          curso: string | null
+          data_vencimento: string | null
+          dias_atraso: number | null
+          email: string | null
+          follow_up: string | null
+          id: string
+          mes: string
+          nome: string
+          observacoes: string | null
+          primeiro_contato: string | null
+          status: string
+          telefone: string | null
+          ultimo_contato: string | null
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string | null
+          curso?: string | null
+          data_vencimento?: string | null
+          dias_atraso?: number | null
+          email?: string | null
+          follow_up?: string | null
+          id?: string
+          mes: string
+          nome: string
+          observacoes?: string | null
+          primeiro_contato?: string | null
+          status?: string
+          telefone?: string | null
+          ultimo_contato?: string | null
+          updated_at?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string | null
+          curso?: string | null
+          data_vencimento?: string | null
+          dias_atraso?: number | null
+          email?: string | null
+          follow_up?: string | null
+          id?: string
+          mes?: string
+          nome?: string
+          observacoes?: string | null
+          primeiro_contato?: string | null
+          status?: string
+          telefone?: string | null
+          ultimo_contato?: string | null
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

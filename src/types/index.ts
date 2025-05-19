@@ -14,6 +14,7 @@ export interface Student {
   statusHistory?: StatusHistory[];
   primeiroContato?: string;
   ultimoContato?: string;
+  mes: string;
 }
 
 export type Status = "inadimplente" | "mensagem-enviada" | "resposta-recebida" | "pagamento-feito";

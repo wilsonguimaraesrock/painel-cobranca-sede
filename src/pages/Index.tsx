@@ -8,6 +8,7 @@ import KanbanBoard from "@/components/KanbanBoard";
 import UserStatus from "@/components/UserStatus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { saveStudents, getStudents, checkMonthData } from "@/services/supabaseService";
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -15,6 +16,7 @@ const Index = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
 
   // Carregar dados quando o mês muda
   useEffect(() => {
@@ -23,28 +25,53 @@ const Index = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getSheetData(selectedMonth);
         
-        // Inicializa todos os estudantes como "inadimplentes" por padrão
-        const initializedData = data.map(student => ({
-          ...student,
-          status: "inadimplente" as const
-        }));
+        // Verificar se já temos dados para este mês no banco de dados
+        const hasData = await checkMonthData(selectedMonth);
         
-        setStudents(initializedData);
-        setFilteredStudents([]);
-        setActiveFilter(null);
-        
-        toast.success(`Dados carregados com sucesso`, {
-          description: `${initializedData.length} alunos encontrados na planilha ${selectedMonth}`
-        });
+        if (hasData) {
+          // Carregar do banco de dados
+          setLoadingSource("database");
+          const dbStudents = await getStudents(selectedMonth);
+          
+          setStudents(dbStudents);
+          setFilteredStudents([]);
+          setActiveFilter(null);
+          
+          toast.success(`Dados carregados do banco de dados`, {
+            description: `${dbStudents.length} alunos encontrados para o mês ${selectedMonth}`
+          });
+        } else {
+          // Carregar da planilha e salvar no banco de dados
+          setLoadingSource("sheets");
+          const sheetsData = await getSheetData(selectedMonth);
+          
+          // Inicializa todos os estudantes como "inadimplentes" por padrão
+          const initializedData = sheetsData.map(student => ({
+            ...student,
+            status: "inadimplente" as const,
+            mes: selectedMonth
+          }));
+          
+          // Salvar no banco de dados
+          await saveStudents(initializedData, selectedMonth);
+          
+          setStudents(initializedData);
+          setFilteredStudents([]);
+          setActiveFilter(null);
+          
+          toast.success(`Dados carregados da planilha e salvos no banco`, {
+            description: `${initializedData.length} alunos encontrados para o mês ${selectedMonth}`
+          });
+        }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados da planilha", {
+        toast.error("Erro ao carregar dados", {
           description: "Verifique sua conexão e tente novamente."
         });
       } finally {
         setLoading(false);
+        setLoadingSource("");
       }
     };
 
@@ -92,7 +119,7 @@ const Index = () => {
   };
 
   // Função para atualizar um estudante específico
-  const handleStudentUpdate = (updatedStudent: Student) => {
+  const handleStudentUpdate = async (updatedStudent: Student) => {
     setStudents(prevStudents => 
       prevStudents.map(student => 
         student.id === updatedStudent.id ? updatedStudent : student
@@ -113,6 +140,13 @@ const Index = () => {
         
         return prevFiltered;
       });
+    }
+    
+    // Salvar no banco de dados (atualizando apenas o estudante atualizado)
+    try {
+      await saveStudents([updatedStudent], selectedMonth);
+    } catch (error) {
+      console.error("Erro ao salvar alterações no banco de dados:", error);
     }
   };
 
@@ -148,6 +182,7 @@ const Index = () => {
         {!loading && (
           <div className="text-sm text-gray-500">
             {students.length} alunos encontrados
+            {loadingSource && ` (${loadingSource === "database" ? "do banco de dados" : "da planilha"})`}
           </div>
         )}
       </div>
