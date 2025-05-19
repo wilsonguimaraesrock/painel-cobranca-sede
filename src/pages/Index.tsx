@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
@@ -30,6 +32,8 @@ const Index = () => {
         }));
         
         setStudents(initializedData);
+        setFilteredStudents([]);
+        setActiveFilter(null);
         
         toast.success(`Dados carregados com sucesso`, {
           description: `${initializedData.length} alunos encontrados na planilha ${selectedMonth}`
@@ -47,6 +51,46 @@ const Index = () => {
     fetchData();
   }, [selectedMonth]);
 
+  // Aplicar filtros com base na seleção de cartão
+  const handleFilterChange = (filterId: string | null) => {
+    if (!filterId) {
+      setFilteredStudents([]);
+      setActiveFilter(null);
+      return;
+    }
+    
+    let filtered: Student[] = [];
+    
+    switch(filterId) {
+      case 'all':
+        // Todos os alunos inadimplentes de qualquer categoria
+        filtered = students.filter(student => 
+          student.status === "inadimplente" || 
+          student.status === "mensagem-enviada" || 
+          student.status === "resposta-recebida"
+        );
+        break;
+      case 'ate5dias':
+        filtered = students.filter(student => student.diasAtraso <= 5);
+        break;
+      case 'ate10dias':
+        filtered = students.filter(student => student.diasAtraso > 5 && student.diasAtraso <= 10);
+        break;
+      case 'mais10dias':
+        filtered = students.filter(student => student.diasAtraso > 10);
+        break;
+      default:
+        filtered = [];
+    }
+    
+    setFilteredStudents(filtered);
+    setActiveFilter(filterId);
+    
+    toast.info(`Filtro aplicado: ${filterId}`, {
+      description: `Exibindo ${filtered.length} alunos`
+    });
+  };
+
   // Função para atualizar um estudante específico
   const handleStudentUpdate = (updatedStudent: Student) => {
     setStudents(prevStudents => 
@@ -54,6 +98,22 @@ const Index = () => {
         student.id === updatedStudent.id ? updatedStudent : student
       )
     );
+    
+    // Atualizar também os estudantes filtrados se o filtro estiver ativo
+    if (activeFilter) {
+      setFilteredStudents(prevFiltered => {
+        const studentInFiltered = prevFiltered.some(s => s.id === updatedStudent.id);
+        
+        // Se o estudante já estava nos filtrados, atualiza-o
+        if (studentInFiltered) {
+          return prevFiltered.map(student => 
+            student.id === updatedStudent.id ? updatedStudent : student
+          );
+        }
+        
+        return prevFiltered;
+      });
+    }
   };
 
   // Renderizar estados de carregamento
@@ -114,9 +174,15 @@ const Index = () => {
         </>
       ) : (
         <>
-          <Dashboard students={students} />
+          <Dashboard 
+            students={students} 
+            onFilterChange={handleFilterChange}
+            activeFilter={activeFilter}
+          />
           <KanbanBoard
             students={students}
+            filteredStudents={filteredStudents}
+            isFiltered={!!activeFilter}
             onStudentUpdate={handleStudentUpdate}
           />
         </>

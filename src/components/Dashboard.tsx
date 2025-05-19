@@ -2,12 +2,17 @@
 import { Student, DashboardMetrics } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/googleSheetsApi";
+import { Button } from "@/components/ui/button";
+import { DollarSign, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardProps {
   students: Student[];
+  onFilterChange: (filter: string | null) => void;
+  activeFilter: string | null;
 }
 
-const Dashboard = ({ students }: DashboardProps) => {
+const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) => {
   // Calcular métricas
   const metrics: DashboardMetrics = {
     total: 0,
@@ -16,8 +21,11 @@ const Dashboard = ({ students }: DashboardProps) => {
     mais10dias: 0
   };
   
-  // Valor total
+  // Valores totais por categoria
   let valorTotal = 0;
+  let valorAte5dias = 0;
+  let valorAte10dias = 0;
+  let valorMais10dias = 0;
   
   students.forEach(student => {
     if (student.status === "inadimplente" || student.status === "mensagem-enviada" || student.status === "resposta-recebida") {
@@ -26,10 +34,13 @@ const Dashboard = ({ students }: DashboardProps) => {
       
       if (student.diasAtraso <= 5) {
         metrics.ate5dias++;
+        valorAte5dias += student.valor;
       } else if (student.diasAtraso <= 10) {
         metrics.ate10dias++;
+        valorAte10dias += student.valor;
       } else {
         metrics.mais10dias++;
+        valorMais10dias += student.valor;
       }
     }
   });
@@ -37,39 +48,74 @@ const Dashboard = ({ students }: DashboardProps) => {
   // Cards para o dashboard
   const dashboardCards = [
     {
+      id: "all",
       title: "Total Inadimplentes",
       value: metrics.total,
-      description: `Valor total: ${formatCurrency(valorTotal)}`,
+      monetary: valorTotal,
+      description: `${formatCurrency(valorTotal)}`,
       color: "bg-gradient-to-r from-blue-500 to-blue-600"
     },
     {
+      id: "ate5dias",
       title: "Atraso até 5 dias",
       value: metrics.ate5dias,
-      description: `${((metrics.ate5dias / metrics.total) * 100).toFixed(1)}% do total`,
+      monetary: valorAte5dias,
+      description: `${((metrics.ate5dias / metrics.total) * 100).toFixed(1)}% - ${formatCurrency(valorAte5dias)}`,
       color: "bg-gradient-to-r from-yellow-400 to-yellow-500"
     },
     {
+      id: "ate10dias",
       title: "Atraso até 10 dias",
       value: metrics.ate10dias,
-      description: `${((metrics.ate10dias / metrics.total) * 100).toFixed(1)}% do total`,
+      monetary: valorAte10dias,
+      description: `${((metrics.ate10dias / metrics.total) * 100).toFixed(1)}% - ${formatCurrency(valorAte10dias)}`,
       color: "bg-gradient-to-r from-orange-500 to-orange-600"
     },
     {
+      id: "mais10dias",
       title: "Atraso > 10 dias",
       value: metrics.mais10dias,
-      description: `${((metrics.mais10dias / metrics.total) * 100).toFixed(1)}% do total`,
+      monetary: valorMais10dias,
+      description: `${((metrics.mais10dias / metrics.total) * 100).toFixed(1)}% - ${formatCurrency(valorMais10dias)}`,
       color: "bg-gradient-to-r from-red-500 to-red-600"
     }
   ];
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">Dashboard de Cobrança</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Dashboard de Cobrança</h2>
+        <div className="flex items-center gap-2">
+          {activeFilter && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onFilterChange(null)}
+              className="flex items-center gap-1"
+            >
+              <Filter size={14} />
+              Mostrar Todos
+            </Button>
+          )}
+          {activeFilter && (
+            <Badge variant="secondary" className="bg-primary/10">
+              Filtro ativo: {dashboardCards.find(c => c.id === activeFilter)?.title || 'Todos'}
+            </Badge>
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {dashboardCards.map((card, index) => (
-          <Card key={index} className={`dashboard-card ${card.color} text-white shadow-lg`}>
+        {dashboardCards.map((card) => (
+          <Card 
+            key={card.id} 
+            className={`dashboard-card ${card.color} text-white shadow-lg hover:shadow-xl transition-all cursor-pointer ${activeFilter === card.id ? 'ring-4 ring-white/50' : ''}`} 
+            onClick={() => onFilterChange(card.id)}
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{card.title}</CardTitle>
+              <CardTitle className="text-lg flex items-center justify-between">
+                {card.title}
+                <DollarSign size={18} className="opacity-80" />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{card.value}</p>

@@ -8,10 +8,15 @@ import { useAuth } from "@/contexts/AuthContext";
 interface KanbanBoardProps {
   students: Student[];
   onStudentUpdate: (updatedStudent: Student) => void;
+  filteredStudents?: Student[];
+  isFiltered: boolean;
 }
 
-const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
+const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }: KanbanBoardProps) => {
   const { username } = useAuth();
+  
+  // Usar os estudantes filtrados ou todos os estudantes
+  const studentsToShow = isFiltered && filteredStudents ? filteredStudents : students;
   
   // Definição das colunas do Kanban
   const columns: { id: Status; title: string; color: string }[] = [
@@ -37,7 +42,7 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
     "pagamento-feito": []
   };
 
-  students.forEach(student => {
+  studentsToShow.forEach(student => {
     studentsByStatus[student.status].push(student);
   });
 
@@ -122,7 +127,14 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
 
   return (
     <div className="w-full overflow-hidden">
-      <h2 className="text-2xl font-bold mb-4">Quadro de Cobrança</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Quadro de Cobrança</h2>
+        {isFiltered && (
+          <div className="text-sm text-gray-500">
+            Exibindo {studentsToShow.length} de {students.length} alunos
+          </div>
+        )}
+      </div>
       <div className="flex gap-4 overflow-x-auto pb-4">
         {columns.map(column => (
           <div 
