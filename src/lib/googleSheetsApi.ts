@@ -51,6 +51,19 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
 
     console.log("Dados recebidos da API:", data.values);
     
+    // Lista específica de nomes válidos para a aba MAIO
+    const validNamesForMaio = [
+      "Jennifer Coelho",
+      "Marcela Nascimento",
+      "Bryan Haag",
+      "Julcemar Martins", 
+      "Samuel Henrique",
+      "Wesley Delmiro",
+      "Bruno Gabriel",
+      "Gisele Andrade",
+      "Thayná dos Prazeres"
+    ];
+    
     // Array para armazenar os alunos
     const students: Student[] = [];
     
@@ -76,6 +89,14 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
       
       // Verificar se a linha tem dados válidos (nome e valor)
       if (!row || !row[0] || row[0].trim() === "" || !row[1]) {
+        continue;
+      }
+      
+      const nome = row[0].trim();
+      
+      // Para a aba MAIO, verificar se o nome está na lista de nomes válidos
+      if (sheetName === "MAIO" && !validNamesForMaio.includes(nome)) {
+        console.log(`Nome ignorado: ${nome} - não está na lista de nomes válidos para MAIO`);
         continue;
       }
       
@@ -115,7 +136,7 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
       // Criar o objeto aluno
       const student: Student = {
         id: `student-${i}`,
-        nome: row[0],
+        nome: nome,
         curso: "", // Não temos essa informação na planilha
         valor: isNaN(valor) ? 0 : valor,
         dataVencimento: row[2] || "",
