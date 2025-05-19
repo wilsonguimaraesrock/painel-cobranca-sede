@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,14 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Verificar se já está logado ao carregar a página
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (isLoggedIn) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
+
   // Hardcoded credentials
   const validCredentials: UserCredential[] = [
     { username: "wadevengaADM", password: "Salmos2714" },
@@ -28,6 +36,9 @@ const LoginPage = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Limpar erro anterior
+    setError("");
     
     // Verify credentials
     const isValid = validCredentials.some(
@@ -44,8 +55,11 @@ const LoginPage = () => {
         description: `Bem-vindo(a), ${username}!`
       });
       
-      // Redirect to main page - ensuring we use navigate instead of window.location
-      navigate("/");
+      // Redirect to main page using navigate WITH replace
+      // We use a small timeout to ensure the toast is shown before redirect
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 100);
     } else {
       setError("Usuário ou senha inválidos");
     }
