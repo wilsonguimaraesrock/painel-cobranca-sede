@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   nome: string;
@@ -11,9 +10,17 @@ export interface Student {
   telefone: string;
   observacoes: string;
   status: Status;
+  statusHistory?: StatusHistory[];
 }
 
 export type Status = "inadimplente" | "mensagem-enviada" | "resposta-recebida" | "pagamento-feito";
+
+export interface StatusHistory {
+  oldStatus: Status;
+  newStatus: Status;
+  changedBy: string;
+  changedAt: Date;
+}
 
 export interface SheetData {
   range: string;

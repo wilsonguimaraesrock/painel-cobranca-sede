@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface KanbanBoardProps {
   students: Student[];
@@ -10,6 +11,8 @@ interface KanbanBoardProps {
 }
 
 const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
+  const { username } = useAuth();
+  
   // Definição das colunas do Kanban
   const columns: { id: Status; title: string; color: string }[] = [
     { id: "inadimplente", title: "Alunos Inadimplentes", color: "bg-kanban-overdue" },
@@ -52,8 +55,22 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
       return;
     }
     
+    // Adicionar entrada ao histórico
+    const statusHistory = student.statusHistory || [];
+    const historyEntry = {
+      oldStatus: student.status,
+      newStatus: newStatus,
+      changedBy: username || 'Usuário não identificado',
+      changedAt: new Date()
+    };
+    
     // Atualizar o status
-    const updatedStudent = { ...student, status: newStatus };
+    const updatedStudent = { 
+      ...student, 
+      status: newStatus,
+      statusHistory: [...statusHistory, historyEntry]
+    };
+    
     onStudentUpdate(updatedStudent);
     
     // Mensagem de confirmação
@@ -79,8 +96,22 @@ const KanbanBoard = ({ students, onStudentUpdate }: KanbanBoardProps) => {
     // Obter o status anterior
     const previousStatus = previousStatusMap[student.status];
     
+    // Adicionar entrada ao histórico
+    const statusHistory = student.statusHistory || [];
+    const historyEntry = {
+      oldStatus: student.status,
+      newStatus: previousStatus,
+      changedBy: username || 'Usuário não identificado',
+      changedAt: new Date()
+    };
+    
     // Atualizar o status
-    const updatedStudent = { ...student, status: previousStatus };
+    const updatedStudent = { 
+      ...student, 
+      status: previousStatus,
+      statusHistory: [...statusHistory, historyEntry]
+    };
+    
     onStudentUpdate(updatedStudent);
     
     // Mensagem de confirmação

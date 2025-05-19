@@ -1,10 +1,26 @@
 
-import { Student, Status } from "@/types";
+import { Student, Status, StatusHistory } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/googleSheetsApi";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface StudentCardProps {
   student: Student;
@@ -13,6 +29,8 @@ interface StudentCardProps {
 }
 
 const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCardProps) => {
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  
   // Mapeia os status para os próximos status possíveis
   const nextStatusMap: Record<Status, Status> = {
     "inadimplente": "mensagem-enviada",
@@ -59,6 +77,19 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
       onReturnToPrevious(student.id);
     }
   };
+  
+  // Formatar data para exibição
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(date));
+  };
+
+  const hasHistory = student.statusHistory && student.statusHistory.length > 0;
 
   return (
     <Card 
@@ -76,6 +107,59 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious }: StudentCar
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
+      )}
+      
+      {/* Botão para mostrar histórico */}
+      {hasHistory && (
+        <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute -top-2 -right-2 rounded-full p-0 h-8 w-8 bg-white border-gray-300 shadow-sm z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              title="Ver histórico de alterações"
+            >
+              <History className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]" onClick={e => e.stopPropagation()}>
+            <DialogHeader>
+              <DialogTitle>Histórico de alterações - {student.nome}</DialogTitle>
+            </DialogHeader>
+            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>De</TableHead>
+                  <TableHead>Para</TableHead>
+                  <TableHead>Alterado por</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {student.statusHistory && student.statusHistory.map((history, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{formatDate(history.changedAt)}</TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[history.oldStatus]}>
+                        {statusDisplay[history.oldStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[history.newStatus]}>
+                        {statusDisplay[history.newStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{history.changedBy}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </DialogContent>
+        </Dialog>
       )}
       
       <CardHeader className="p-3 pb-1">

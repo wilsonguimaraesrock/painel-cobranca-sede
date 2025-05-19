@@ -1,5 +1,4 @@
-
-import { Student, SheetData, Status } from "@/types";
+import { Student, SheetData, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
 
 // API Key and Spreadsheet ID
@@ -159,7 +158,8 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         email: "", // Não temos na planilha
         telefone: "", // Não temos na planilha
         observacoes: row[6] || "", // OBSERVAÇÃO está na coluna G (índice 6)
-        status: "inadimplente" as Status
+        status: "inadimplente" as Status,
+        statusHistory: [] // Inicializa o histórico de status vazio
       };
       
       console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}`);
