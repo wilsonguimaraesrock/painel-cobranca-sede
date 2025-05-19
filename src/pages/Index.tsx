@@ -37,21 +37,25 @@ const Index = () => {
           return;
         }
         
+        console.log(`Carregados ${sheetsData.length} alunos da planilha para o mês ${selectedMonth}`);
+        
         // Verificar se já existem dados no banco para este mês
         const hasData = await checkMonthData(selectedMonth);
+        console.log(`Dados existentes no banco para o mês ${selectedMonth}: ${hasData}`);
         
         if (hasData) {
           // Se existem dados no banco, carregamos para ter as informações de status mais atualizadas
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
+          console.log(`Carregados ${dbStudents.length} alunos do banco para o mês ${selectedMonth}`);
           
           if (dbStudents.length > 0) {
             // Mesclar dados da planilha com status do banco
             const mergedStudents = sheetsData.map(sheetStudent => {
-              const dbStudent = dbStudents.find(db => 
-                db.nome === sheetStudent.nome && 
-                db.valor === sheetStudent.valor && 
-                db.dataVencimento === sheetStudent.dataVencimento
+              const dbStudent = dbStudents.find(db => db.id === sheetStudent.id || 
+                (db.nome === sheetStudent.nome && 
+                 db.valor === sheetStudent.valor && 
+                 db.dataVencimento === sheetStudent.dataVencimento)
               );
               
               if (dbStudent) {
@@ -71,6 +75,7 @@ const Index = () => {
               return sheetStudent;
             });
             
+            console.log(`Mesclados ${mergedStudents.length} alunos para o mês ${selectedMonth}`);
             setStudents(mergedStudents);
             
             // Salvar dados mesclados no banco
@@ -156,6 +161,9 @@ const Index = () => {
 
   // Função para atualizar um estudante específico
   const handleStudentUpdate = async (updatedStudent: Student) => {
+    console.log(`Atualizando estudante ${updatedStudent.id} com status ${updatedStudent.status}`);
+    
+    // Atualizar o estado local primeiro
     setStudents(prevStudents => 
       prevStudents.map(student => 
         student.id === updatedStudent.id ? updatedStudent : student
@@ -180,7 +188,9 @@ const Index = () => {
     
     // Salvar no banco de dados
     try {
+      console.log(`Salvando atualização do estudante ${updatedStudent.id} no banco`);
       await saveStudents([updatedStudent], selectedMonth);
+      console.log(`Estudante ${updatedStudent.id} salvo com sucesso`);
     } catch (error) {
       console.error("Erro ao salvar alterações no banco de dados:", error);
     }

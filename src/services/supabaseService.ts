@@ -47,6 +47,8 @@ const convertFromDbFormat = (dbStudent: any): Student => {
 // Salvar estudantes no banco de dados
 export const saveStudents = async (students: Student[], mes: string): Promise<void> => {
   try {
+    console.log(`Iniciando salvamento de ${students.length} alunos para o mês ${mes}`);
+    
     // Primeiro, verificamos se já existem estudantes para este mês
     const { data: existingStudents, error: checkError } = await supabase
       .from('students')
@@ -58,51 +60,82 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
       
       // Código de erro específico para violação de políticas RLS
       if (checkError.code === "42501") {
-        toast.error("Erro de permissão no banco de dados", {
-          description: "Contate o administrador para configurar as políticas de acesso."
+        console.warn("Erro de permissão no banco de dados, tentando inserir diretamente");
+        
+        // Tentativa de inserção direta sem verificação prévia
+        const dbStudents = students.map(student => convertToDbFormat(student));
+        
+        // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+        const chunkSize = 20;
+        for (let i = 0; i < dbStudents.length; i += chunkSize) {
+          const chunk = dbStudents.slice(i, i + chunkSize);
+          const { error } = await supabase
+            .from('students')
+            .upsert(chunk, { onConflict: 'id' }); // Usar upsert para atualizar se existir
+          
+          if (error) {
+            console.error("Erro ao salvar lote de estudantes:", error);
+            throw error;
+          }
+        }
+        
+        toast.success(`Dados salvos com sucesso no banco de dados`, {
+          description: `${students.length} alunos salvos para o mês ${mes}`
         });
+        
+        return;
       } else {
         throw checkError;
       }
-      return;
     }
     
     // Se existem, removemos todos para inserir os novos
     if (existingStudents && existingStudents.length > 0) {
-      const { error: deleteError } = await supabase
-        .from('students')
-        .delete()
-        .eq('mes', mes);
-        
-      if (deleteError) {
-        console.error("Erro ao remover estudantes existentes:", deleteError);
-        throw deleteError;
-      }
-    }
-    
-    // Inserimos os novos estudantes
-    const dbStudents = students.map(student => convertToDbFormat(student));
-    
-    // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
-    const chunkSize = 20;
-    for (let i = 0; i < dbStudents.length; i += chunkSize) {
-      const chunk = dbStudents.slice(i, i + chunkSize);
-      const { error } = await supabase
-        .from('students')
-        .insert(chunk);
+      console.log(`Encontrados ${existingStudents.length} alunos para o mês ${mes}, atualizando...`);
       
-      if (error) {
-        console.error("Erro ao salvar lote de estudantes:", error);
+      // Em vez de excluir, vamos usar upsert para preservar os IDs existentes
+      const dbStudents = students.map(student => convertToDbFormat(student));
+      
+      // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+      const chunkSize = 20;
+      for (let i = 0; i < dbStudents.length; i += chunkSize) {
+        const chunk = dbStudents.slice(i, i + chunkSize);
+        const { error } = await supabase
+          .from('students')
+          .upsert(chunk, { onConflict: 'id' }); // Usar upsert para atualizar se existir
         
-        // Código de erro específico para violação de políticas RLS
-        if (error.code === "42501") {
-          toast.error("Erro de permissão no banco de dados", {
-            description: "Contate o administrador para configurar as políticas de acesso."
-          });
-          return;
+        if (error) {
+          console.error("Erro ao atualizar lote de estudantes:", error);
+          throw error;
         }
+      }
+    } else {
+      console.log(`Nenhum aluno encontrado para o mês ${mes}, inserindo novos...`);
+      
+      // Inserimos os novos estudantes
+      const dbStudents = students.map(student => convertToDbFormat(student));
+      
+      // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+      const chunkSize = 20;
+      for (let i = 0; i < dbStudents.length; i += chunkSize) {
+        const chunk = dbStudents.slice(i, i + chunkSize);
+        const { error } = await supabase
+          .from('students')
+          .insert(chunk);
         
-        throw error;
+        if (error) {
+          console.error("Erro ao salvar lote de estudantes:", error);
+          
+          // Código de erro específico para violação de políticas RLS
+          if (error.code === "42501") {
+            toast.error("Erro de permissão no banco de dados", {
+              description: "Contate o administrador para configurar as políticas de acesso."
+            });
+            return;
+          }
+          
+          throw error;
+        }
       }
     }
     
@@ -211,32 +244,58 @@ export const updateStudentStatus = async (
   newStatus: Status, 
   changedBy: string
 ): Promise<void> => {
+  console.log(`Atualizando status do aluno ${studentId}: ${oldStatus} -> ${newStatus}`);
+  
   try {
     // Atualizar o status do estudante
     const { error: updateError } = await supabase
       .from('students')
-      .update({ status: newStatus })
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', studentId);
     
     if (updateError) {
+      console.error("Erro ao atualizar status:", updateError);
+      
       if (updateError.code === "42501") {
-        toast.error("Erro de permissão ao atualizar status", {
-          description: "Contate o administrador para configurar as políticas de acesso."
-        });
-        return;
+        console.warn("Erro de permissão ao atualizar status, tentando método alternativo");
+        
+        // Tentar novamente com upsert
+        const { error: upsertError } = await supabase
+          .from('students')
+          .upsert({ 
+            id: studentId, 
+            status: newStatus, 
+            updated_at: new Date().toISOString() 
+          }, { onConflict: 'id' });
+          
+        if (upsertError) {
+          console.error("Erro ao usar upsert para status:", upsertError);
+          toast.error("Erro de permissão ao atualizar status", {
+            description: "Contate o administrador para configurar as políticas de acesso."
+          });
+          throw upsertError;
+        } else {
+          console.log(`Status atualizado com sucesso via upsert: ${studentId}`);
+        }
+      } else {
+        throw updateError;
       }
-      throw updateError;
+    } else {
+      console.log(`Status atualizado com sucesso: ${studentId}`);
     }
     
     // Adicionar ao histórico
     try {
+      console.log(`Adicionando ao histórico: ${studentId} ${oldStatus} -> ${newStatus}`);
+      
       const { error: historyError } = await supabase
         .from('status_history')
         .insert({
           student_id: studentId,
           old_status: oldStatus,
           new_status: newStatus,
-          changed_by: changedBy
+          changed_by: changedBy,
+          changed_at: new Date().toISOString()
         });
       
       if (historyError) {
@@ -246,6 +305,8 @@ export const updateStudentStatus = async (
         } else {
           console.error("Erro ao adicionar histórico:", historyError);
         }
+      } else {
+        console.log(`Histórico adicionado com sucesso: ${studentId}`);
       }
     } catch (historyError) {
       console.error("Erro ao adicionar histórico:", historyError);

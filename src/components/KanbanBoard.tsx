@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
@@ -16,9 +16,16 @@ interface KanbanBoardProps {
 const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }: KanbanBoardProps) => {
   const { username } = useAuth();
   const [processingStudentId, setProcessingStudentId] = useState<string | null>(null);
+  const [localStudents, setLocalStudents] = useState<Student[]>([]);
   
-  // Usar os estudantes filtrados ou todos os estudantes
-  const studentsToShow = isFiltered && filteredStudents ? filteredStudents : students;
+  // Sincronizar o estado local com as props
+  useEffect(() => {
+    const studentsToShow = isFiltered && filteredStudents ? filteredStudents : students;
+    setLocalStudents(studentsToShow);
+  }, [students, filteredStudents, isFiltered]);
+  
+  // Usar os estudantes locais para exibição
+  const studentsToShow = localStudents;
   
   // Definição das colunas do Kanban
   const columns: { id: Status; title: string; color: string }[] = [
@@ -48,16 +55,31 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     studentsByStatus[student.status].push(student);
   });
 
+  // Função para atualizar o estado local
+  const updateLocalStudent = (updatedStudent: Student) => {
+    setLocalStudents(prev => 
+      prev.map(student => 
+        student.id === updatedStudent.id ? updatedStudent : student
+      )
+    );
+  };
+
   // Função para alterar o status de um aluno para o próximo
   const handleStatusChange = async (studentId: string, newStatus: Status) => {
+    console.log(`handleStatusChange chamado para aluno ${studentId}, novo status: ${newStatus}`);
+    
     // Evitar múltiplas chamadas simultâneas para o mesmo estudante
-    if (processingStudentId === studentId) return;
+    if (processingStudentId === studentId) {
+      console.log(`Aluno ${studentId} já está sendo processado, ignorando`);
+      return;
+    }
     
     setProcessingStudentId(studentId);
     
     const student = students.find(s => s.id === studentId);
     
     if (!student) {
+      console.log(`Aluno ${studentId} não encontrado`);
       setProcessingStudentId(null);
       return;
     }
@@ -91,8 +113,13 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         statusHistory: [...statusHistory, historyEntry]
       };
       
-      // Atualizar a UI primeiro para feedback imediato
+      // Atualizar estado local primeiro para feedback imediato
+      updateLocalStudent(updatedStudent);
+      
+      // Atualizar a UI do componente pai
       onStudentUpdate(updatedStudent);
+      
+      console.log(`Atualizando status no banco de dados para aluno ${studentId}`);
       
       // Agora atualizar no banco de dados
       await updateStudentStatus(
@@ -113,6 +140,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       // Reverter para o status anterior no caso de erro
       const originalStudent = students.find(s => s.id === studentId);
       if (originalStudent) {
+        updateLocalStudent({...originalStudent});
         onStudentUpdate({...originalStudent});
       }
       
@@ -126,14 +154,20 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
 
   // Função para retornar o aluno para o status anterior
   const handleReturnToPreviousStatus = async (studentId: string) => {
+    console.log(`handleReturnToPreviousStatus chamado para aluno ${studentId}`);
+    
     // Evitar múltiplas chamadas simultâneas para o mesmo estudante
-    if (processingStudentId === studentId) return;
+    if (processingStudentId === studentId) {
+      console.log(`Aluno ${studentId} já está sendo processado, ignorando`);
+      return;
+    }
     
     setProcessingStudentId(studentId);
     
     const student = students.find(s => s.id === studentId);
     
     if (!student) {
+      console.log(`Aluno ${studentId} não encontrado`);
       setProcessingStudentId(null);
       return;
     }
@@ -167,8 +201,13 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         statusHistory: [...statusHistory, historyEntry]
       };
       
-      // Atualizar a UI primeiro para feedback imediato
+      // Atualizar estado local primeiro para feedback imediato
+      updateLocalStudent(updatedStudent);
+      
+      // Atualizar a UI do componente pai
       onStudentUpdate(updatedStudent);
+      
+      console.log(`Atualizando status no banco de dados para aluno ${studentId} (retorno)`);
       
       // Agora atualizar no banco de dados
       await updateStudentStatus(
@@ -188,6 +227,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       // Reverter para o status anterior no caso de erro
       const originalStudent = students.find(s => s.id === studentId);
       if (originalStudent) {
+        updateLocalStudent({...originalStudent});
         onStudentUpdate({...originalStudent});
       }
       

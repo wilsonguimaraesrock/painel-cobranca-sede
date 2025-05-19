@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/googleSheetsApi";
 import { ChevronLeft, ChevronRight, History, Eye, Calendar } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,11 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editedStudent, setEditedStudent] = useState<Student>({...student});
   
+  // Atualizar o estudante editado sempre que as props mudarem
+  useEffect(() => {
+    setEditedStudent({...student});
+  }, [student]);
+  
   // Mapeia os status para os próximos status possíveis
   const nextStatusMap: Record<Status, Status> = {
     "inadimplente": "mensagem-enviada",
@@ -64,11 +69,13 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   
   const handleMoveNext = () => {
     if (!canAdvance) {
+      toast.error("O campo 'Follow Up' precisa ser preenchido");
       return;
     }
     
     const nextStatus = nextStatusMap[student.status];
     if (nextStatus !== student.status) {
+      console.log(`Movendo aluno ${student.id} para ${nextStatus}`);
       onStatusChange(student.id, nextStatus);
     }
   };
@@ -79,6 +86,7 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   const handleReturnToPrevious = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita que o evento de clique do cartão seja acionado
     if (canReturn) {
+      console.log(`Retornando aluno ${student.id} para status anterior`);
       onReturnToPrevious(student.id);
     }
   };
@@ -103,6 +111,7 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   // Função para atualizar os dados do aluno
   const handleUpdateStudentData = () => {
     if (onStudentUpdate) {
+      console.log(`Atualizando dados do aluno ${student.id} via detalhes`);
       onStudentUpdate(editedStudent);
       toast.success("Dados do aluno atualizados");
       setIsDetailsOpen(false);
