@@ -1,6 +1,6 @@
-
 import { Student, SheetData, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 // API Key and Spreadsheet ID
 const API_KEY = "AIzaSyDXMSnzWko3pVk4VTV2OYKY2HYN89dM130";
@@ -147,9 +147,9 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         }
       }
       
-      // Criar o objeto aluno - IMPORTANTE: adicionar o 'mes' ao objeto
+      // Criar o objeto aluno - IMPORTANTE: Gerar um UUID válido para o ID
       const student: Student = {
-        id: `student-${i}`,
+        id: uuidv4(), // Gerando UUID válido para uso com Supabase
         nome: nome,
         curso: "", // Não temos essa informação na planilha
         valor: isNaN(valor) ? 0 : valor,
@@ -166,7 +166,7 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         mes: sheetName // Adicionamos o mês corretamente aqui
       };
       
-      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}, primeiro contato: ${student.primeiroContato}, último contato: ${student.ultimoContato}, mês: ${student.mes}`);
+      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}, primeiro contato: ${student.primeiroContato}, último contato: ${student.ultimoContato}, mês: ${student.mes}, id: ${student.id}`);
       students.push(student);
     }
     

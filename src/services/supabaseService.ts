@@ -6,6 +6,7 @@ import { toast } from "sonner";
 // Converter um objeto Student do formato da aplicação para o formato do banco de dados
 const convertToDbFormat = (student: Student) => {
   return {
+    id: student.id, // Usar o UUID gerado
     nome: student.nome,
     curso: student.curso || "",
     valor: student.valor,
@@ -60,16 +61,21 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
     }
     
     // Inserimos os novos estudantes
-    const dbStudents = students.map(student => ({
-      ...convertToDbFormat(student),
-      mes: mes
-    }));
+    const dbStudents = students.map(student => convertToDbFormat(student));
     
-    const { error } = await supabase
-      .from('students')
-      .insert(dbStudents);
-    
-    if (error) throw error;
+    // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
+    const chunkSize = 20;
+    for (let i = 0; i < dbStudents.length; i += chunkSize) {
+      const chunk = dbStudents.slice(i, i + chunkSize);
+      const { error } = await supabase
+        .from('students')
+        .insert(chunk);
+      
+      if (error) {
+        console.error("Erro ao salvar lote de estudantes:", error);
+        throw error;
+      }
+    }
     
     toast.success(`Dados salvos com sucesso no banco de dados`, {
       description: `${students.length} alunos salvos para o mês ${mes}`
