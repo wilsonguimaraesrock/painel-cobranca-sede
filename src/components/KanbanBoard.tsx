@@ -272,6 +272,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
                     student={student}
                     onStatusChange={handleStatusChange}
                     onReturnToPrevious={handleReturnToPreviousStatus}
+                    onStudentUpdate={onStudentUpdate}
                   />
                 ))
               ) : (

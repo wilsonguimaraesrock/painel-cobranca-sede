@@ -112,8 +112,17 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
   const handleUpdateStudentData = () => {
     if (onStudentUpdate) {
       console.log(`Atualizando dados do aluno ${student.id} via detalhes`);
-      onStudentUpdate(editedStudent);
-      toast.success("Dados do aluno atualizados");
+      
+      // Verificar se houve mudanças
+      const hasChanges = JSON.stringify(editedStudent) !== JSON.stringify(student);
+      
+      if (hasChanges) {
+        onStudentUpdate(editedStudent);
+        toast.success("Dados do aluno atualizados");
+      } else {
+        toast.info("Nenhuma mudança detectada");
+      }
+      
       setIsDetailsOpen(false);
     }
   };

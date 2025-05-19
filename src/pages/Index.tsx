@@ -193,6 +193,9 @@ const Index = () => {
       console.log(`Estudante ${updatedStudent.id} salvo com sucesso`);
     } catch (error) {
       console.error("Erro ao salvar alterações no banco de dados:", error);
+      toast.error("Erro ao salvar alterações", {
+        description: "Não foi possível salvar as alterações no banco de dados."
+      });
     }
   };
 

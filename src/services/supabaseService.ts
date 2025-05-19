@@ -247,10 +247,31 @@ export const updateStudentStatus = async (
   console.log(`Atualizando status do aluno ${studentId}: ${oldStatus} -> ${newStatus}`);
   
   try {
-    // Atualizar o status do estudante
+    // Primeiro precisamos obter todos os dados do estudante para fazer update/upsert corretamente
+    const { data: studentData, error: fetchError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Erro ao buscar dados do estudante:", fetchError);
+      throw fetchError;
+    }
+    
+    if (!studentData) {
+      console.error(`Estudante com ID ${studentId} não encontrado`);
+      toast.error("Erro ao atualizar status: estudante não encontrado");
+      return;
+    }
+    
+    // Atualizar apenas o campo status
     const { error: updateError } = await supabase
       .from('students')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .update({ 
+        status: newStatus, 
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', studentId);
     
     if (updateError) {
@@ -259,14 +280,16 @@ export const updateStudentStatus = async (
       if (updateError.code === "42501") {
         console.warn("Erro de permissão ao atualizar status, tentando método alternativo");
         
-        // Tentar novamente com upsert
+        // Atualizar todos os campos necessários do estudante no upsert
+        const updatedStudent = {
+          ...studentData,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        };
+        
         const { error: upsertError } = await supabase
           .from('students')
-          .upsert({ 
-            id: studentId, 
-            status: newStatus, 
-            updated_at: new Date().toISOString() 
-          }, { onConflict: 'id' });
+          .upsert(updatedStudent, { onConflict: 'id' });
           
         if (upsertError) {
           console.error("Erro ao usar upsert para status:", upsertError);
