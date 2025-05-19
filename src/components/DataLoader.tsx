@@ -11,11 +11,19 @@ interface DataLoaderProps {
 }
 
 const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoaderProps) => {
+  // Coloque todos os hooks no topo do componente
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
+  const [isMounted, setIsMounted] = useState(true);
 
+  // Efeito único para limpar ao desmontar
   useEffect(() => {
-    let isMounted = true;
-    
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  // Efeito para carregar dados quando o mês muda
+  useEffect(() => {
     const fetchData = async () => {
       if (!selectedMonth) return;
       
@@ -74,12 +82,7 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
     };
 
     fetchData();
-    
-    // Cleanup function to prevent state updates after unmounting
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedMonth, onDataLoaded, onLoadingChange]);
+  }, [selectedMonth, onDataLoaded, onLoadingChange, isMounted]);
 
   return null;
 };

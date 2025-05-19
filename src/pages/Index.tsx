@@ -15,7 +15,7 @@ import { saveStudents } from "@/services/supabaseService";
 import { toast } from "sonner";
 
 const Index = () => {
-  // All state hooks at the beginning, never conditionally
+  // Todos os hooks de estado no início
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -34,7 +34,7 @@ const Index = () => {
     setLoadingSource(source);
   };
 
-  // Debug logging effect - placed before other effects
+  // Efeito para log de debug - colocado antes de outros efeitos
   useEffect(() => {
     if (!loading && students.length > 0) {
       console.log("Estado atual - Total de alunos:", students.length);
@@ -100,7 +100,6 @@ const Index = () => {
     
     switch(filterId) {
       case 'all':
-        // Todos os alunos inadimplentes de qualquer categoria
         filtered = students.filter(student => 
           student.status === "inadimplente" || 
           student.status === "mensagem-enviada" || 
@@ -152,7 +151,7 @@ const Index = () => {
     }
   };
 
-  // Renderização do componente
+  // Função de renderização condicional do conteúdo
   const renderContent = () => {
     // Renderização condicional para quando não há mês selecionado
     if (!selectedMonth) {
