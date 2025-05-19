@@ -5,6 +5,7 @@ import { getSheetData } from "@/lib/googleSheetsApi";
 import MonthSelector from "@/components/MonthSelector";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
+import UserStatus from "@/components/UserStatus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -60,7 +61,10 @@ const Index = () => {
     return (
       <div className="container mx-auto p-4">
         <div className="w-full bg-primary text-primary-foreground py-4 mb-8 rounded-md shadow-md">
-          <h1 className="text-3xl font-bold text-center">CRM de Cobrança - Rockfeller Navegantes</h1>
+          <div className="flex justify-between items-center px-4">
+            <h1 className="text-3xl font-bold">CRM de Cobrança - Rockfeller Navegantes</h1>
+            <UserStatus />
+          </div>
         </div>
         <MonthSelector onMonthChange={setSelectedMonth} />
         <div className="mt-8 text-center text-gray-500">
@@ -73,7 +77,10 @@ const Index = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="w-full bg-primary text-primary-foreground py-4 mb-4 rounded-md shadow-md">
-        <h1 className="text-3xl font-bold text-center">CRM de Cobrança - Rockfeller Navegantes</h1>
+        <div className="flex justify-between items-center px-4">
+          <h1 className="text-3xl font-bold">CRM de Cobrança - Rockfeller Navegantes</h1>
+          <UserStatus />
+        </div>
       </div>
       
       <div className="flex justify-between items-center mb-8">
