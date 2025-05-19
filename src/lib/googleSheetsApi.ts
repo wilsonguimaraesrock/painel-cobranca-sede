@@ -29,8 +29,8 @@ export async function getAvailableSheets(): Promise<string[]> {
 // Obtém dados da planilha para o mês selecionado
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
-    // Intervalo para o cabeçalho (linha 2) e os dados dos alunos (linhas 3 a 30)
-    const range = `${sheetName}!A3:J30`;
+    // Buscamos um intervalo maior para examinar a estrutura completa
+    const range = `${sheetName}!A1:J50`;
     
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
@@ -49,10 +49,54 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
     // Converter dados da planilha para objetos Student
     const students: Student[] = [];
     
-    // Processar cada linha como um estudante (todas as linhas são estudantes agora)
+    // Encontrar a seção de alunos - geralmente após "RETIRADOS DA PLANILHA" ou onde tiver um cabeçalho claro
+    let startIndex = -1;
     for (let i = 0; i < data.values.length; i++) {
       const row = data.values[i];
-      if (!row || !row[0]) continue; // Pula linhas vazias
+      if (row && row[0] === "RETIRADOS DA PLANILHA") {
+        // A próxima linha deve conter os cabeçalhos e depois começam os alunos
+        startIndex = i + 2; // Pulamos o "RETIRADOS DA PLANILHA" e a linha de cabeçalho
+        break;
+      }
+      
+      // Alternativa: buscar linha com "NOME" na primeira coluna, que indica cabeçalho
+      if (row && row[0] === "NOME") {
+        startIndex = i + 1; // A próxima linha após "NOME" contém alunos
+        break;
+      }
+    }
+    
+    // Se não encontrarmos o marcador, tentamos buscar alunos pela estrutura de dados
+    if (startIndex === -1) {
+      for (let i = 13; i < data.values.length; i++) { // Começando da linha 14 (índice 13)
+        const row = data.values[i];
+        if (row && row.length >= 7) { // Verificar se tem dados suficientes para ser um aluno
+          // Verificar se a linha parece conter dados de aluno (nome, valor, data)
+          if (row[0] && row[1] && row[2]) {
+            const valorStr = row[1]?.toString() || "";
+            // Se a linha tem nome e o segundo campo parece ser um valor monetário (contém R$)
+            if (valorStr.includes("R$")) {
+              startIndex = i;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Se ainda não encontramos o início, usamos uma abordagem padrão
+    if (startIndex === -1) {
+      startIndex = 14; // Começamos da linha 15 (índice 14) por padrão
+    }
+    
+    // Processar os dados dos alunos a partir do índice de início
+    for (let i = startIndex; i < data.values.length; i++) {
+      const row = data.values[i];
+      if (!row || !row[0] || row[0].trim() === "") continue; // Pula linhas vazias
+      
+      // Verificar se a linha tem formato de valor monetário na segunda coluna
+      const valorStr = row[1]?.toString() || "";
+      if (!valorStr.includes("R$")) continue; // Pula se não parece ser um aluno
       
       // Determinar status baseado na lógica de negócios
       // Por padrão, começam como inadimplentes
@@ -63,13 +107,13 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         id: `student-${i}`,
         nome: row[0] || "",
         curso: row[1] || "",
-        valor: parseFloat(row[2]?.replace("R$", "").replace(".", "").replace(",", ".")) || 0,
-        dataVencimento: row[3] || "",
-        diasAtraso: parseInt(row[4] || "0", 10),
-        followUp: row[5] || "",
-        email: row[6] || "",
-        telefone: row[7] || "",
-        observacoes: row[8] || "",
+        valor: parseFloat(valorStr.replace("R$", "").replace(".", "").replace(",", ".")) || 0,
+        dataVencimento: row[2] || "",
+        diasAtraso: parseInt(row[3] ? row[3].replace(/\D/g, "") : "0", 10) || 0,
+        followUp: row[6] || "",
+        email: row[4] || "",
+        telefone: row[5] || "",
+        observacoes: row[5] || "",
         status
       };
       
