@@ -59,7 +59,9 @@ const Index = () => {
   if (!selectedMonth) {
     return (
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-8">CRM de Cobrança - Kanban</h1>
+        <div className="w-full bg-primary text-primary-foreground py-4 mb-8 rounded-md shadow-md">
+          <h1 className="text-3xl font-bold text-center">CRM de Cobrança - Rockfeller Navegantes</h1>
+        </div>
         <MonthSelector onMonthChange={setSelectedMonth} />
         <div className="mt-8 text-center text-gray-500">
           Selecione um mês para visualizar os dados
@@ -70,7 +72,9 @@ const Index = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">CRM de Cobrança - Kanban</h1>
+      <div className="w-full bg-primary text-primary-foreground py-4 mb-4 rounded-md shadow-md">
+        <h1 className="text-3xl font-bold text-center">CRM de Cobrança - Rockfeller Navegantes</h1>
+      </div>
       
       <div className="flex justify-between items-center mb-8">
         <MonthSelector onMonthChange={setSelectedMonth} />
