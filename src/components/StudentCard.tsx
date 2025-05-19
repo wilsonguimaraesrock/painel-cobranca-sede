@@ -1,4 +1,3 @@
-
 import { Student, Status, StatusHistory } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -240,18 +239,16 @@ const StudentCard = ({ student, onStatusChange, onReturnToPrevious, onStudentUpd
             {student.observacoes && (
               <>
                 <div className="text-muted-foreground">Observações:</div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="font-medium truncate" style={{ maxWidth: "120px" }}>
-                        {truncateText(student.observacoes, 15)}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">{student.observacoes}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="font-medium truncate" style={{ maxWidth: "120px" }}>
+                      {truncateText(student.observacoes, 15)}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{student.observacoes}</p>
+                  </TooltipContent>
+                </Tooltip>
               </>
             )}
           </div>
