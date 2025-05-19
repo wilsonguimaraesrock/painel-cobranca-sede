@@ -22,10 +22,10 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         
         if (availableSheets.length > 0) {
           setMonths(availableSheets);
-          // Selecione o mês mais recente (última aba)
-          const mostRecentMonth = availableSheets[availableSheets.length - 1];
-          setSelectedMonth(mostRecentMonth);
-          onMonthChange(mostRecentMonth);
+          // Selecione a primeira aba (mais recente, atual)
+          const currentMonth = availableSheets[0]; 
+          setSelectedMonth(currentMonth);
+          onMonthChange(currentMonth);
         }
       } catch (error) {
         console.error("Erro ao buscar meses:", error);

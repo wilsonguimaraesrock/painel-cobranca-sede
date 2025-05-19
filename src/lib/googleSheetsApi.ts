@@ -51,19 +51,6 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
 
     console.log("Dados recebidos da API:", data.values);
     
-    // Lista específica de nomes válidos para a aba MAIO
-    const validNamesForMaio = [
-      "Jennifer Coelho",
-      "Marcela Nascimento",
-      "Bryan Haag",
-      "Julcemar Martins", 
-      "Samuel Henrique",
-      "Wesley Delmiro",
-      "Bruno Gabriel",
-      "Gisele Andrade",
-      "Thayná dos Prazeres"
-    ];
-    
     // Array para armazenar os alunos
     const students: Student[] = [];
     
@@ -94,14 +81,8 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
       
       const nome = row[0].trim();
       
-      // Para a aba MAIO, verificar se o nome está na lista de nomes válidos
-      if (sheetName === "MAIO" && !validNamesForMaio.includes(nome)) {
-        console.log(`Nome ignorado: ${nome} - não está na lista de nomes válidos para MAIO`);
-        continue;
-      }
-      
       // Se a linha contém RETIRADOS DA PLANILHA ou algum outro marcador, pula
-      if (row[0].includes("RETIRADOS") || row[0].includes("Bonificação")) {
+      if (nome.includes("RETIRADOS") || nome.includes("Bonificação")) {
         continue;
       }
       
