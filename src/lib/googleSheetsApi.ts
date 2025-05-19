@@ -29,7 +29,7 @@ export async function getAvailableSheets(): Promise<string[]> {
 // Obtém dados da planilha para o mês selecionado
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
-    // Intervalo completo incluindo o cabeçalho
+    // Intervalo para o cabeçalho (linha 2) e os dados dos alunos (linhas 3 a 30)
     const range = `${sheetName}!A2:J30`;
     
     const response = await fetch(
@@ -42,19 +42,20 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
     
     const data: SheetData = await response.json();
     
-    if (!data.values || data.values.length < 2) {
+    if (!data.values || data.values.length === 0) {
       return [];
     }
 
-    // Primeira linha contém os cabeçalhos
+    // Primeira linha contém os cabeçalhos (linha 2 da planilha)
     const headers = data.values[0];
     
-    // Converter dados da planilha para objetos Student
+    // Converter dados da planilha para objetos Student (a partir da linha 3 da planilha, índice 1 no array)
     const students: Student[] = [];
     
+    // Começamos a partir do índice 1, que corresponde à linha 3 da planilha
     for (let i = 1; i < data.values.length; i++) {
       const row = data.values[i];
-      if (!row[0]) continue; // Pula linhas vazias
+      if (!row || !row[0]) continue; // Pula linhas vazias
       
       // Determinar status baseado na lógica de negócios
       // Por padrão, começam como inadimplentes
