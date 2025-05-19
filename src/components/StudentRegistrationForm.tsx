@@ -19,15 +19,11 @@ const studentSchema = z.object({
   nome: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
   valor: z.string().min(1, { message: "Valor é obrigatório" }),
   dataVencimento: z.string().min(1, { message: "Data de vencimento é obrigatória" }),
-  curso: z.string().optional(),
   primeiroContato: z.string().optional(),
   ultimoContato: z.string().optional(), 
   dataPagamento: z.string().optional(),
   observacoes: z.string().optional(),
   dataFollowUp: z.string().optional(),
-  email: z.string().email({ message: "E-mail inválido" }).optional().or(z.literal("")),
-  telefone: z.string().optional(),
-  diasAtraso: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -46,15 +42,11 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       nome: "",
       valor: "",
       dataVencimento: "",
-      curso: "",
       primeiroContato: "",
       ultimoContato: "",
       dataPagamento: "",
       observacoes: "",
       dataFollowUp: "",
-      email: "",
-      telefone: "",
-      diasAtraso: "",
     }
   });
 
@@ -70,9 +62,9 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       // Converter o valor para número
       const valorNumerico = parseFloat(values.valor.replace(/[^\d,.]/g, "").replace(",", "."));
       
-      // Calcular dias de atraso (usar o valor informado ou calcular)
-      let diasAtraso = parseInt(values.diasAtraso || "0");
-      if (isNaN(diasAtraso) && values.dataVencimento) {
+      // Calcular dias de atraso
+      let diasAtraso = 0;
+      if (values.dataVencimento) {
         const partesData = values.dataVencimento.split('/');
         
         if (partesData.length >= 2) {
@@ -93,13 +85,13 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
       const newStudent: Student = {
         id: uuidv4(),
         nome: values.nome,
-        curso: values.curso || "",
+        curso: "",
         valor: valorNumerico,
         dataVencimento: values.dataVencimento,
         diasAtraso: diasAtraso,
         followUp: values.dataFollowUp || "",
-        email: values.email || "",
-        telefone: values.telefone || "",
+        email: "",
+        telefone: "",
         observacoes: values.observacoes || "",
         status: "inadimplente" as Status,
         statusHistory: [],
@@ -114,13 +106,10 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
         .insert({
           id: newStudent.id,
           nome: newStudent.nome,
-          curso: newStudent.curso,
           valor: newStudent.valor,
           data_vencimento: newStudent.dataVencimento,
           dias_atraso: newStudent.diasAtraso,
           follow_up: newStudent.followUp,
-          email: newStudent.email,
-          telefone: newStudent.telefone,
           observacoes: newStudent.observacoes,
           status: newStudent.status,
           primeiro_contato: newStudent.primeiroContato,
@@ -219,48 +208,27 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="dataVencimento"
-                render={({ field: { onChange, ...rest } }) => (
-                  <FormItem>
-                    <FormLabel>VENCIMEN.</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...rest} 
-                        placeholder="DD/MM/AAAA" 
-                        onChange={(e) => {
-                          const formattedValue = formatDate(e.target.value);
-                          onChange(formattedValue);
-                        }} 
-                        maxLength={10}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="diasAtraso"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dias de Atraso</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="0" 
-                        type="number"
-                        min="0"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="dataVencimento"
+              render={({ field: { onChange, ...rest } }) => (
+                <FormItem>
+                  <FormLabel>VENCIMEN.</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...rest} 
+                      placeholder="DD/MM/AAAA" 
+                      onChange={(e) => {
+                        const formattedValue = formatDate(e.target.value);
+                        onChange(formattedValue);
+                      }} 
+                      maxLength={10}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -347,50 +315,6 @@ export default function StudentRegistrationForm({ selectedMonth }: StudentRegist
                         }} 
                         maxLength={10}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="curso"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Curso</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Nome do curso" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="email@exemplo.com" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="telefone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="(XX) XXXXX-XXXX" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -2,13 +2,13 @@
 export interface Student {
   id: string;
   nome: string;
-  curso: string;
+  curso?: string;
   valor: number;
   dataVencimento: string;
   diasAtraso: number;
   followUp: string;
-  email: string;
-  telefone: string;
+  email?: string;
+  telefone?: string;
   observacoes: string;
   status: Status;
   statusHistory?: StatusHistory[];
