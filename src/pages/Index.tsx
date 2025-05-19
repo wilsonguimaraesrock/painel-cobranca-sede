@@ -26,44 +26,80 @@ const Index = () => {
       try {
         setLoading(true);
         
-        // Verificar se já temos dados para este mês no banco de dados
+        // Primeiro sempre carregamos da planilha do Google
+        setLoadingSource("sheets");
+        const sheetsData = await getSheetData(selectedMonth);
+        
+        if (sheetsData.length === 0) {
+          toast.error(`Não foram encontrados alunos na planilha para o mês ${selectedMonth}`);
+          setLoading(false);
+          setLoadingSource("");
+          return;
+        }
+        
+        // Verificar se já existem dados no banco para este mês
         const hasData = await checkMonthData(selectedMonth);
         
         if (hasData) {
-          // Carregar do banco de dados
+          // Se existem dados no banco, carregamos para ter as informações de status mais atualizadas
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
           
-          setStudents(dbStudents);
-          setFilteredStudents([]);
-          setActiveFilter(null);
-          
-          toast.success(`Dados carregados do banco de dados`, {
-            description: `${dbStudents.length} alunos encontrados para o mês ${selectedMonth}`
-          });
+          if (dbStudents.length > 0) {
+            // Mesclar dados da planilha com status do banco
+            const mergedStudents = sheetsData.map(sheetStudent => {
+              const dbStudent = dbStudents.find(db => 
+                db.nome === sheetStudent.nome && 
+                db.valor === sheetStudent.valor && 
+                db.dataVencimento === sheetStudent.dataVencimento
+              );
+              
+              if (dbStudent) {
+                return {
+                  ...sheetStudent,
+                  id: dbStudent.id, // Mantemos o ID do banco de dados
+                  status: dbStudent.status,
+                  statusHistory: dbStudent.statusHistory || [],
+                  observacoes: dbStudent.observacoes || sheetStudent.observacoes,
+                  email: dbStudent.email || sheetStudent.email,
+                  telefone: dbStudent.telefone || sheetStudent.telefone,
+                  primeiroContato: dbStudent.primeiroContato || sheetStudent.primeiroContato,
+                  ultimoContato: dbStudent.ultimoContato || sheetStudent.ultimoContato
+                };
+              }
+              
+              return sheetStudent;
+            });
+            
+            setStudents(mergedStudents);
+            
+            // Salvar dados mesclados no banco
+            await saveStudents(mergedStudents, selectedMonth);
+            
+            toast.success(`Dados carregados e atualizados`, {
+              description: `${mergedStudents.length} alunos para o mês ${selectedMonth}`
+            });
+          } else {
+            // Apenas salvamos os dados da planilha no banco
+            setStudents(sheetsData);
+            await saveStudents(sheetsData, selectedMonth);
+            
+            toast.success(`Dados carregados da planilha`, {
+              description: `${sheetsData.length} alunos para o mês ${selectedMonth}`
+            });
+          }
         } else {
-          // Carregar da planilha e salvar no banco de dados
-          setLoadingSource("sheets");
-          const sheetsData = await getSheetData(selectedMonth);
-          
-          // Inicializa todos os estudantes como "inadimplentes" por padrão
-          const initializedData = sheetsData.map(student => ({
-            ...student,
-            status: "inadimplente" as const,
-            mes: selectedMonth
-          }));
-          
-          // Salvar no banco de dados
-          await saveStudents(initializedData, selectedMonth);
-          
-          setStudents(initializedData);
-          setFilteredStudents([]);
-          setActiveFilter(null);
+          // Se não existem dados no banco, salvamos os da planilha
+          setStudents(sheetsData);
+          await saveStudents(sheetsData, selectedMonth);
           
           toast.success(`Dados carregados da planilha e salvos no banco`, {
-            description: `${initializedData.length} alunos encontrados para o mês ${selectedMonth}`
+            description: `${sheetsData.length} alunos para o mês ${selectedMonth}`
           });
         }
+        
+        setFilteredStudents([]);
+        setActiveFilter(null);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados", {
@@ -142,7 +178,7 @@ const Index = () => {
       });
     }
     
-    // Salvar no banco de dados (atualizando apenas o estudante atualizado)
+    // Salvar no banco de dados
     try {
       await saveStudents([updatedStudent], selectedMonth);
     } catch (error) {

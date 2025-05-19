@@ -147,7 +147,7 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         }
       }
       
-      // Criar o objeto aluno
+      // Criar o objeto aluno - IMPORTANTE: adicionar o 'mes' ao objeto
       const student: Student = {
         id: `student-${i}`,
         nome: nome,
@@ -162,10 +162,11 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
         primeiroContato: row[3] || "", // PRIMEIRO CONTATO está na coluna D (índice 3)
         ultimoContato: row[4] || "", // ÚLTIMO CONTATO está na coluna E (índice 4)
         status: "inadimplente" as Status,
-        statusHistory: [] // Inicializa o histórico de status vazio
+        statusHistory: [], // Inicializa o histórico de status vazio
+        mes: sheetName // Adicionamos o mês corretamente aqui
       };
       
-      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}, primeiro contato: ${student.primeiroContato}, último contato: ${student.ultimoContato}`);
+      console.log(`Processando aluno ${i}: ${student.nome}, valor: ${student.valor}, vencimento: ${student.dataVencimento}, dias atraso: ${student.diasAtraso}, primeiro contato: ${student.primeiroContato}, último contato: ${student.ultimoContato}, mês: ${student.mes}`);
       students.push(student);
     }
     
