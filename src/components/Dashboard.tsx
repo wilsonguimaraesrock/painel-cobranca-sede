@@ -1,3 +1,4 @@
+
 import { Student, DashboardMetrics } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/googleSheetsApi";
@@ -56,6 +57,9 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
   const pagamentoFeitoPercentage = totalStudents > 0 
     ? ((metrics.pagamentoFeito / totalStudents) * 100).toFixed(1) 
     : "0.0";
+  
+  // Calculate total in default (all cards except "pagamento-feito")
+  const totalInadimplencia = valorTotal;
   
   // Cards para o dashboard
   const dashboardCards = [

@@ -1,15 +1,16 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DataLoader from "@/components/DataLoader";
 import LoadingSkeletons from "@/components/LoadingSkeletons";
 import PageHeader from "@/components/PageHeader";
 import MonthSelectorWithCount from "@/components/MonthSelectorWithCount";
-import { getSheetData } from "@/lib/googleSheetsApi";
+import { getSheetData, formatCurrency } from "@/lib/googleSheetsApi";
 import { saveStudents } from "@/services/supabaseService";
 import { toast } from "sonner";
 
@@ -45,6 +46,11 @@ const Index = () => {
       });
     }
   }, [loading, students]);
+
+  // Calculate total in default
+  const totalEmInadimplencia = students
+    .filter(s => s.status !== "pagamento-feito")
+    .reduce((total, student) => total + student.valor, 0);
 
   // Force import from sheet
   const handleForceImport = async () => {
@@ -226,6 +232,13 @@ const Index = () => {
             <Download className="h-4 w-4" />
             {isImporting ? "Importing..." : "Import from Spreadsheet"}
           </Button>
+          
+          {!loading && students.length > 0 && (
+            <div className="flex items-center px-4 py-2 bg-orange-100 border border-orange-200 rounded-md text-orange-800 font-medium">
+              <DollarSign className="h-4 w-4 mr-1" />
+              Total em inadimplência: {formatCurrency(totalEmInadimplencia)}
+            </div>
+          )}
         </div>
         <Button 
           onClick={() => navigate("/register-student")}
