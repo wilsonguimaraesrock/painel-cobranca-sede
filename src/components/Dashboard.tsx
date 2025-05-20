@@ -1,9 +1,8 @@
-
 import { Student, DashboardMetrics } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/googleSheetsApi";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Filter } from "lucide-react";
+import { DollarSign, Filter, BadgeCheckIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface DashboardProps {
@@ -18,7 +17,8 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
     total: 0,
     ate5dias: 0,
     ate10dias: 0,
-    mais10dias: 0
+    mais10dias: 0,
+    pagamentoFeito: 0
   };
   
   // Valores totais por categoria
@@ -26,8 +26,14 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
   let valorAte5dias = 0;
   let valorAte10dias = 0;
   let valorMais10dias = 0;
+  let valorPagamentoFeito = 0;
   
   students.forEach(student => {
+    if (student.status === "pagamento-feito") {
+      metrics.pagamentoFeito++;
+      valorPagamentoFeito += student.valor;
+    }
+
     if (student.status === "inadimplente" || student.status === "mensagem-enviada" || student.status === "resposta-recebida") {
       metrics.total++;
       valorTotal += student.valor;
@@ -44,6 +50,12 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
       }
     }
   });
+  
+  // Calculate total number of students for percentage
+  const totalStudents = students.length;
+  const pagamentoFeitoPercentage = totalStudents > 0 
+    ? ((metrics.pagamentoFeito / totalStudents) * 100).toFixed(1) 
+    : "0.0";
   
   // Cards para o dashboard
   const dashboardCards = [
@@ -78,6 +90,14 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
       monetary: valorMais10dias,
       description: `${((metrics.mais10dias / metrics.total) * 100).toFixed(1)}% - ${formatCurrency(valorMais10dias)}`,
       color: "bg-gradient-to-r from-red-500 to-red-600"
+    },
+    {
+      id: "pagamento-feito",
+      title: "Pagamento Realizado",
+      value: metrics.pagamentoFeito,
+      monetary: valorPagamentoFeito,
+      description: `${pagamentoFeitoPercentage}% - ${formatCurrency(valorPagamentoFeito)}`,
+      color: "bg-gradient-to-r from-green-500 to-green-600"
     }
   ];
 
@@ -104,7 +124,7 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
           )}
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {dashboardCards.map((card) => (
           <Card 
             key={card.id} 

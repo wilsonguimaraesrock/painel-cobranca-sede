@@ -9,6 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      funcionarios: {
+        Row: {
+          ativo: boolean
+          cargo: string
+          datacadastro: string
+          departamento: string
+          email: string | null
+          foto: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cargo: string
+          datacadastro?: string
+          departamento: string
+          email?: string | null
+          foto?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cargo?: string
+          datacadastro?: string
+          departamento?: string
+          email?: string | null
+          foto?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      horarios: {
+        Row: {
+          created_at: string | null
+          data: string
+          funcionarioid: string
+          horaentrada1: string | null
+          horaentrada2: string | null
+          horasaida1: string | null
+          horasaida2: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: string
+          funcionarioid: string
+          horaentrada1?: string | null
+          horaentrada2?: string | null
+          horasaida1?: string | null
+          horasaida2?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: string
+          funcionarioid?: string
+          horaentrada1?: string | null
+          horaentrada2?: string | null
+          horasaida1?: string | null
+          horasaida2?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horarios_funcionarioid_fkey"
+            columns: ["funcionarioid"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       status_history: {
         Row: {
           changed_at: string | null

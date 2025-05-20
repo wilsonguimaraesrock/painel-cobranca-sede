@@ -38,4 +38,5 @@ export interface DashboardMetrics {
   ate5dias: number;
   ate10dias: number;
   mais10dias: number;
+  pagamentoFeito: number;
 }
