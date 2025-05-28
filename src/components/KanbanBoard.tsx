@@ -365,16 +365,14 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Quadro de Cobrança</h2>
         <div className="flex items-center gap-2">
-          {hasChanges && (
-            <Button 
-              onClick={handleSaveChanges} 
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              <Save size={16} />
-              {isSaving ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          )}
+          <Button 
+            onClick={handleSaveChanges} 
+            disabled={isSaving}
+            className="flex items-center gap-2"
+          >
+            <Save size={16} />
+            {isSaving ? "Salvando..." : "Salvar Alterações"}
+          </Button>
           {isFiltered && (
             <div className="text-sm text-gray-500">
               Exibindo {studentsToShow.length} de {students.length} alunos
