@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      available_months: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          month_value: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          month_value: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          month_value?: string
+        }
+        Relationships: []
+      }
       funcionarios: {
         Row: {
           ativo: boolean

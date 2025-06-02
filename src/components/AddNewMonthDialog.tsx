@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { createNewMonthInDatabase, formatMonthDisplay, checkMonthExistsInDatabase } from "@/services/monthsService";
 
 interface AddNewMonthDialogProps {
   isOpen: boolean;
@@ -18,46 +19,6 @@ interface AddNewMonthDialogProps {
   onMonthAdded: (month: string) => void;
   existingMonths: string[];
 }
-
-// Função para converter MM-YYYY para formato por extenso
-const formatMonthDisplay = (monthValue: string): string => {
-  // Validar se o valor existe e está no formato correto
-  if (!monthValue || typeof monthValue !== 'string') {
-    console.warn('Invalid month value:', monthValue);
-    return monthValue || '';
-  }
-
-  const parts = monthValue.split('-');
-  if (parts.length !== 2) {
-    console.warn('Month value not in MM-YYYY format:', monthValue);
-    return monthValue;
-  }
-
-  const [month, year] = parts;
-  
-  // Validar se month e year existem
-  if (!month || !year) {
-    console.warn('Invalid month or year in:', monthValue);
-    return monthValue;
-  }
-
-  const monthNames = [
-    'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-    'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-  ];
-  
-  const monthIndex = parseInt(month) - 1;
-  
-  // Validar se o índice do mês é válido
-  if (monthIndex < 0 || monthIndex >= 12 || isNaN(monthIndex)) {
-    console.warn('Invalid month index:', month, 'in value:', monthValue);
-    return monthValue;
-  }
-  
-  const shortYear = year.length >= 2 ? year.slice(-2) : year;
-  
-  return `${monthNames[monthIndex]}/${shortYear}`;
-};
 
 const AddNewMonthDialog = ({ 
   isOpen, 
@@ -97,26 +58,39 @@ const AddNewMonthDialog = ({
       return;
     }
 
-    if (existingMonths.includes(monthName.trim())) {
-      toast.error("Este mês já existe");
-      return;
-    }
+    const trimmedMonthName = monthName.trim();
 
     // Validar formato (MM-YYYY)
     const monthPattern = /^(0[1-9]|1[0-2])-\d{4}$/;
-    if (!monthPattern.test(monthName.trim())) {
+    if (!monthPattern.test(trimmedMonthName)) {
       toast.error("Use o formato MM-YYYY (ex: 01-2024)");
+      return;
+    }
+
+    // Verificar se já existe localmente
+    if (existingMonths.includes(trimmedMonthName)) {
+      toast.error("Este mês já existe na lista local");
       return;
     }
 
     try {
       setIsCreating(true);
       
-      // Aqui você pode adicionar lógica para criar o mês na planilha se necessário
-      // Por enquanto, vamos apenas adicionar localmente
+      // Verificar se já existe no banco de dados
+      const existsInDb = await checkMonthExistsInDatabase(trimmedMonthName);
+      if (existsInDb) {
+        toast.error("Este mês já existe no banco de dados");
+        return;
+      }
       
-      onMonthAdded(monthName.trim());
-      setMonthName("");
+      // Criar o mês no banco de dados
+      const success = await createNewMonthInDatabase(trimmedMonthName);
+      
+      if (success) {
+        onMonthAdded(trimmedMonthName);
+        setMonthName("");
+        toast.success(`Novo mês "${formatMonthDisplay(trimmedMonthName)}" criado e salvo no banco de dados!`);
+      }
     } catch (error) {
       console.error("Erro ao criar novo mês:", error);
       toast.error("Erro ao criar novo mês");

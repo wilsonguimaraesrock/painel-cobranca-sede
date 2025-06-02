@@ -6,50 +6,11 @@ import { getAvailableSheets } from "@/lib/googleSheetsApi";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import AddNewMonthDialog from "./AddNewMonthDialog";
+import { getAvailableMonthsFromDatabase, formatMonthDisplay } from "@/services/monthsService";
 
 interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
 }
-
-// Função para converter MM-YYYY para formato por extenso
-const formatMonthDisplay = (monthValue: string): string => {
-  // Validar se o valor existe e está no formato correto
-  if (!monthValue || typeof monthValue !== 'string') {
-    console.warn('Invalid month value:', monthValue);
-    return monthValue || '';
-  }
-
-  const parts = monthValue.split('-');
-  if (parts.length !== 2) {
-    console.warn('Month value not in MM-YYYY format:', monthValue);
-    return monthValue;
-  }
-
-  const [month, year] = parts;
-  
-  // Validar se month e year existem
-  if (!month || !year) {
-    console.warn('Invalid month or year in:', monthValue);
-    return monthValue;
-  }
-
-  const monthNames = [
-    'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-    'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-  ];
-  
-  const monthIndex = parseInt(month) - 1;
-  
-  // Validar se o índice do mês é válido
-  if (monthIndex < 0 || monthIndex >= 12 || isNaN(monthIndex)) {
-    console.warn('Invalid month index:', month, 'in value:', monthValue);
-    return monthValue;
-  }
-  
-  const shortYear = year.length >= 2 ? year.slice(-2) : year;
-  
-  return `${monthNames[monthIndex]}/${shortYear}`;
-};
 
 const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
   const [months, setMonths] = useState<string[]>([]);
@@ -61,14 +22,28 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     const fetchMonths = async () => {
       try {
         setLoading(true);
-        const availableSheets = await getAvailableSheets();
         
-        if (availableSheets.length > 0) {
-          setMonths(availableSheets);
-          // Selecione a primeira aba (mais recente, atual)
-          const currentMonth = availableSheets[0]; 
+        // Primeiro tenta buscar do banco de dados
+        const dbMonths = await getAvailableMonthsFromDatabase();
+        
+        if (dbMonths.length > 0) {
+          console.log("Usando meses do banco de dados:", dbMonths);
+          setMonths(dbMonths);
+          // Selecione o primeiro mês (mais recente)
+          const currentMonth = dbMonths[0]; 
           setSelectedMonth(currentMonth);
           onMonthChange(currentMonth);
+        } else {
+          // Se não houver meses no banco, busca das planilhas como fallback
+          console.log("Nenhum mês no banco, buscando das planilhas...");
+          const availableSheets = await getAvailableSheets();
+          
+          if (availableSheets.length > 0) {
+            setMonths(availableSheets);
+            const currentMonth = availableSheets[0]; 
+            setSelectedMonth(currentMonth);
+            onMonthChange(currentMonth);
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar meses:", error);
