@@ -21,14 +21,40 @@ interface AddNewMonthDialogProps {
 
 // Função para converter MM-YYYY para formato por extenso
 const formatMonthDisplay = (monthValue: string): string => {
-  const [month, year] = monthValue.split('-');
+  // Validar se o valor existe e está no formato correto
+  if (!monthValue || typeof monthValue !== 'string') {
+    console.warn('Invalid month value:', monthValue);
+    return monthValue || '';
+  }
+
+  const parts = monthValue.split('-');
+  if (parts.length !== 2) {
+    console.warn('Month value not in MM-YYYY format:', monthValue);
+    return monthValue;
+  }
+
+  const [month, year] = parts;
+  
+  // Validar se month e year existem
+  if (!month || !year) {
+    console.warn('Invalid month or year in:', monthValue);
+    return monthValue;
+  }
+
   const monthNames = [
     'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
     'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
   ];
   
   const monthIndex = parseInt(month) - 1;
-  const shortYear = year.slice(-2);
+  
+  // Validar se o índice do mês é válido
+  if (monthIndex < 0 || monthIndex >= 12 || isNaN(monthIndex)) {
+    console.warn('Invalid month index:', month, 'in value:', monthValue);
+    return monthValue;
+  }
+  
+  const shortYear = year.length >= 2 ? year.slice(-2) : year;
   
   return `${monthNames[monthIndex]}/${shortYear}`;
 };
