@@ -11,6 +11,20 @@ interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
 }
 
+// Função para converter MM-YYYY para formato por extenso
+const formatMonthDisplay = (monthValue: string): string => {
+  const [month, year] = monthValue.split('-');
+  const monthNames = [
+    'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+    'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
+  ];
+  
+  const monthIndex = parseInt(month) - 1;
+  const shortYear = year.slice(-2); // Pega os últimos 2 dígitos do ano
+  
+  return `${monthNames[monthIndex]}/${shortYear}`;
+};
+
 const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
   const [months, setMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -52,7 +66,7 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     setSelectedMonth(newMonth);
     onMonthChange(newMonth);
     setIsAddMonthDialogOpen(false);
-    toast.success(`Novo mês "${newMonth}" criado com sucesso!`);
+    toast.success(`Novo mês "${formatMonthDisplay(newMonth)}" criado com sucesso!`);
   };
 
   return (
@@ -63,13 +77,13 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         value={selectedMonth}
         onValueChange={handleMonthChange}
       >
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="w-48">
           <SelectValue placeholder="Selecionar mês" />
         </SelectTrigger>
         <SelectContent>
           {months.map((month) => (
             <SelectItem key={month} value={month}>
-              {month}
+              {formatMonthDisplay(month)}
             </SelectItem>
           ))}
         </SelectContent>

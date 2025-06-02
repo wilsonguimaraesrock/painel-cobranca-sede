@@ -19,6 +19,20 @@ interface AddNewMonthDialogProps {
   existingMonths: string[];
 }
 
+// Função para converter MM-YYYY para formato por extenso
+const formatMonthDisplay = (monthValue: string): string => {
+  const [month, year] = monthValue.split('-');
+  const monthNames = [
+    'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+    'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
+  ];
+  
+  const monthIndex = parseInt(month) - 1;
+  const shortYear = year.slice(-2);
+  
+  return `${monthNames[monthIndex]}/${shortYear}`;
+};
+
 const AddNewMonthDialog = ({ 
   isOpen, 
   onClose, 
@@ -41,7 +55,10 @@ const AddNewMonthDialog = ({
       }).replace('/', '-');
       
       if (!existingMonths.includes(monthYear)) {
-        suggestions.push(monthYear);
+        suggestions.push({
+          value: monthYear,
+          display: formatMonthDisplay(monthYear)
+        });
       }
     }
     
@@ -112,13 +129,13 @@ const AddNewMonthDialog = ({
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion) => (
                   <Button
-                    key={suggestion}
+                    key={suggestion.value}
                     variant="outline"
                     size="sm"
-                    onClick={() => setMonthName(suggestion)}
+                    onClick={() => setMonthName(suggestion.value)}
                     className="text-xs"
                   >
-                    {suggestion}
+                    {suggestion.display}
                   </Button>
                 ))}
               </div>
