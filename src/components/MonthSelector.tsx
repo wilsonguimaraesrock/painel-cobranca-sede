@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAvailableSheets } from "@/lib/googleSheetsApi";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import AddNewMonthDialog from "./AddNewMonthDialog";
 
 interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
@@ -13,6 +15,7 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
   const [months, setMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAddMonthDialogOpen, setIsAddMonthDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchMonths = async () => {
@@ -43,6 +46,15 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     onMonthChange(value);
   };
 
+  const handleNewMonthAdded = (newMonth: string) => {
+    // Adicionar o novo mês à lista e selecioná-lo
+    setMonths(prev => [newMonth, ...prev]);
+    setSelectedMonth(newMonth);
+    onMonthChange(newMonth);
+    setIsAddMonthDialogOpen(false);
+    toast.success(`Novo mês "${newMonth}" criado com sucesso!`);
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <label className="text-sm font-medium">Selecione o mês:</label>
@@ -62,6 +74,23 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
           ))}
         </SelectContent>
       </Select>
+      
+      <Button
+        onClick={() => setIsAddMonthDialogOpen(true)}
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+      >
+        <Plus className="h-4 w-4" />
+        Novo Mês
+      </Button>
+
+      <AddNewMonthDialog
+        isOpen={isAddMonthDialogOpen}
+        onClose={() => setIsAddMonthDialogOpen(false)}
+        onMonthAdded={handleNewMonthAdded}
+        existingMonths={months}
+      />
     </div>
   );
 };
