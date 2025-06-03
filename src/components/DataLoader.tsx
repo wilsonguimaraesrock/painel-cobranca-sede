@@ -54,15 +54,16 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
           if (!isMountedRef.current) return;
           
           console.log(`Loaded ${dbStudents.length} students from database for month ${selectedMonth}`);
+          console.log("Students data:", dbStudents);
           
           if (dbStudents.length > 0) {
             onDataLoaded(dbStudents, "database");
-            toast.success(`Data loaded from database`, {
-              description: `${dbStudents.length} students for month ${selectedMonth}`
+            toast.success(`Dados carregados do banco de dados`, {
+              description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
             });
           } else {
-            toast.info(`No students found in database for month ${selectedMonth}`, {
-              description: "You can use the 'Import from Spreadsheet' button to import data"
+            toast.info(`Nenhum estudante encontrado no banco para o mês ${selectedMonth}`, {
+              description: "Use o botão 'Importar da Planilha' para importar dados"
             });
             onDataLoaded([], "database");
           }
@@ -70,18 +71,31 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
           // No data in database
           if (!isMountedRef.current) return;
           
-          toast.info(`No data found for month ${selectedMonth}`, {
-            description: "You can use the 'Import from Spreadsheet' button to import data"
-          });
-          onDataLoaded([], "");
+          console.log(`No data in database for month ${selectedMonth}, trying to load anyway...`);
+          
+          // Try to load students anyway in case the count check failed
+          const dbStudents = await getStudents(selectedMonth);
+          
+          if (dbStudents.length > 0) {
+            console.log(`Found ${dbStudents.length} students despite checkMonthData returning false`);
+            onDataLoaded(dbStudents, "database");
+            toast.success(`Dados carregados do banco de dados`, {
+              description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
+            });
+          } else {
+            toast.info(`Nenhum dado encontrado para o mês ${selectedMonth}`, {
+              description: "Use o botão 'Importar da Planilha' para importar dados"
+            });
+            onDataLoaded([], "");
+          }
         }
       } catch (error) {
         // Return early if component unmounted
         if (!isMountedRef.current) return;
         
         console.error("Error loading data:", error);
-        toast.error("Error loading data", {
-          description: "Check your connection and try again."
+        toast.error("Erro ao carregar dados", {
+          description: "Verifique sua conexão e tente novamente."
         });
         onDataLoaded([], "");
       } finally {

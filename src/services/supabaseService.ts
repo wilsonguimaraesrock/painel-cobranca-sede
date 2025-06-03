@@ -181,6 +181,9 @@ export const saveAllStudents = async (students: Student[]): Promise<void> => {
 // Checar se existem dados para um mês específico
 export const checkMonthData = async (mes: string): Promise<boolean> => {
   try {
+    console.log(`Checking month data for: ${mes}`);
+    
+    // First try exact match
     const { count, error } = await supabase
       .from('students')
       .select('*', { count: 'exact', head: true })
@@ -195,7 +198,26 @@ export const checkMonthData = async (mes: string): Promise<boolean> => {
       throw error;
     }
     
-    return count !== null && count > 0;
+    console.log(`Found ${count} students with exact match for month ${mes}`);
+    
+    if (count && count > 0) {
+      return true;
+    }
+    
+    // If no exact match, try to find similar formats
+    const { data: allStudents, error: allError } = await supabase
+      .from('students')
+      .select('mes')
+      .limit(100);
+    
+    if (allError) {
+      console.error("Error fetching all student months:", allError);
+      return false;
+    }
+    
+    console.log("All month values in database:", allStudents?.map(s => s.mes));
+    
+    return false;
   } catch (error) {
     console.error("Erro ao verificar dados do mês:", error);
     return false;
@@ -206,7 +228,9 @@ export const checkMonthData = async (mes: string): Promise<boolean> => {
 export const getStudents = async (mes: string): Promise<Student[]> => {
   try {
     console.log(`Buscando estudantes no banco para o mês ${mes}`);
-    const { data, error } = await supabase
+    
+    // First try exact match
+    let { data, error } = await supabase
       .from('students')
       .select('*')
       .eq('mes', mes);
@@ -223,8 +247,45 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
       throw error;
     }
     
+    console.log(`Found ${data?.length || 0} students with exact match for month ${mes}`);
+    
+    // If no exact match found, try different formats
     if (!data || data.length === 0) {
-      console.log(`Nenhum estudante encontrado no banco para o mês ${mes}`);
+      console.log("No exact match found, trying alternative formats...");
+      
+      // Try case variations and similar formats
+      const alternativeFormats = [
+        mes.toLowerCase(),
+        mes.toUpperCase(),
+        'maio/25',
+        'MAIO/25',
+        'Maio/25'
+      ];
+      
+      for (const format of alternativeFormats) {
+        if (format === mes) continue; // Skip already tried format
+        
+        console.log(`Trying format: ${format}`);
+        const { data: altData, error: altError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('mes', format);
+        
+        if (altError) {
+          console.error(`Error with format ${format}:`, altError);
+          continue;
+        }
+        
+        if (altData && altData.length > 0) {
+          console.log(`Found ${altData.length} students with format ${format}`);
+          data = altData;
+          break;
+        }
+      }
+    }
+    
+    if (!data || data.length === 0) {
+      console.log(`Nenhum estudante encontrado no banco para o mês ${mes} em qualquer formato`);
       return [];
     }
     
