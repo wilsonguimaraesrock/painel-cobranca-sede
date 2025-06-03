@@ -6,7 +6,7 @@ import { getAvailableSheets } from "@/lib/googleSheetsApi";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import AddNewMonthDialog from "./AddNewMonthDialog";
-import { getAvailableMonthsFromDatabase, formatMonthDisplay } from "@/services/monthsService";
+import { getAvailableMonthsFromDatabase, formatMonthDisplay, ensureMaioAvailable } from "@/services/monthsService";
 
 interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
@@ -23,7 +23,10 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
       try {
         setLoading(true);
         
-        // Primeiro tenta buscar do banco de dados
+        // Primeiro garantir que maio/25 esteja disponível
+        await ensureMaioAvailable();
+        
+        // Buscar meses do banco de dados
         const dbMonths = await getAvailableMonthsFromDatabase();
         
         if (dbMonths.length > 0) {

@@ -129,3 +129,52 @@ export const checkMonthExistsInDatabase = async (monthValue: string): Promise<bo
     return false;
   }
 };
+
+// Verificar se existem dados de estudantes para um mês específico
+export const checkStudentsForMonth = async (monthValue: string): Promise<number> => {
+  try {
+    console.log(`Verificando estudantes para o mês: ${monthValue}`);
+    
+    const { count, error } = await supabase
+      .from('students')
+      .select('*', { count: 'exact', head: true })
+      .eq('mes', monthValue);
+    
+    if (error) {
+      console.error("Erro ao verificar estudantes do mês:", error);
+      return 0;
+    }
+    
+    const studentCount = count || 0;
+    console.log(`Encontrados ${studentCount} estudantes para o mês ${monthValue}`);
+    
+    return studentCount;
+  } catch (error) {
+    console.error("Erro ao verificar estudantes:", error);
+    return 0;
+  }
+};
+
+// Garantir que maio/25 esteja disponível
+export const ensureMaioAvailable = async (): Promise<void> => {
+  try {
+    console.log("Verificando se maio/25 está disponível...");
+    
+    const maioExists = await checkMonthExistsInDatabase('05-2025');
+    
+    if (!maioExists) {
+      console.log("Maio/25 não encontrado, criando...");
+      await createNewMonthInDatabase('05-2025');
+    } else {
+      console.log("Maio/25 já está disponível no banco");
+    }
+    
+    // Verificar se há estudantes para maio
+    const studentCount = await checkStudentsForMonth('05-2025');
+    if (studentCount > 0) {
+      console.log(`Maio/25 tem ${studentCount} estudantes cadastrados`);
+    }
+  } catch (error) {
+    console.error("Erro ao garantir maio disponível:", error);
+  }
+};
