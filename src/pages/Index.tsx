@@ -13,6 +13,13 @@ import { getSheetData, formatCurrency } from "@/lib/googleSheetsApi";
 import { saveStudents } from "@/services/supabaseService";
 import { toast } from "sonner";
 
+// Mapeamento de meses para nomes de abas do Google Sheets
+const monthSheetMap: Record<string, string> = {
+  '05-2025': 'MAIO/25',
+  'MAIO/25': 'MAIO/25',
+  // Adicione outros mapeamentos conforme necessário
+};
+
 const Index = () => {
   // All state hooks at the top
   const [students, setStudents] = useState<Student[]>([]);
@@ -62,8 +69,11 @@ const Index = () => {
       setIsImporting(true);
       toast.info(`Starting data import for month ${selectedMonth}...`);
       
+      // Usar o nome correto da aba
+      const sheetName = monthSheetMap[selectedMonth] || selectedMonth;
+      
       // Get data directly from sheet
-      const sheetsData = await getSheetData(selectedMonth);
+      const sheetsData = await getSheetData(sheetName);
       
       if (sheetsData.length === 0) {
         toast.error(`No students found in spreadsheet for month ${selectedMonth}`);

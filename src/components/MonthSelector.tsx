@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,31 +21,13 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     const fetchMonths = async () => {
       try {
         setLoading(true);
-        
-        // Primeiro garantir que maio/25 esteja disponível
-        await ensureMaioAvailable();
-        
-        // Buscar meses do banco de dados
-        const dbMonths = await getAvailableMonthsFromDatabase();
-        
-        if (dbMonths.length > 0) {
-          console.log("Usando meses do banco de dados:", dbMonths);
-          setMonths(dbMonths);
-          // Selecione o primeiro mês (mais recente)
-          const currentMonth = dbMonths[0]; 
+        // Buscar meses diretamente das abas do Google Sheets
+        const availableSheets = await getAvailableSheets();
+        if (availableSheets.length > 0) {
+          setMonths(availableSheets);
+          const currentMonth = availableSheets[0];
           setSelectedMonth(currentMonth);
           onMonthChange(currentMonth);
-        } else {
-          // Se não houver meses no banco, busca das planilhas como fallback
-          console.log("Nenhum mês no banco, buscando das planilhas...");
-          const availableSheets = await getAvailableSheets();
-          
-          if (availableSheets.length > 0) {
-            setMonths(availableSheets);
-            const currentMonth = availableSheets[0]; 
-            setSelectedMonth(currentMonth);
-            onMonthChange(currentMonth);
-          }
         }
       } catch (error) {
         console.error("Erro ao buscar meses:", error);
@@ -55,7 +36,6 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         setLoading(false);
       }
     };
-
     fetchMonths();
   }, [onMonthChange]);
 

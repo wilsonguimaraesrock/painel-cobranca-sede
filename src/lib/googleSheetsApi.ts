@@ -1,4 +1,3 @@
-
 import { Student, SheetData, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -33,7 +32,8 @@ export async function getAvailableSheets(): Promise<string[]> {
 export async function getSheetData(sheetName: string): Promise<Student[]> {
   try {
     // Buscamos um range maior para garantir que todos os alunos sejam pegos
-    const range = `${sheetName}!A1:H100`;
+    const encodedSheetName = encodeURIComponent(sheetName);
+    const range = `${encodedSheetName}!A1:H100`;
     
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
@@ -59,9 +59,14 @@ export async function getSheetData(sheetName: string): Promise<Student[]> {
     let headerIndex = -1;
     for (let i = 0; i < data.values.length; i++) {
       const row = data.values[i];
-      if (row && row[0] === "NOME" && row[1] === "VALOR" && row[2]?.includes("VENCIMEN")) {
-        headerIndex = i;
-        break;
+      if (row) {
+        const colA = row[0]?.toString().trim().toUpperCase();
+        const colB = row[1]?.toString().trim().toUpperCase();
+        const colC = row[2]?.toString().trim().toUpperCase();
+        if (colA === "NOME" && colB === "VALOR" && colC.includes("VENCIMEN")) {
+          headerIndex = i;
+          break;
+        }
       }
     }
     
