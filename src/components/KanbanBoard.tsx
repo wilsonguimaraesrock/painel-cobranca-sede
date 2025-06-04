@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
@@ -65,6 +66,13 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     });
     
     setLocalStudents(updatedStudents);
+    
+    // Marcar como tendo alterações sempre que receber novos dados
+    // Isso permite salvar dados importados da planilha
+    if (updatedStudents.length > 0) {
+      console.log(`Setting hasChanges to true - received ${updatedStudents.length} students`);
+      setHasChanges(true);
+    }
   }, [students, filteredStudents, isFiltered]);
   
   // Usar os estudantes locais para exibição
@@ -110,26 +118,28 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
 
   // Função para salvar todas as alterações no banco de dados
   const handleSaveChanges = async () => {
-    if (!hasChanges) {
-      toast.info("Não há alterações para salvar");
+    console.log("handleSaveChanges called - hasChanges:", hasChanges, "students count:", localStudents.length);
+    
+    if (localStudents.length === 0) {
+      toast.info("Não há dados para salvar");
       return;
     }
 
     try {
       setIsSaving(true);
-      console.log("Salvando todas as alterações no banco de dados...");
+      console.log("Salvando todas as alterações no banco de dados...", localStudents.length, "estudantes");
       
-      // Chamar a função de salvar todos os estudantes
+      // Forçar salvamento de todos os estudantes, independente de ter alterações
       await saveAllStudents(localStudents);
       
-      toast.success("Todas as alterações foram salvas com sucesso", {
-        description: "Os dados foram persistidos no banco de dados."
+      toast.success("Dados salvos com sucesso no banco de dados", {
+        description: `${localStudents.length} estudantes foram salvos.`
       });
       
       setHasChanges(false);
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
-      toast.error("Erro ao salvar alterações", {
+      toast.error("Erro ao salvar dados", {
         description: "Verifique sua conexão e tente novamente."
       });
     } finally {
@@ -367,11 +377,12 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         <div className="flex items-center gap-2">
           <Button 
             onClick={handleSaveChanges} 
-            disabled={isSaving}
+            disabled={isSaving || localStudents.length === 0}
             className="flex items-center gap-2"
+            variant={hasChanges ? "default" : "outline"}
           >
             <Save size={16} />
-            {isSaving ? "Salvando..." : "Salvar Alterações"}
+            {isSaving ? "Salvando..." : `Salvar no Banco (${localStudents.length})`}
           </Button>
           {isFiltered && (
             <div className="text-sm text-gray-500">
