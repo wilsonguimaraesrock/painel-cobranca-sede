@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Student, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
@@ -204,18 +205,29 @@ export const checkMonthData = async (mes: string): Promise<boolean> => {
       return true;
     }
     
-    // If no exact match, try to find similar formats
-    const { data: allStudents, error: allError } = await supabase
-      .from('students')
-      .select('mes')
-      .limit(100);
+    // Se não encontrou com formato atual, tentar formatos antigos
+    const legacyFormats = [
+      'MAIO',      // Formato antigo
+      'maio',      // Minúsculo
+      'Maio',      // Capitalizado
+    ];
     
-    if (allError) {
-      console.error("Error fetching all student months:", allError);
-      return false;
+    for (const format of legacyFormats) {
+      const { count: legacyCount, error: legacyError } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('mes', format);
+      
+      if (legacyError) {
+        console.error(`Error checking legacy format ${format}:`, legacyError);
+        continue;
+      }
+      
+      if (legacyCount && legacyCount > 0) {
+        console.log(`Found ${legacyCount} students with legacy format ${format}`);
+        return true;
+      }
     }
-    
-    console.log("All month values in database:", allStudents?.map(s => s.mes));
     
     return false;
   } catch (error) {
@@ -249,36 +261,64 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     
     console.log(`Found ${data?.length || 0} students with exact match for month ${mes}`);
     
-    // If no exact match found, try different formats
+    // Se não encontrou com formato atual, tentar formatos antigos
     if (!data || data.length === 0) {
-      console.log("No exact match found, trying alternative formats...");
+      console.log("No exact match found, trying legacy formats...");
       
-      // Try case variations and similar formats
-      const alternativeFormats = [
-        mes.toLowerCase(),
-        mes.toUpperCase(),
-        'maio/25',
-        'MAIO/25',
-        'Maio/25'
+      const legacyFormats = [
+        'MAIO',      // Formato antigo principal
+        'maio',      // Minúsculo
+        'Maio',      // Capitalizado
+        'maio/25',   // Com ano
+        'MAIO/25',   // Com ano maiúsculo
       ];
       
-      for (const format of alternativeFormats) {
+      for (const format of legacyFormats) {
         if (format === mes) continue; // Skip already tried format
         
-        console.log(`Trying format: ${format}`);
-        const { data: altData, error: altError } = await supabase
+        console.log(`Trying legacy format: ${format}`);
+        const { data: legacyData, error: legacyError } = await supabase
           .from('students')
           .select('*')
           .eq('mes', format);
         
-        if (altError) {
-          console.error(`Error with format ${format}:`, altError);
+        if (legacyError) {
+          console.error(`Error with legacy format ${format}:`, legacyError);
           continue;
         }
         
-        if (altData && altData.length > 0) {
-          console.log(`Found ${altData.length} students with format ${format}`);
-          data = altData;
+        if (legacyData && legacyData.length > 0) {
+          console.log(`Found ${legacyData.length} students with legacy format ${format}`);
+          data = legacyData;
+          
+          // Atualizar o formato do mês nos dados encontrados para o formato atual
+          console.log(`Updating month format from ${format} to ${mes} for ${data.length} students`);
+          
+          try {
+            const updatePromises = data.map(student => 
+              supabase
+                .from('students')
+                .update({ mes: mes })
+                .eq('id', student.id)
+            );
+            
+            await Promise.all(updatePromises);
+            console.log(`Successfully updated month format for all ${data.length} students`);
+            
+            // Atualizar os dados locais também
+            data = data.map(student => ({ ...student, mes: mes }));
+            
+            toast.success(`Dados recuperados e atualizados`, {
+              description: `${data.length} estudantes encontrados com formato antigo "${format}" e atualizados para "${mes}"`
+            });
+          } catch (updateError) {
+            console.error("Erro ao atualizar formato do mês:", updateError);
+            // Continuar mesmo se a atualização falhar
+            toast.info(`Dados recuperados`, {
+              description: `${data.length} estudantes encontrados com formato "${format}"`
+            });
+          }
+          
           break;
         }
       }
