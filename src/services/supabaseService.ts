@@ -1,5 +1,4 @@
-
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseUtils } from "@/config/supabase";
 import { Student, Status, StatusHistory } from "@/types";
 import { toast } from "sonner";
 
@@ -44,10 +43,39 @@ const convertFromDbFormat = (dbStudent: any): Student => {
   };
 };
 
-// Salvar estudantes no banco de dados
+// Adicionar função para verificar conexão com o Supabase
+export const checkSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    console.log("Verificando conexão com o Supabase...");
+    const { data, error } = await supabase.from('students').select('count').limit(1);
+    
+    if (error) {
+      console.error("Erro na conexão com o Supabase:", error);
+      toast.error("Erro de conexão com o banco de dados", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+      return false;
+    }
+    
+    console.log("Conexão com o Supabase estabelecida com sucesso");
+    return true;
+  } catch (error) {
+    console.error("Erro ao verificar conexão com o Supabase:", error);
+    toast.error("Erro ao verificar conexão com o banco de dados");
+    return false;
+  }
+};
+
+// Modificar a função saveStudents para usar o novo tratamento de erros
 export const saveStudents = async (students: Student[], mes: string): Promise<void> => {
   try {
     console.log(`Iniciando salvamento de ${students.length} alunos para o mês ${mes}`);
+    
+    // Verificar conexão antes de prosseguir
+    const isConnected = await checkSupabaseConnection();
+    if (!isConnected) {
+      throw new Error("Sem conexão com o banco de dados");
+    }
     
     if (students.length === 0) {
       console.log("Nenhum aluno para salvar");
@@ -59,6 +87,9 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
     
     // Inserir em lotes de 20 para evitar problemas com requisições muito grandes
     const chunkSize = 20;
+    let successCount = 0;
+    let errorCount = 0;
+    
     for (let i = 0; i < dbStudents.length; i += chunkSize) {
       const chunk = dbStudents.slice(i, i + chunkSize);
       console.log(`Salvando lote ${Math.floor(i/chunkSize) + 1} de ${Math.ceil(dbStudents.length/chunkSize)}`);
@@ -68,12 +99,20 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
           .from('students')
           .upsert(chunk, { 
             onConflict: 'id',
-            ignoreDuplicates: false // Forçar atualização mesmo que os dados sejam iguais
+            ignoreDuplicates: false
           });
         
         if (error) {
-          if (error.code === "42501") {
-            console.warn("Erro de permissão ao salvar lote, tentando um por um:", error);
+          console.error(`Erro ao salvar lote ${Math.floor(i/chunkSize) + 1}:`, error);
+          errorCount += chunk.length;
+          
+          const errorInfo = supabaseUtils.handleError(error);
+          toast.error(errorInfo.message, {
+            description: errorInfo.description
+          });
+          
+          if (supabaseUtils.isPermissionError(error)) {
+            console.warn("Erro de permissão ao salvar lote, tentando um por um");
             
             // Tentar salvar um a um
             for (const student of chunk) {
@@ -81,27 +120,40 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
                 .from('students')
                 .upsert(student, { onConflict: 'id' });
                 
-              if (singleError && singleError.code !== "42501") {
+              if (singleError) {
                 console.error(`Erro ao salvar estudante ${student.id}:`, singleError);
-                throw singleError;
+                errorCount++;
+              } else {
+                successCount++;
               }
             }
-          } else {
-            console.error("Erro ao salvar lote de estudantes:", error);
-            throw error;
           }
+        } else {
+          successCount += chunk.length;
         }
       } catch (chunkError) {
         console.error(`Erro ao processar lote ${Math.floor(i/chunkSize) + 1}:`, chunkError);
-        // Continuamos com o próximo lote mesmo se houver erro
+        errorCount += chunk.length;
+        
+        const errorInfo = supabaseUtils.handleError(chunkError);
+        toast.error(errorInfo.message, {
+          description: errorInfo.description
+        });
       }
     }
     
-    console.log(`Finalizado salvamento de ${students.length} alunos para o mês ${mes}`);
+    console.log(`Finalizado salvamento: ${successCount} sucessos, ${errorCount} erros`);
+    
+    if (errorCount > 0) {
+      toast.warning(`Alguns dados não foram salvos (${errorCount} erros)`);
+    } else {
+      toast.success("Dados salvos com sucesso");
+    }
   } catch (error) {
     console.error("Erro ao salvar estudantes:", error);
-    toast.error("Erro ao salvar dados no banco de dados", {
-      description: "Verifique sua conexão e tente novamente."
+    const errorInfo = supabaseUtils.handleError(error);
+    toast.error(errorInfo.message, {
+      description: errorInfo.description
     });
     throw error;
   }

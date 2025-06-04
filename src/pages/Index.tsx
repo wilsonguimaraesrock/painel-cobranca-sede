@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
@@ -214,6 +213,16 @@ const Index = () => {
   return (
     <div className="container mx-auto p-4">
       <PageHeader title="CRM de Cobrança - Rockfeller Navegantes" />
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="md:col-span-3">
+          <MonthSelectorWithCount
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+            studentCount={students.length}
+          />
+        </div>
+      </div>
       
       <div className="flex justify-between items-center mb-8 flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
