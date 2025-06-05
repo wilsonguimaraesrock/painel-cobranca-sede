@@ -35,11 +35,11 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     const fetchMonths = async () => {
       try {
         setLoading(true);
-        // Buscar meses únicos do campo 'mes' dos alunos
-        const uniqueMonths = await getUniqueStudentMonths();
-        if (uniqueMonths.length > 0) {
-          setMonths(uniqueMonths.map(m => ({ display_name: m })));
-          const currentMonth = uniqueMonths[0];
+        // Buscar meses disponíveis do banco
+        const availableMonths = await getAvailableMonthsFromDatabase();
+        if (availableMonths.length > 0) {
+          setMonths(availableMonths);
+          const currentMonth = availableMonths[0].month_value;
           setSelectedMonth(currentMonth);
           onMonthChange(currentMonth);
         }
@@ -74,8 +74,8 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
   const handleNewMonthAdded = (newMonth: string) => {
     // Adicionar o novo mês à lista e selecioná-lo
     setMonths(prev => [{ month_value: newMonth, display_name: formatMonthDisplay(newMonth) }, ...prev]);
-    setSelectedMonth(formatMonthDisplay(newMonth));
-    onMonthChange(formatMonthDisplay(newMonth));
+    setSelectedMonth(newMonth);
+    onMonthChange(newMonth);
     setIsAddMonthDialogOpen(false);
     toast.success(`Novo mês "${formatMonthDisplay(newMonth)}" criado com sucesso!`);
   };
@@ -90,11 +90,11 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
       // Excluir mês
       await supabase.from('available_months').delete().ilike('display_name', monthToDelete);
       // Atualizar lista
-      setMonths(prev => prev.filter(m => m.display_name !== monthToDelete));
+      setMonths(prev => prev.filter(m => m.month_value !== monthToDelete));
       toast.success(`Mês ${monthToDelete} e alunos excluídos!`);
       // Se o mês excluído era o selecionado, selecionar o próximo disponível
       if (selectedMonth === monthToDelete) {
-        const next = months.find(m => m.display_name !== monthToDelete)?.display_name || '';
+        const next = months.find(m => m.month_value !== monthToDelete)?.month_value || '';
         setSelectedMonth(next);
         onMonthChange(next);
       }
@@ -123,11 +123,11 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
           <div id="month-dropdown-list" className="absolute z-20 mt-1 w-48 bg-white border rounded shadow-lg max-h-72 overflow-y-auto">
             {months.map((month) => (
               <div
-                key={month.display_name}
-                className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 ${selectedMonth === month.display_name ? 'bg-gray-100 font-semibold' : ''}`}
+                key={month.month_value}
+                className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 ${selectedMonth === month.month_value ? 'bg-gray-100 font-semibold' : ''}`}
                 onClick={() => {
-                  setSelectedMonth(month.display_name);
-                  onMonthChange(month.display_name);
+                  setSelectedMonth(month.month_value);
+                  onMonthChange(month.month_value);
                   setDropdownOpen(false);
                 }}
               >
@@ -137,7 +137,7 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
                   className="ml-2 text-red-500 hover:text-red-700 flex-shrink-0"
                   onClick={e => {
                     e.stopPropagation();
-                    setMonthToDelete(month.display_name);
+                    setMonthToDelete(month.month_value);
                   }}
                   title="Excluir mês"
                 >
@@ -161,7 +161,7 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         isOpen={isAddMonthDialogOpen}
         onClose={() => setIsAddMonthDialogOpen(false)}
         onMonthAdded={handleNewMonthAdded}
-        existingMonths={months.map(m => m.display_name)}
+        existingMonths={months.map(m => m.month_value)}
       />
       {/* Modal de confirmação de exclusão */}
       <AlertDialog open={!!monthToDelete} onOpenChange={open => { if (!open) setMonthToDelete(null); }}>
