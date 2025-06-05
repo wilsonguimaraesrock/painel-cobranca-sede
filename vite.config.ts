@@ -19,5 +19,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: '/a-kanban-brasil/',
+  base: process.env.VERCEL ? '/' : '/a-kanban-brasil/',
 }));
