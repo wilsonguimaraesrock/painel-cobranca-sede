@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -11,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { createNewMonthInDatabase, formatMonthDisplay, checkMonthExistsInDatabase } from "@/services/monthsService";
+import { createNewMonthInDatabase, formatMonthDisplay, checkMonthExistsInDatabase, importStudentsFromPreviousMonth } from "@/services/monthsService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddNewMonthDialogProps {
   isOpen: boolean;
@@ -53,49 +53,86 @@ const AddNewMonthDialog = ({
   };
 
   const handleCreateMonth = async () => {
-    if (!monthName.trim()) {
-      toast.error("Digite o nome do mês");
-      return;
-    }
-
-    const trimmedMonthName = monthName.trim();
-
-    // Validar formato (MM-YYYY)
-    const monthPattern = /^(0[1-9]|1[0-2])-\d{4}$/;
-    if (!monthPattern.test(trimmedMonthName)) {
-      toast.error("Use o formato MM-YYYY (ex: 01-2024)");
-      return;
-    }
-
-    // Verificar se já existe localmente
-    if (existingMonths.includes(trimmedMonthName)) {
-      toast.error("Este mês já existe na lista local");
-      return;
-    }
-
     try {
-      setIsCreating(true);
-      
-      // Verificar se já existe no banco de dados
-      const existsInDb = await checkMonthExistsInDatabase(trimmedMonthName);
-      if (existsInDb) {
-        toast.error("Este mês já existe no banco de dados");
+      if (!monthName) {
+        toast.error('Por favor, insira o nome do mês');
         return;
       }
-      
-      // Criar o mês no banco de dados
-      const success = await createNewMonthInDatabase(trimmedMonthName);
-      
-      if (success) {
-        onMonthAdded(trimmedMonthName);
-        setMonthName("");
-        toast.success(`Novo mês "${formatMonthDisplay(trimmedMonthName)}" criado e salvo no banco de dados!`);
+
+      // Validar formato do mês (MM-YYYY)
+      const monthRegex = /^(0[1-9]|1[0-2])-\d{4}$/;
+      if (!monthRegex.test(monthName)) {
+        toast.error('Formato inválido. Use MM-YYYY (ex: 06-2025)');
+        return;
+      }
+
+      // Verificar se o mês já existe localmente
+      const monthExists = existingMonths.some(m => m === monthName);
+      if (monthExists) {
+        toast.error('Este mês já existe');
+        return;
+      }
+
+      // Verificar se é junho/25 e excluir se existir
+      if (monthName === '06-2025') {
+        // Excluir todos os registros de junho/25 em qualquer formato
+        const { data: existingMonths } = await supabase
+          .from('available_months')
+          .select('month_value')
+          .or("month_value.ilike.06-2025,month_value.ilike.%JUNHO%25,month_value.ilike.%junho%25");
+
+        if (existingMonths && existingMonths.length > 0) {
+          for (const month of existingMonths) {
+            // Excluir alunos do mês
+            await supabase
+              .from('students')
+              .delete()
+              .eq('mes', month.month_value);
+
+            // Excluir o mês
+            await supabase
+              .from('available_months')
+              .delete()
+              .eq('month_value', month.month_value);
+          }
+          toast.success('Todos os registros de junho/25 anteriores foram excluídos');
+        }
+      }
+
+      // Criar o novo mês padronizado
+      let displayName = monthName;
+      if (monthName === '06-2025') displayName = 'JUNHO/25';
+      const { error } = await supabase
+        .from('available_months')
+        .insert([{ 
+          month_value: '06-2025',
+          display_name: displayName,
+          is_active: true
+        }]);
+
+      if (error) {
+        console.error('Erro ao criar mês:', error);
+        toast.error('Erro ao criar mês');
+        return;
+      }
+
+      toast.success('Mês criado com sucesso!');
+      onClose();
+      onMonthAdded('06-2025');
+
+      // Se for junho/25, importar alunos de maio/25
+      if (monthName === '06-2025') {
+        try {
+          await importStudentsFromPreviousMonth('06-2025');
+          toast.success('Alunos inadimplentes de maio importados para junho!');
+        } catch (error) {
+          console.error('Erro ao importar alunos:', error);
+          toast.error('Erro ao importar alunos do mês anterior');
+        }
       }
     } catch (error) {
-      console.error("Erro ao criar novo mês:", error);
-      toast.error("Erro ao criar novo mês");
-    } finally {
-      setIsCreating(false);
+      console.error('Erro ao criar mês:', error);
+      toast.error('Erro ao criar mês');
     }
   };
 

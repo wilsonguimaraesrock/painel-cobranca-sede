@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Student } from "@/types";
 import { getStudents, checkMonthData } from "@/services/supabaseService";
@@ -29,6 +28,8 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
       onLoadingChange(false);
       return;
     }
+    
+    console.log('[DataLoader] Mês selecionado para busca:', selectedMonth);
     
     const fetchData = async () => {
       if (!isMountedRef.current) return;

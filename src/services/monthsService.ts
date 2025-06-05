@@ -1,6 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getStudents, saveStudents } from "./supabaseService";
+import { v4 as uuidv4 } from "uuid";
 
 // Função para converter MM-YYYY para formato por extenso
 export const formatMonthDisplay = (monthValue: string): string => {
@@ -43,13 +44,13 @@ export const formatMonthDisplay = (monthValue: string): string => {
 };
 
 // Obter todos os meses disponíveis do banco de dados
-export const getAvailableMonthsFromDatabase = async (): Promise<string[]> => {
+export const getAvailableMonthsFromDatabase = async (): Promise<{ month_value: string, display_name: string }[]> => {
   try {
     console.log("Buscando meses disponíveis no banco de dados...");
     
     const { data, error } = await supabase
       .from('available_months')
-      .select('month_value')
+      .select('month_value, display_name')
       .eq('is_active', true)
       .order('month_value', { ascending: false });
     
@@ -63,10 +64,8 @@ export const getAvailableMonthsFromDatabase = async (): Promise<string[]> => {
       return [];
     }
     
-    const months = data.map(item => item.month_value);
-    console.log(`Encontrados ${months.length} meses no banco:`, months);
-    
-    return months;
+    console.log(`Encontrados ${data.length} meses no banco:`, data);
+    return data;
   } catch (error) {
     console.error("Erro ao obter meses do banco:", error);
     return [];
@@ -176,5 +175,114 @@ export const ensureMaioAvailable = async (): Promise<void> => {
     }
   } catch (error) {
     console.error("Erro ao garantir maio disponível:", error);
+  }
+};
+
+// Importar alunos do mês anterior (exceto pagamento realizado) para o novo mês
+export const importStudentsFromPreviousMonth = async (newMonth: string): Promise<void> => {
+  try {
+    // Extrair mês e ano do novo mês
+    const [newMonthNum, newYear] = newMonth.split("-");
+    let prevMonthNum = parseInt(newMonthNum) - 1;
+    let prevYear = parseInt(newYear);
+    if (prevMonthNum === 0) {
+      prevMonthNum = 12;
+      prevYear -= 1;
+    }
+    const prevMonthMMYYYY = `${prevMonthNum.toString().padStart(2, "0")}-${prevYear}`;
+    console.log(`Tentando importar alunos do mês anterior: ${prevMonthMMYYYY} para o novo mês: ${newMonth}`);
+
+    // Buscar todos os valores únicos de mes existentes
+    const uniqueMonths = await getUniqueStudentMonths();
+    // Procurar o mês anterior real salvo no banco
+    let prevMonthReal = uniqueMonths.find(m => m.includes("MAIO") || m === prevMonthMMYYYY) || prevMonthMMYYYY;
+    console.log(`Mês anterior real encontrado para importação: ${prevMonthReal}`);
+
+    // Buscar alunos do mês anterior real
+    const prevStudents = await getStudents(prevMonthReal);
+    if (!prevStudents || prevStudents.length === 0) {
+      toast.info("Nenhum aluno encontrado no mês anterior para importar");
+      return;
+    }
+
+    // Filtrar alunos que não estão em pagamento realizado
+    const studentsToImport = prevStudents.filter(s => s.status !== "pagamento-feito");
+    if (studentsToImport.length === 0) {
+      toast.info("Nenhum aluno para importar do mês anterior");
+      return;
+    }
+
+    // Duplicar alunos para o novo mês, mantendo status e dados, mas novo id
+    const newStudents = studentsToImport.map(s => ({
+      ...s,
+      id: uuidv4(),
+      mes: newMonth,
+      statusHistory: []
+    }));
+
+    // Salvar no banco
+    await saveStudents(newStudents, newMonth);
+    toast.success(`${newStudents.length} alunos importados do mês anterior para o novo mês!`);
+  } catch (error) {
+    console.error("Erro ao importar alunos do mês anterior:", error);
+    toast.error("Erro ao importar alunos do mês anterior");
+  }
+};
+
+// Excluir um mês e seus alunos do banco de dados
+export const deleteMonth = async (monthValue: string): Promise<boolean> => {
+  try {
+    console.log(`Excluindo mês ${monthValue} e seus alunos do banco de dados...`);
+    
+    // Primeiro, excluir todos os alunos do mês
+    const { error: studentsError } = await supabase
+      .from('students')
+      .delete()
+      .eq('mes', monthValue);
+    
+    if (studentsError) {
+      console.error("Erro ao excluir alunos do mês:", studentsError);
+      toast.error("Erro ao excluir alunos do mês");
+      return false;
+    }
+    
+    // Depois, excluir o mês da tabela de meses disponíveis
+    const { error: monthError } = await supabase
+      .from('available_months')
+      .delete()
+      .eq('month_value', monthValue);
+    
+    if (monthError) {
+      console.error("Erro ao excluir mês:", monthError);
+      toast.error("Erro ao excluir mês");
+      return false;
+    }
+    
+    console.log(`Mês ${monthValue} e seus alunos excluídos com sucesso`);
+    toast.success(`Mês ${formatMonthDisplay(monthValue)} excluído com sucesso`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao excluir mês:", error);
+    toast.error("Erro ao excluir mês");
+    return false;
+  }
+};
+
+// Buscar todos os valores únicos do campo 'mes' da tabela students
+export const getUniqueStudentMonths = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('students')
+      .select('mes')
+      .neq('mes', null);
+    if (error) {
+      console.error('Erro ao buscar meses únicos dos alunos:', error);
+      return [];
+    }
+    const unique = [...new Set(data.map((d: any) => d.mes))];
+    return unique;
+  } catch (error) {
+    console.error('Erro ao buscar meses únicos dos alunos:', error);
+    return [];
   }
 };

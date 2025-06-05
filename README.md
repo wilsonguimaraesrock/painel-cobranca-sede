@@ -71,3 +71,7 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## [NOVO] Importação automática de alunos ao criar mês
+
+Ao criar um novo mês pelo frontend, todos os alunos do mês anterior que não estejam com status "pagamento-feito" são automaticamente importados para o novo mês, mantendo-os na mesma etapa/coluna. Isso agiliza o processo de transição mensal e evita retrabalho manual.

@@ -1,31 +1,45 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAvailableSheets } from "@/lib/googleSheetsApi";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import AddNewMonthDialog from "./AddNewMonthDialog";
-import { getAvailableMonthsFromDatabase, formatMonthDisplay, ensureMaioAvailable } from "@/services/monthsService";
+import { getAvailableMonthsFromDatabase, formatMonthDisplay, ensureMaioAvailable, getUniqueStudentMonths } from "@/services/monthsService";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
 }
 
 const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
-  const [months, setMonths] = useState<string[]>([]);
+  const [months, setMonths] = useState<{ month_value: string, display_name: string }[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [isAddMonthDialogOpen, setIsAddMonthDialogOpen] = useState<boolean>(false);
+  const [monthToDelete, setMonthToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchMonths = async () => {
       try {
         setLoading(true);
-        // Buscar meses diretamente das abas do Google Sheets
-        const availableSheets = await getAvailableSheets();
-        if (availableSheets.length > 0) {
-          setMonths(availableSheets);
-          const currentMonth = availableSheets[0];
+        // Buscar meses únicos do campo 'mes' dos alunos
+        const uniqueMonths = await getUniqueStudentMonths();
+        if (uniqueMonths.length > 0) {
+          setMonths(uniqueMonths.map(m => ({ display_name: m })));
+          const currentMonth = uniqueMonths[0];
           setSelectedMonth(currentMonth);
           onMonthChange(currentMonth);
         }
@@ -39,6 +53,19 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     fetchMonths();
   }, [onMonthChange]);
 
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      const dropdown = document.getElementById('month-dropdown-list');
+      if (dropdown && !dropdown.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
   const handleMonthChange = (value: string) => {
     setSelectedMonth(value);
     onMonthChange(value);
@@ -46,33 +73,81 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
 
   const handleNewMonthAdded = (newMonth: string) => {
     // Adicionar o novo mês à lista e selecioná-lo
-    setMonths(prev => [newMonth, ...prev]);
-    setSelectedMonth(newMonth);
-    onMonthChange(newMonth);
+    setMonths(prev => [{ month_value: newMonth, display_name: formatMonthDisplay(newMonth) }, ...prev]);
+    setSelectedMonth(formatMonthDisplay(newMonth));
+    onMonthChange(formatMonthDisplay(newMonth));
     setIsAddMonthDialogOpen(false);
     toast.success(`Novo mês "${formatMonthDisplay(newMonth)}" criado com sucesso!`);
   };
 
+  // Função para excluir mês e alunos
+  const handleDeleteMonth = async () => {
+    if (!monthToDelete) return;
+    setDeleting(true);
+    try {
+      // Excluir alunos
+      await supabase.from('students').delete().ilike('mes', monthToDelete);
+      // Excluir mês
+      await supabase.from('available_months').delete().ilike('display_name', monthToDelete);
+      // Atualizar lista
+      setMonths(prev => prev.filter(m => m.display_name !== monthToDelete));
+      toast.success(`Mês ${monthToDelete} e alunos excluídos!`);
+      // Se o mês excluído era o selecionado, selecionar o próximo disponível
+      if (selectedMonth === monthToDelete) {
+        const next = months.find(m => m.display_name !== monthToDelete)?.display_name || '';
+        setSelectedMonth(next);
+        onMonthChange(next);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir mês:', error);
+      toast.error('Erro ao excluir mês');
+    } finally {
+      setDeleting(false);
+      setMonthToDelete(null);
+    }
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 relative">
       <label className="text-sm font-medium">Selecione o mês:</label>
-      <Select
-        disabled={loading || months.length === 0}
-        value={selectedMonth}
-        onValueChange={handleMonthChange}
-      >
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Selecionar mês" />
-        </SelectTrigger>
-        <SelectContent>
-          {months.map((month) => (
-            <SelectItem key={month} value={month}>
-              {formatMonthDisplay(month)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
+      <div className="relative">
+        <button
+          className="w-48 flex justify-between items-center border rounded px-3 py-2 bg-white shadow-sm"
+          onClick={() => setDropdownOpen((open) => !open)}
+          type="button"
+        >
+          <span>{selectedMonth ? formatMonthDisplay(selectedMonth) : "Selecionar mês"}</span>
+          <ChevronDown className="w-4 h-4 ml-2" />
+        </button>
+        {dropdownOpen && (
+          <div id="month-dropdown-list" className="absolute z-20 mt-1 w-48 bg-white border rounded shadow-lg max-h-72 overflow-y-auto">
+            {months.map((month) => (
+              <div
+                key={month.display_name}
+                className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 ${selectedMonth === month.display_name ? 'bg-gray-100 font-semibold' : ''}`}
+                onClick={() => {
+                  setSelectedMonth(month.display_name);
+                  onMonthChange(month.display_name);
+                  setDropdownOpen(false);
+                }}
+              >
+                <span>{month.display_name}</span>
+                <button
+                  type="button"
+                  className="ml-2 text-red-500 hover:text-red-700 flex-shrink-0"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setMonthToDelete(month.display_name);
+                  }}
+                  title="Excluir mês"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <Button
         onClick={() => setIsAddMonthDialogOpen(true)}
         variant="outline"
@@ -82,13 +157,29 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         <Plus className="h-4 w-4" />
         Novo Mês
       </Button>
-
       <AddNewMonthDialog
         isOpen={isAddMonthDialogOpen}
         onClose={() => setIsAddMonthDialogOpen(false)}
         onMonthAdded={handleNewMonthAdded}
-        existingMonths={months}
+        existingMonths={months.map(m => m.display_name)}
       />
+      {/* Modal de confirmação de exclusão */}
+      <AlertDialog open={!!monthToDelete} onOpenChange={open => { if (!open) setMonthToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir mês?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o mês <b>{monthToDelete && formatMonthDisplay(monthToDelete)}</b> e <b>todos os alunos desse mês</b>?<br />Essa ação não pode ser desfeita!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMonth} disabled={deleting} className="bg-red-600 hover:bg-red-700">
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

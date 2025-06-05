@@ -293,11 +293,11 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
   try {
     console.log(`Buscando estudantes no banco para o mês ${mes}`);
     
-    // First try exact match
+    // First try exact match (case-insensitive)
     let { data, error } = await supabase
       .from('students')
       .select('*')
-      .eq('mes', mes);
+      .ilike('mes', mes);
     
     if (error) {
       // Código de erro específico para violação de políticas RLS
@@ -332,7 +332,7 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
         const { data: legacyData, error: legacyError } = await supabase
           .from('students')
           .select('*')
-          .eq('mes', format);
+          .ilike('mes', format);
         
         if (legacyError) {
           console.error(`Error with legacy format ${format}:`, legacyError);
