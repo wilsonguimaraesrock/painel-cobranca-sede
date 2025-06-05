@@ -1,0 +1,6 @@
+{
+  // Todas as rotas são redirecionadas para o index.html para funcionar como SPA
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+} 
