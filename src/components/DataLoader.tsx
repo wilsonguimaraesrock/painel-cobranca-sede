@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Student } from "@/types";
 import { getStudents, checkMonthData } from "@/services/supabaseService";
@@ -25,6 +26,7 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
   useEffect(() => {
     // Skip loading if no month selected
     if (!selectedMonth) {
+      console.log('[DataLoader] No month selected, skipping data load');
       onLoadingChange(false);
       return;
     }
@@ -37,25 +39,27 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
       try {
         // Start loading
         onLoadingChange(true);
-        console.log(`Loading data for month: ${selectedMonth}`);
+        console.log(`[DataLoader] Loading data for month: ${selectedMonth}`);
         
         // Check if data exists in database
+        console.log(`[DataLoader] Checking if data exists in database for month: ${selectedMonth}`);
         const hasData = await checkMonthData(selectedMonth);
-        console.log(`Data exists in database for month ${selectedMonth}: ${hasData}`);
+        console.log(`[DataLoader] Data exists in database for month ${selectedMonth}: ${hasData}`);
         
         // Return early if component unmounted
         if (!isMountedRef.current) return;
         
         if (hasData) {
           // Load from database
+          console.log(`[DataLoader] Loading from database for month: ${selectedMonth}`);
           setLoadingSource("database");
           const dbStudents = await getStudents(selectedMonth);
           
           // Return early if component unmounted
           if (!isMountedRef.current) return;
           
-          console.log(`Loaded ${dbStudents.length} students from database for month ${selectedMonth}`);
-          console.log("Students data:", dbStudents);
+          console.log(`[DataLoader] Loaded ${dbStudents.length} students from database for month ${selectedMonth}`);
+          console.log("[DataLoader] Students data:", dbStudents);
           
           if (dbStudents.length > 0) {
             onDataLoaded(dbStudents, "database");
@@ -63,6 +67,7 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
               description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
             });
           } else {
+            console.log(`[DataLoader] No students found despite hasData being true`);
             toast.info(`Nenhum estudante encontrado no banco para o mês ${selectedMonth}`, {
               description: "Use o botão 'Importar da Planilha' para importar dados"
             });
@@ -72,18 +77,19 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
           // No data in database
           if (!isMountedRef.current) return;
           
-          console.log(`No data in database for month ${selectedMonth}, trying to load anyway...`);
+          console.log(`[DataLoader] No data in database for month ${selectedMonth}, trying to load anyway...`);
           
           // Try to load students anyway in case the count check failed
           const dbStudents = await getStudents(selectedMonth);
           
           if (dbStudents.length > 0) {
-            console.log(`Found ${dbStudents.length} students despite checkMonthData returning false`);
+            console.log(`[DataLoader] Found ${dbStudents.length} students despite checkMonthData returning false`);
             onDataLoaded(dbStudents, "database");
             toast.success(`Dados carregados do banco de dados`, {
               description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
             });
           } else {
+            console.log(`[DataLoader] No students found for month ${selectedMonth}`);
             toast.info(`Nenhum dado encontrado para o mês ${selectedMonth}`, {
               description: "Use o botão 'Importar da Planilha' para importar dados"
             });
@@ -94,13 +100,14 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
         // Return early if component unmounted
         if (!isMountedRef.current) return;
         
-        console.error("Error loading data:", error);
+        console.error("[DataLoader] Error loading data:", error);
         toast.error("Erro ao carregar dados", {
           description: "Verifique sua conexão e tente novamente."
         });
         onDataLoaded([], "");
       } finally {
         if (isMountedRef.current) {
+          console.log(`[DataLoader] Loading completed for month: ${selectedMonth}`);
           onLoadingChange(false);
           setLoadingSource("");
         }
