@@ -29,19 +29,11 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const [isImporting, setIsImporting] = useState<boolean>(false);
-  const [debugInfo, setDebugInfo] = useState<string>("");
   const navigate = useNavigate();
-
-  // Debug logging function
-  const addDebugInfo = (message: string) => {
-    console.log(`[DEBUG] ${message}`);
-    setDebugInfo(prev => prev + `\n${new Date().toLocaleTimeString()}: ${message}`);
-  };
 
   // Handle data loaded from DataLoader component
   const handleDataLoaded = useCallback((loadedStudents: Student[], source: "sheets" | "database" | "") => {
     console.log("Data loaded:", loadedStudents.length, "students from source:", source);
-    addDebugInfo(`Data loaded: ${loadedStudents.length} students from source: ${source}`);
     setStudents(loadedStudents);
     setFilteredStudents([]);
     setActiveFilter(null);
@@ -52,7 +44,6 @@ const Index = () => {
   useEffect(() => {
     if (!loading && students.length > 0) {
       console.log("Current state - Total students:", students.length);
-      addDebugInfo(`Current state - Total students: ${students.length}`);
       console.log("Status distribution:", {
         inadimplente: students.filter(s => s.status === "inadimplente").length,
         mensagemEnviada: students.filter(s => s.status === "mensagem-enviada").length,
@@ -76,7 +67,6 @@ const Index = () => {
     
     try {
       setIsImporting(true);
-      addDebugInfo(`Starting data import for month ${selectedMonth}...`);
       toast.info(`Starting data import for month ${selectedMonth}...`);
       
       // Usar o nome correto da aba
@@ -87,13 +77,11 @@ const Index = () => {
       
       if (sheetsData.length === 0) {
         toast.error(`No students found in spreadsheet for month ${selectedMonth}`);
-        addDebugInfo(`No students found in spreadsheet for month ${selectedMonth}`);
         setIsImporting(false);
         return;
       }
       
       console.log(`Importing ${sheetsData.length} students from spreadsheet for month ${selectedMonth}`);
-      addDebugInfo(`Importing ${sheetsData.length} students from spreadsheet`);
       
       // Save to database
       await saveStudents(sheetsData, selectedMonth);
@@ -106,7 +94,6 @@ const Index = () => {
       });
     } catch (error) {
       console.error("Error importing data:", error);
-      addDebugInfo(`Error importing data: ${error}`);
       toast.error("Error importing data from spreadsheet", {
         description: "Check your connection and try again."
       });
@@ -199,28 +186,16 @@ const Index = () => {
 
   // Render content based on loading state and selected month
   const renderContent = () => {
-    addDebugInfo(`Rendering content - selectedMonth: ${selectedMonth}, loading: ${loading}, students: ${students.length}`);
-    
     if (!selectedMonth) {
       return (
         <div className="mt-8 text-center text-gray-500">
           <p>Select a month to view data</p>
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-sm text-yellow-800">Debug: No month selected</p>
-          </div>
         </div>
       );
     }
 
     if (loading) {
-      return (
-        <div>
-          <LoadingSkeletons />
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">Debug: Loading data for month {selectedMonth}</p>
-          </div>
-        </div>
-      );
+      return <LoadingSkeletons />;
     }
 
     return (
@@ -236,22 +211,6 @@ const Index = () => {
           isFiltered={!!activeFilter}
           onStudentUpdate={handleStudentUpdate}
         />
-        {/* Debug Panel */}
-        <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-md">
-          <details>
-            <summary className="cursor-pointer font-medium">Debug Information</summary>
-            <div className="mt-2 text-xs text-gray-600">
-              <p>Selected Month: {selectedMonth}</p>
-              <p>Students Count: {students.length}</p>
-              <p>Loading: {loading.toString()}</p>
-              <p>Loading Source: {loadingSource}</p>
-              <p>Active Filter: {activeFilter || 'none'}</p>
-              <pre className="mt-2 text-xs bg-gray-100 p-2 rounded max-h-32 overflow-y-auto whitespace-pre-wrap">
-                {debugInfo}
-              </pre>
-            </div>
-          </details>
-        </div>
       </>
     );
   };
@@ -259,7 +218,6 @@ const Index = () => {
   // Handle loading state changes
   const handleLoadingChange = useCallback((isLoading: boolean) => {
     console.log(`Loading state changed to: ${isLoading}`);
-    addDebugInfo(`Loading state changed to: ${isLoading}`);
     setLoading(isLoading);
   }, []);
 
@@ -272,7 +230,6 @@ const Index = () => {
           <MonthSelectorWithCount
             onMonthChange={(month) => {
               console.log(`Month selected: ${month}`);
-              addDebugInfo(`Month selected: ${month}`);
               setSelectedMonth(month);
             }}
             studentsCount={students.length}
