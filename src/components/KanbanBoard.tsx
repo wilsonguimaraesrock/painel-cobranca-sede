@@ -31,6 +31,11 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     const updatedStudents = studentsToShow.map(student => {
       const updatedStudent = { ...student };
       
+      // Se o pagamento já foi feito, não recalcular dias em atraso
+      if (student.status === "pagamento-feito") {
+        return updatedStudent;
+      }
+      
       // Calcular dias em atraso baseado na data atual e data de vencimento
       if (student.dataVencimento) {
         try {

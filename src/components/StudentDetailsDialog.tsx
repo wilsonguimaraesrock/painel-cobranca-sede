@@ -95,9 +95,14 @@ const StudentDetailsDialog = ({
                   {getStatusDisplay(student.status)}
                 </span>
               </div>
-              {student.diasAtraso > 0 && (
+              {student.diasAtraso > 0 && student.status !== "pagamento-feito" && (
                 <p className="text-xs font-medium text-red-500 mt-1">
                   {student.diasAtraso} dias em atraso
+                </p>
+              )}
+              {student.status === "pagamento-feito" && student.dataPagamento && (
+                <p className="text-xs font-medium text-green-600 mt-1">
+                  Pagamento realizado em: {student.dataPagamento}
                 </p>
               )}
             </div>

@@ -18,6 +18,7 @@ const convertToDbFormat = (student: Student) => {
     status: student.status,
     primeiro_contato: student.primeiroContato || "",
     ultimo_contato: student.ultimoContato || "",
+    data_pagamento: student.dataPagamento || "",
     mes: student.mes
   };
 };
@@ -38,6 +39,7 @@ const convertFromDbFormat = (dbStudent: any): Student => {
     status: dbStudent.status as Status,
     primeiroContato: dbStudent.primeiro_contato || "",
     ultimoContato: dbStudent.ultimo_contato || "",
+    dataPagamento: dbStudent.data_pagamento || "",
     mes: dbStudent.mes,
     statusHistory: [] // Inicializa o histórico vazio para ser preenchido depois
   };
@@ -462,13 +464,51 @@ export const updateStudentStatus = async (
     }
     
     // Agora atualizamos o status do estudante
+    // Preparar os dados para atualização
+    const updateData: any = { 
+      status: newStatus, 
+      updated_at: new Date().toISOString() 
+    };
+    
+    // Se o status for "pagamento-feito", calcular e fixar os dias em atraso até a data atual
+    if (newStatus === "pagamento-feito") {
+      // Buscar os dados atuais do estudante para calcular os dias em atraso finais
+      const { data: currentStudent, error: fetchError } = await supabase
+        .from('students')
+        .select('data_vencimento, dias_atraso')
+        .eq('id', studentId)
+        .maybeSingle();
+        
+      if (!fetchError && currentStudent && currentStudent.data_vencimento) {
+        try {
+          // Calcular dias em atraso até hoje (que será o valor final)
+          const parts = currentStudent.data_vencimento.split('/');
+          if (parts.length === 3) {
+            const vencimentoDate = new Date(
+              parseInt(parts[2]), 
+              parseInt(parts[1]) - 1, 
+              parseInt(parts[0])
+            );
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = today.getTime() - vencimentoDate.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Fixar os dias em atraso no valor atual (não será mais recalculado)
+            updateData.dias_atraso = diffDays > 0 ? diffDays : 0;
+          }
+        } catch (error) {
+          console.error("Erro ao calcular dias em atraso finais:", error);
+        }
+      }
+    }
+    
     // Em vez de buscar dados primeiro, fazemos update direto
     const { error: updateError } = await supabase
       .from('students')
-      .update({ 
-        status: newStatus, 
-        updated_at: new Date().toISOString() 
-      })
+      .update(updateData)
       .eq('id', studentId);
     
     if (updateError) {
