@@ -4,7 +4,7 @@ import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateStudentStatus, saveAllStudents, deleteStudent } from "@/services/supabaseService";
+import { updateStudentStatus, saveAllStudents, deleteStudent, getFollowUps } from "@/services/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 
@@ -178,8 +178,6 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
     // Verificar se existe pelo menos um follow-up registrado para alunos inadimplentes
     if (student.status === "inadimplente") {
       try {
-        // Importar a função getFollowUps se não estiver importada
-        const { getFollowUps } = await import("@/services/supabaseService");
         const followUps = await getFollowUps(student.id);
         
         if (followUps.length === 0 && !student.followUp?.trim()) {
@@ -189,6 +187,8 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
           setProcessingStudentId(null);
           return;
         }
+        
+        console.log(`✅ Aluno ${student.nome} tem ${followUps.length} follow-ups registrados. Pode mover.`);
       } catch (error) {
         console.warn("Erro ao verificar follow-ups, usando validação do campo antigo:", error);
         // Fallback para o campo antigo em caso de erro
