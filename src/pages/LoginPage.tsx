@@ -31,7 +31,8 @@ const LoginPage = () => {
   const validCredentials: UserCredential[] = [
     { username: "wadevengaADM", password: "Salmos2714" },
     { username: "tati.venga", password: "tati.venga" },
-    { username: "Kamilla.vitoriano", password: "396502" }
+    { username: "Kamilla.vitoriano", password: "396502" },
+    { username: "nathaly.alves", password: "156890" }
   ];
 
   const handleLogin = (e: React.FormEvent) => {
