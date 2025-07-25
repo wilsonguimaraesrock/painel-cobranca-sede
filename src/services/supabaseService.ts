@@ -1,5 +1,5 @@
 import { supabase, supabaseUtils } from "@/config/supabase";
-import { Student, Status, StatusHistory } from "@/types";
+import { Student, Status, StatusHistory, FollowUp } from "@/types";
 import { toast } from "sonner";
 
 // Converter um objeto Student do formato da aplicação para o formato do banco de dados
@@ -609,3 +609,189 @@ export const deleteStudent = async (studentId: string): Promise<void> => {
     throw error;
   }
 };
+
+// ========== FOLLOW-UPS FUNCTIONS ==========
+// TODO: Descomentar após executar a migração 20250725140000-add-follow-ups-table.sql
+
+/*
+// Buscar follow-ups de um estudante específico
+export const getFollowUps = async (studentId: string): Promise<FollowUp[]> => {
+  try {
+    console.log(`Buscando follow-ups para o estudante ${studentId}`);
+    
+    const { data, error } = await supabase
+      .from('follow_ups' as any)
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: true }); // Do mais antigo para o mais novo
+    
+    if (error) {
+      console.error("Erro ao buscar follow-ups:", error);
+      throw error;
+    }
+    
+    // Converter formato do banco para o formato da aplicação
+    const followUps: FollowUp[] = data?.map((dbFollowUp: any) => ({
+      id: dbFollowUp.id,
+      studentId: dbFollowUp.student_id,
+      content: dbFollowUp.content,
+      createdBy: dbFollowUp.created_by,
+      createdAt: new Date(dbFollowUp.created_at),
+      updatedAt: new Date(dbFollowUp.updated_at)
+    })) || [];
+    
+    console.log(`Found ${followUps.length} follow-ups for student ${studentId}`);
+    return followUps;
+    
+  } catch (error) {
+    console.error("Erro ao buscar follow-ups:", error);
+    toast.error("Erro ao carregar follow-ups", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return [];
+  }
+};
+
+// Adicionar um novo follow-up
+export const addFollowUp = async (studentId: string, content: string, createdBy: string): Promise<FollowUp | null> => {
+  try {
+    console.log(`Adicionando follow-up para o estudante ${studentId}`);
+    
+    const { data, error } = await supabase
+      .from('follow_ups' as any)
+      .insert({
+        student_id: studentId,
+        content: content.trim(),
+        created_by: createdBy
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Erro ao adicionar follow-up:", error);
+      throw error;
+    }
+    
+    // Converter formato do banco para o formato da aplicação
+    const followUp: FollowUp = {
+      id: data.id,
+      studentId: data.student_id,
+      content: data.content,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
+    };
+    
+    console.log(`Follow-up adicionado com sucesso: ${followUp.id}`);
+    toast.success("Follow-up adicionado com sucesso!");
+    
+    return followUp;
+    
+  } catch (error) {
+    console.error("Erro ao adicionar follow-up:", error);
+    toast.error("Erro ao adicionar follow-up", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return null;
+  }
+};
+
+// Atualizar um follow-up existente (apenas quem criou pode editar)
+export const updateFollowUp = async (followUpId: string, content: string, currentUser: string): Promise<boolean> => {
+  try {
+    console.log(`Atualizando follow-up ${followUpId}`);
+    
+    // Primeiro verificar se o usuário atual é o criador
+    const { data: existingFollowUp, error: fetchError } = await supabase
+      .from('follow_ups' as any)
+      .select('created_by')
+      .eq('id', followUpId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Erro ao buscar follow-up:", fetchError);
+      throw fetchError;
+    }
+    
+    if (existingFollowUp.created_by !== currentUser) {
+      toast.error("Permissão negada", {
+        description: "Apenas quem criou o follow-up pode editá-lo."
+      });
+      return false;
+    }
+    
+    const { error } = await supabase
+      .from('follow_ups' as any)
+      .update({ 
+        content: content.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', followUpId);
+    
+    if (error) {
+      console.error("Erro ao atualizar follow-up:", error);
+      throw error;
+    }
+    
+    console.log(`Follow-up ${followUpId} atualizado com sucesso`);
+    toast.success("Follow-up atualizado com sucesso!");
+    
+    return true;
+    
+  } catch (error) {
+    console.error("Erro ao atualizar follow-up:", error);
+    toast.error("Erro ao atualizar follow-up", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return false;
+  }
+};
+
+// Excluir um follow-up (apenas quem criou pode excluir)
+export const deleteFollowUp = async (followUpId: string, currentUser: string): Promise<boolean> => {
+  try {
+    console.log(`Excluindo follow-up ${followUpId}`);
+    
+    // Primeiro verificar se o usuário atual é o criador
+    const { data: existingFollowUp, error: fetchError } = await supabase
+      .from('follow_ups' as any)
+      .select('created_by')
+      .eq('id', followUpId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Erro ao buscar follow-up:", fetchError);
+      throw fetchError;
+    }
+    
+    if (existingFollowUp.created_by !== currentUser) {
+      toast.error("Permissão negada", {
+        description: "Apenas quem criou o follow-up pode excluí-lo."
+      });
+      return false;
+    }
+    
+    const { error } = await supabase
+      .from('follow_ups' as any)
+      .delete()
+      .eq('id', followUpId);
+    
+    if (error) {
+      console.error("Erro ao excluir follow-up:", error);
+      throw error;
+    }
+    
+    console.log(`Follow-up ${followUpId} excluído com sucesso`);
+    toast.success("Follow-up excluído com sucesso!");
+    
+    return true;
+    
+  } catch (error) {
+    console.error("Erro ao excluir follow-up:", error);
+    toast.error("Erro ao excluir follow-up", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return false;
+  }
+};
+*/

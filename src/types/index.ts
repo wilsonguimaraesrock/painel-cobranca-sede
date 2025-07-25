@@ -6,7 +6,7 @@ export interface Student {
   valor: number;
   dataVencimento: string;
   diasAtraso: number;
-  followUp: string;
+  followUp: string; // Mantido para compatibilidade, mas será deprecated
   email?: string;
   telefone?: string;
   observacoes: string;
@@ -16,6 +16,8 @@ export interface Student {
   ultimoContato?: string;
   dataPagamento?: string;
   mes: string;
+  createdBy?: string; // Novo campo para controlar quem criou o aluno
+  followUps?: FollowUp[]; // Nova estrutura para follow-ups com histórico
 }
 
 export type Status = "inadimplente" | "mensagem-enviada" | "resposta-recebida" | "pagamento-feito";
@@ -25,6 +27,16 @@ export interface StatusHistory {
   newStatus: Status;
   changedBy: string;
   changedAt: Date;
+}
+
+// Nova interface para follow-ups com histórico
+export interface FollowUp {
+  id: string;
+  studentId: string;
+  content: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SheetData {
