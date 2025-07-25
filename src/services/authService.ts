@@ -36,7 +36,37 @@ export const authenticateUser = async (credentials: LoginCredentials): Promise<L
   try {
     const { email, password } = credentials;
 
-    // Buscar usuário na tabela user_profiles
+    console.log('🔍 Tentativa de login:', { email, password });
+
+    // Primeiro, buscar usuário apenas por email para debug
+    const { data: userCheck, error: checkError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+
+    console.log('📋 Usuário encontrado:', userCheck);
+    console.log('❗ Erro na busca:', checkError);
+
+    if (checkError || !userCheck) {
+      console.log('❌ Usuário não encontrado para email:', email);
+      return {
+        success: false,
+        error: 'Email não encontrado no sistema'
+      };
+    }
+
+    // Verificar senha
+    if (userCheck.password_hash !== password) {
+      console.log('❌ Senha incorreta. Esperado:', userCheck.password_hash, 'Recebido:', password);
+      return {
+        success: false,
+        error: 'Senha incorreta'
+      };
+    }
+
+    // Agora buscar com email e senha para confirmar
     const { data: user, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -46,7 +76,7 @@ export const authenticateUser = async (credentials: LoginCredentials): Promise<L
       .single();
 
     if (error || !user) {
-      console.log('Usuário não encontrado ou credenciais inválidas:', error);
+      console.log('❌ Erro na consulta final:', error);
       return {
         success: false,
         error: 'Email ou senha inválidos'
