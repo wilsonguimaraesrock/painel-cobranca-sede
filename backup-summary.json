@@ -1,0 +1,13 @@
+{
+  "backup_date": "2025-07-25T14:38:17.039Z",
+  "tables": {
+    "students": 55,
+    "status_history": 161,
+    "user_profiles": 9,
+    "available_months": 6
+  },
+  "original_project": {
+    "url": "https://olhdcicquehastcwvieu.supabase.co",
+    "project_id": "olhdcicquehastcwvieu"
+  }
+}

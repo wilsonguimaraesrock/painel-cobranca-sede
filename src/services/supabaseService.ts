@@ -19,7 +19,8 @@ const convertToDbFormat = (student: Student) => {
     primeiro_contato: student.primeiroContato || "",
     ultimo_contato: student.ultimoContato || "",
     data_pagamento: student.dataPagamento || "",
-    mes: student.mes
+    mes: student.mes,
+    created_by: student.createdBy || ""
   };
 };
 
@@ -41,7 +42,9 @@ const convertFromDbFormat = (dbStudent: any): Student => {
     ultimoContato: dbStudent.ultimo_contato || "",
     dataPagamento: dbStudent.data_pagamento || "",
     mes: dbStudent.mes,
-    statusHistory: [] // Inicializa o histórico vazio para ser preenchido depois
+    createdBy: dbStudent.created_by || "",
+    statusHistory: [], // Inicializa o histórico vazio para ser preenchido depois
+    followUps: [] // Inicializa follow-ups vazio - será carregado separadamente
   };
 };
 
@@ -611,9 +614,7 @@ export const deleteStudent = async (studentId: string): Promise<void> => {
 };
 
 // ========== FOLLOW-UPS FUNCTIONS ==========
-// TODO: Descomentar após executar a migração 20250725140000-add-follow-ups-table.sql
 
-/*
 // Buscar follow-ups de um estudante específico
 export const getFollowUps = async (studentId: string): Promise<FollowUp[]> => {
   try {
@@ -794,4 +795,3 @@ export const deleteFollowUp = async (followUpId: string, currentUser: string): P
     return false;
   }
 };
-*/

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "2e941b9e-627b-4745-b5a4-561692644e0b",
+    "user_id": "b1f3aec2-2f23-4316-beb5-45860b3cf976",
+    "name": "Marcele Domingos",
+    "email": "marcele_domingos@hotmail.com",
+    "role": "vendedor",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-08T20:16:17.726634+00:00",
+    "last_login": "2025-07-08T23:58:27.647+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "928402db-a3f6-4395-8c91-5770cd8fbf9e",
+    "user_id": "51f0ce24-f72b-4d96-83ed-c61fa010db25",
+    "name": "Vinicius Naumann",
+    "email": "viniciusmnaumann@gmail.com",
+    "role": "coordenador",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-09T22:07:12.050426+00:00",
+    "last_login": "2025-07-09T22:13:11.143+00:00",
+    "first_login_completed": false
+  },
+  {
+    "id": "9c981b6b-b72f-49ac-9405-fd47dad93849",
+    "user_id": "06c74689-7f35-4996-8e29-ac691f57d02e",
+    "name": "Wade Venga",
+    "email": "wadepvenga@gmail.com",
+    "role": "franqueado",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-08T03:41:54.553006+00:00",
+    "last_login": "2025-07-10T13:10:54.185+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "df95ace6-29fd-418f-9abe-66ca9f25c41e",
+    "user_id": "138625d3-8f79-41c2-bb66-bbe6865df21d",
+    "name": "Tatiana Venga",
+    "email": "tatiana.direito@hotmail.com",
+    "role": "franqueado",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-07T23:23:43.578491+00:00",
+    "last_login": "2025-07-15T13:28:25.279+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "0809c1d2-b1cc-41fe-aecd-3a650512f992",
+    "user_id": "c05d24bf-ea65-4593-9a85-b29a1063d13b",
+    "name": "Kamilla Pedrozo",
+    "email": "millaka80@gmail.com",
+    "role": "assessora_adm",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-08T19:47:53.464391+00:00",
+    "last_login": "2025-07-09T16:00:08.231+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "0e466a56-1d50-459a-886c-a24a316b0095",
+    "user_id": "3eee3793-ceb9-4eb3-968c-a7983873af58",
+    "name": "Nathaly Ribeiro Alves",
+    "email": "nathalyribeiroalves@hotmail.com",
+    "role": "supervisor_adm",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-08T12:40:10.843205+00:00",
+    "last_login": "2025-07-09T23:37:19.625+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "44fee957-24ee-4f90-9631-e4c4d8e006fa",
+    "user_id": "567a778f-a5e0-427e-85df-8917c7efe607",
+    "name": "Administrador",
+    "email": "wadevenga@hotmail.com",
+    "role": "admin",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-07T20:49:57.931374+00:00",
+    "last_login": "2025-07-09T20:34:02.738+00:00",
+    "first_login_completed": true
+  },
+  {
+    "id": "406753cb-eb3c-4cc9-a642-a85bc9720e59",
+    "user_id": "9549ed2f-c2aa-47fb-ab57-9f481f57bec9",
+    "name": "Maria Thereza Kauss",
+    "email": "mtkauss@gmail.com",
+    "role": "coordenador",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-09T22:03:04.531486+00:00",
+    "last_login": "2025-07-09T23:51:06.989+00:00",
+    "first_login_completed": false
+  },
+  {
+    "id": "59995e67-bb60-48a5-a75e-1f0d87717954",
+    "user_id": "33859b75-ebcd-4d27-b403-ccc5f297e1d6",
+    "name": "Vanessa Pereira",
+    "email": "vanessathk@gmail.com",
+    "role": "assessora_adm",
+    "is_active": true,
+    "password_hash": null,
+    "created_at": "2025-07-08T19:47:19.357115+00:00",
+    "last_login": "2025-07-10T00:21:29.016+00:00",
+    "first_login_completed": true
+  }
+]

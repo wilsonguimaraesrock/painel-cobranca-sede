@@ -4,7 +4,7 @@ import { Student, Status } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
-import StudentDetailsDialog from "@/components/StudentDetailsDialog";
+import StudentDetailsDialogV2 from "@/components/StudentDetailsDialogV2";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -211,7 +211,7 @@ const StudentCard = ({
       </CardFooter>
       
       {isDetailsOpen && (
-        <StudentDetailsDialog 
+        <StudentDetailsDialogV2 
           student={student}
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}

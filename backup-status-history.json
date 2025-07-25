@@ -1,0 +1,1290 @@
+[
+  {
+    "id": "a269f399-cf08-46ee-939b-21974c22a768",
+    "student_id": "e501d683-2988-4508-9542-564fff019119",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:28:35.126+00:00"
+  },
+  {
+    "id": "898ff5ee-28e1-4365-9e2e-518538eb63b1",
+    "student_id": "ede89375-a144-4ab3-969c-7139b30a0278",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:28:54.427+00:00"
+  },
+  {
+    "id": "cd76965a-3fa3-4ea8-848f-abd923e2f737",
+    "student_id": "ede89375-a144-4ab3-969c-7139b30a0278",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:29:19.861+00:00"
+  },
+  {
+    "id": "f657cccc-cc54-46a0-bcee-2d3683cf97bc",
+    "student_id": "ede89375-a144-4ab3-969c-7139b30a0278",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:29:21.514+00:00"
+  },
+  {
+    "id": "5ea59ca0-5959-47ac-af84-649d07b9a6d8",
+    "student_id": "90f03d94-0cb8-4baa-84b5-e5edb7c3da35",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:29:46.233+00:00"
+  },
+  {
+    "id": "8f1a320a-0c31-4279-86ba-eabcb2a8facc",
+    "student_id": "9e6c93e7-4a3e-4879-b18a-ddd0b23488c1",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:41:02.767+00:00"
+  },
+  {
+    "id": "b595551c-12c2-4ed2-af35-a857a024607c",
+    "student_id": "64ec83fa-0b05-49a5-ab6a-442de1128e83",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:48:52.038+00:00"
+  },
+  {
+    "id": "05fad460-347d-4030-a232-d28e695185df",
+    "student_id": "7ca3fb8b-cdf1-49c6-ada7-90981804ed2e",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:52:53.68+00:00"
+  },
+  {
+    "id": "05b804a3-f803-4fb4-8198-576049741a38",
+    "student_id": "ac497113-f6dc-4e7c-bb45-281609ebc2dc",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:24.863+00:00"
+  },
+  {
+    "id": "4f4865a5-6b9e-4a8e-ba92-3aa54dff25ef",
+    "student_id": "ac497113-f6dc-4e7c-bb45-281609ebc2dc",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:26.262+00:00"
+  },
+  {
+    "id": "71b42cb5-c656-472e-be9b-81b5553cce6b",
+    "student_id": "a65f536d-f575-4df4-a911-56bcbd626d8a",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:35.424+00:00"
+  },
+  {
+    "id": "7b13a573-40c3-424b-93a5-5a9c060182ec",
+    "student_id": "e32e2c43-aaae-4651-95b7-b56f91e5e963",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:40.653+00:00"
+  },
+  {
+    "id": "96fd867a-5b59-4517-b6a3-2a122c932985",
+    "student_id": "7a311eb5-5139-4659-a003-b253d5a46132",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:45.749+00:00"
+  },
+  {
+    "id": "5724ea71-66f9-4599-8f0f-ddb7d1c12b34",
+    "student_id": "e7031a97-76a5-472a-95b0-6120cc4981ab",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T14:27:59.732+00:00"
+  },
+  {
+    "id": "7bdb0946-eb79-466b-8e35-6c2daf352ac5",
+    "student_id": "e501d683-2988-4508-9542-564fff019119",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-24T15:13:36.063+00:00"
+  },
+  {
+    "id": "12e5b986-abf0-4830-94ff-420b8d505c6d",
+    "student_id": "e7031a97-76a5-472a-95b0-6120cc4981ab",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-24T15:14:02.096+00:00"
+  },
+  {
+    "id": "b88e18be-790d-4e7c-89e9-6d4f0cae97bf",
+    "student_id": "e32e2c43-aaae-4651-95b7-b56f91e5e963",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-26T19:10:51.11+00:00"
+  },
+  {
+    "id": "2d2afc8f-18d2-46a5-895e-8e7931a07833",
+    "student_id": "e32e2c43-aaae-4651-95b7-b56f91e5e963",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-26T19:10:52.421+00:00"
+  },
+  {
+    "id": "fa7a635a-a32d-4fed-9b18-51804585ead0",
+    "student_id": "ce7055a9-208e-4c9c-90c3-5ff0fb522c78",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-01T14:56:58.523+00:00"
+  },
+  {
+    "id": "da01d4b3-9713-4bf4-9d16-442a02b688fd",
+    "student_id": "ce7055a9-208e-4c9c-90c3-5ff0fb522c78",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-01T14:57:13.605+00:00"
+  },
+  {
+    "id": "0675ad7a-1071-4c33-8a7e-748c96cc3a49",
+    "student_id": "90f03d94-0cb8-4baa-84b5-e5edb7c3da35",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-01T14:57:16.042+00:00"
+  },
+  {
+    "id": "b94a99a8-0226-4d66-9a0d-611719a29f97",
+    "student_id": "fffe9df4-6ee7-4221-b755-0edebeecf913",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T13:50:06.355+00:00"
+  },
+  {
+    "id": "b9dcb6a4-12d8-438a-981f-75d33f2748d0",
+    "student_id": "4b0bfa9f-52bc-4ed3-9563-892df6321ccf",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T13:58:49.106+00:00"
+  },
+  {
+    "id": "f96533fa-92ff-4875-b54b-25dcfb1c2768",
+    "student_id": "1374e6cf-9325-4274-98df-8977b102e720",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:01:39.175+00:00"
+  },
+  {
+    "id": "4dba3965-1bde-4949-bb8a-98c59f863751",
+    "student_id": "5eb0f40b-d457-44ba-870a-2ef226634388",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:06:06.985+00:00"
+  },
+  {
+    "id": "a3368ab6-4d4c-47d7-b61e-8e4e4f66c378",
+    "student_id": "5eb0f40b-d457-44ba-870a-2ef226634388",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:06:43.077+00:00"
+  },
+  {
+    "id": "b0785b57-b676-4d56-ba27-3c278959ed7c",
+    "student_id": "1374e6cf-9325-4274-98df-8977b102e720",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:06:48.837+00:00"
+  },
+  {
+    "id": "e054f80f-2515-47ad-b428-b221766c49ca",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:20:05.809+00:00"
+  },
+  {
+    "id": "3aceb16d-92f4-44fb-93d5-886aeba7c2e2",
+    "student_id": "7908b505-f7f7-4173-877b-f0b786d8716c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:25:08.899+00:00"
+  },
+  {
+    "id": "f0865a79-7cd0-4c04-bf94-318010f80283",
+    "student_id": "24607fe2-9497-4d5a-9498-0584ade4af79",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:03:43.902+00:00"
+  },
+  {
+    "id": "0fe47912-faa0-4064-876a-a99659fb8847",
+    "student_id": "e1d5d07d-0a81-4f1a-b392-a240c24fb2ad",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:10:42.535+00:00"
+  },
+  {
+    "id": "97bd514d-2f3b-4213-b77a-0280bccda031",
+    "student_id": "7b83f67b-2924-420a-8b93-2590bbdb806f",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:12:27.441+00:00"
+  },
+  {
+    "id": "792a2c90-dc21-4172-b038-376c6b0eb9d6",
+    "student_id": "8fb9fdb4-2c8b-4143-93c2-4e60186adb1c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:18:19.022+00:00"
+  },
+  {
+    "id": "7d510a5c-9b72-44b4-b6df-57d83a8a9047",
+    "student_id": "de82bbaf-d906-4248-99be-a065c142bcc0",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:19:03.166+00:00"
+  },
+  {
+    "id": "c44d77ce-0346-4cc6-9051-cf2f710a4f25",
+    "student_id": "c11b30e2-dd94-4139-9d90-7e723f790cf4",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:22:44.657+00:00"
+  },
+  {
+    "id": "5966568c-c48b-40fc-a983-9f8525bdcbf8",
+    "student_id": "e1d5d07d-0a81-4f1a-b392-a240c24fb2ad",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:25:57.889+00:00"
+  },
+  {
+    "id": "16fea477-67c0-4080-b975-e1fea046490b",
+    "student_id": "059a41f6-8fd9-4603-b571-d3a72f82e110",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T15:27:24.723+00:00"
+  },
+  {
+    "id": "b145c459-89a5-43e6-81c9-fc17c8bee0c5",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "resposta-recebida",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:28:34.553+00:00"
+  },
+  {
+    "id": "1d5da05a-7fd4-4d09-9444-5e2d374000ef",
+    "student_id": "7908b505-f7f7-4173-877b-f0b786d8716c",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:32:02.485+00:00"
+  },
+  {
+    "id": "4474887b-f306-4ba0-af7e-91fd718c1f8e",
+    "student_id": "7908b505-f7f7-4173-877b-f0b786d8716c",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:32:17.144+00:00"
+  },
+  {
+    "id": "5ae1584d-b5b5-4360-a1b0-19bc1dc9e8e9",
+    "student_id": "de82bbaf-d906-4248-99be-a065c142bcc0",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:33:24.4+00:00"
+  },
+  {
+    "id": "f3de62bc-6fdf-4963-ab79-61c0ce44d8a0",
+    "student_id": "de82bbaf-d906-4248-99be-a065c142bcc0",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:33:28.536+00:00"
+  },
+  {
+    "id": "27b722f8-bc61-4689-8dbd-cdb9b10dba6e",
+    "student_id": "104057e5-4dda-4ba6-9c0c-cac70102c1ef",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:33:50.722+00:00"
+  },
+  {
+    "id": "d2bad226-d02a-47c5-9087-f295be6ebd29",
+    "student_id": "104057e5-4dda-4ba6-9c0c-cac70102c1ef",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:33:58.519+00:00"
+  },
+  {
+    "id": "150999d8-61be-426d-a89b-b4870aa4d44a",
+    "student_id": "e1d5d07d-0a81-4f1a-b392-a240c24fb2ad",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:36:03.305+00:00"
+  },
+  {
+    "id": "db5805a2-38c3-4281-809a-69e41ee93495",
+    "student_id": "fffe9df4-6ee7-4221-b755-0edebeecf913",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T12:54:27.249+00:00"
+  },
+  {
+    "id": "a6be0b6f-fbf0-4267-b9c8-c87c1447525e",
+    "student_id": "1734604f-d5c0-4b5c-802f-3c93f786bedc",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T15:28:24.681+00:00"
+  },
+  {
+    "id": "b0a184bc-ce2c-4fe2-8818-d8d9d9ed8ce0",
+    "student_id": "1734604f-d5c0-4b5c-802f-3c93f786bedc",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T15:28:29.336+00:00"
+  },
+  {
+    "id": "15c7d8bc-c352-448c-b43d-d9a095dcfe10",
+    "student_id": "ae0ee8e7-e4bd-4ca3-9acc-ae0efe79fb9a",
+    "old_status": "resposta-recebida",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-14T16:04:51.788+00:00"
+  },
+  {
+    "id": "3b3cfb9b-6589-424a-97a0-25f3676555a9",
+    "student_id": "fffe9df4-6ee7-4221-b755-0edebeecf913",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T13:07:39.72+00:00"
+  },
+  {
+    "id": "53a9174f-1e04-4620-8c17-39318cb94976",
+    "student_id": "4b0bfa9f-52bc-4ed3-9563-892df6321ccf",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T13:52:22.272+00:00"
+  },
+  {
+    "id": "0f2758b4-a9a2-4759-bf8e-f1838c554a27",
+    "student_id": "4b0bfa9f-52bc-4ed3-9563-892df6321ccf",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T13:52:31.014+00:00"
+  },
+  {
+    "id": "2658959a-3888-4e49-9a73-7d807b0960da",
+    "student_id": "c11b30e2-dd94-4139-9d90-7e723f790cf4",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T14:22:58.974+00:00"
+  },
+  {
+    "id": "e975b5d6-72d4-43a5-876c-d4b9321cbd0e",
+    "student_id": "c11b30e2-dd94-4139-9d90-7e723f790cf4",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T14:23:03.038+00:00"
+  },
+  {
+    "id": "1eb19df6-0779-4209-ac83-9ee3a8585a24",
+    "student_id": "f6fd2e09-a47a-4d49-9e0f-4d092b255192",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-15T15:10:29.514+00:00"
+  },
+  {
+    "id": "ba87d52d-4e7c-42c4-a52f-c3aa4783d52b",
+    "student_id": "5d681894-62ae-4685-9873-58f23f5438ad",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:14:06.104+00:00"
+  },
+  {
+    "id": "9182e650-51f6-45fc-94c3-8d9e50c82329",
+    "student_id": "9e67f5e0-a351-4cc8-b1e3-858fea208160",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:14:49.663+00:00"
+  },
+  {
+    "id": "73ec3f1f-ffe0-4fba-ba7b-24cf63980be1",
+    "student_id": "9f6c6fbc-14cc-4347-b494-94f32bdf4e87",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:17:16.576+00:00"
+  },
+  {
+    "id": "0d717251-1466-4242-8df3-8e192e92d749",
+    "student_id": "9e67f5e0-a351-4cc8-b1e3-858fea208160",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:19:46.472+00:00"
+  },
+  {
+    "id": "394e292c-530d-47cf-ac81-bc51c3065d79",
+    "student_id": "dafe1068-a432-425d-adfc-fa504af3980b",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:22:19.18+00:00"
+  },
+  {
+    "id": "b5c353b2-5909-4434-be36-d3daed2765ea",
+    "student_id": "0a39eed9-e238-4da0-888b-c91f4bb93ead",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:38:22.72+00:00"
+  },
+  {
+    "id": "b0aae0a8-00d6-4248-891f-ee2608906e9c",
+    "student_id": "0a39eed9-e238-4da0-888b-c91f4bb93ead",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:38:32.523+00:00"
+  },
+  {
+    "id": "32695412-935a-4260-96a2-ca7419ba729f",
+    "student_id": "0a39eed9-e238-4da0-888b-c91f4bb93ead",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:38:33.609+00:00"
+  },
+  {
+    "id": "6092484c-6597-4661-b7f8-82c4abaeb317",
+    "student_id": "f8e13d22-75f9-442f-82bb-1d1776511951",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:45:26.646+00:00"
+  },
+  {
+    "id": "3be78425-fb28-4764-9d8c-671d148ae2c1",
+    "student_id": "8ab732f0-4b7a-4aa9-bfc7-fb931c3d779f",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-16T18:50:50.765+00:00"
+  },
+  {
+    "id": "826267d5-a8a1-4071-9a1d-6c6054521432",
+    "student_id": "f8e13d22-75f9-442f-82bb-1d1776511951",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:52:23.525+00:00"
+  },
+  {
+    "id": "808cfd5e-65fc-4817-98c8-f435688acc82",
+    "student_id": "f8e13d22-75f9-442f-82bb-1d1776511951",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:52:24.508+00:00"
+  },
+  {
+    "id": "e1520827-f5e5-4af3-ae6d-1c4a337d221d",
+    "student_id": "64ec83fa-0b05-49a5-ab6a-442de1128e83",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:53:34.261+00:00"
+  },
+  {
+    "id": "b51ae68e-5931-413b-b3f3-18a9619f967f",
+    "student_id": "64ec83fa-0b05-49a5-ab6a-442de1128e83",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:53:35.269+00:00"
+  },
+  {
+    "id": "7d5a751a-cb83-4356-8f5c-52e54856ad53",
+    "student_id": "7ca3fb8b-cdf1-49c6-ada7-90981804ed2e",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:53:52.092+00:00"
+  },
+  {
+    "id": "5bf69dec-fca0-4145-9275-e9c52ad4f795",
+    "student_id": "7ca3fb8b-cdf1-49c6-ada7-90981804ed2e",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-23T13:53:53.548+00:00"
+  },
+  {
+    "id": "f259a80a-1ec6-484b-bf16-09eadc963ed2",
+    "student_id": "b9748481-a58f-435c-b71a-815c38b9248f",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:05:26.001+00:00"
+  },
+  {
+    "id": "a68855b0-eca0-4a7c-9cb3-b2140e62fa85",
+    "student_id": "b9748481-a58f-435c-b71a-815c38b9248f",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:05:30.877+00:00"
+  },
+  {
+    "id": "81ef1e7f-bad9-4b58-940d-6f0f6b5565f4",
+    "student_id": "aa9a55d2-ee1a-4f75-9b4d-89c72084d334",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:06:25.829+00:00"
+  },
+  {
+    "id": "557fca35-5f14-4288-be1c-8e9988f2c22d",
+    "student_id": "92c80595-e5d1-4f71-8f21-09ddc17b05f1",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:07:06.126+00:00"
+  },
+  {
+    "id": "bf798b0f-7b75-4fd9-b69a-9ff87e6316a3",
+    "student_id": "92c80595-e5d1-4f71-8f21-09ddc17b05f1",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:07:10.991+00:00"
+  },
+  {
+    "id": "416d387d-84ff-4c64-8a14-1bb0328824d8",
+    "student_id": "92c80595-e5d1-4f71-8f21-09ddc17b05f1",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:08:37.242+00:00"
+  },
+  {
+    "id": "1420ee03-f160-4dfc-9d38-650eec95797f",
+    "student_id": "eb9bdaa9-6ee0-4ae6-b42d-33814917eb83",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:10:15.92+00:00"
+  },
+  {
+    "id": "e745556f-1feb-4ea0-b02c-b144e1a08254",
+    "student_id": "e2b2c37f-1784-4973-9b35-5d61462d3da1",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:12:10.892+00:00"
+  },
+  {
+    "id": "ea83255d-c947-4810-a7a1-f7b70266f88f",
+    "student_id": "e2b2c37f-1784-4973-9b35-5d61462d3da1",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:12:16.886+00:00"
+  },
+  {
+    "id": "0ad7bd33-f876-400c-9725-8e085142a16c",
+    "student_id": "e2b2c37f-1784-4973-9b35-5d61462d3da1",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:12:18.266+00:00"
+  },
+  {
+    "id": "8941142c-0bdf-4304-9fdf-560e58fa8800",
+    "student_id": "2a5c5efb-494c-4779-a92d-c371d1fee5c9",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:13:31.046+00:00"
+  },
+  {
+    "id": "a491e810-a554-4b4c-a21a-887882c8f64f",
+    "student_id": "2a5c5efb-494c-4779-a92d-c371d1fee5c9",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:13:32.302+00:00"
+  },
+  {
+    "id": "d9124729-1f73-49b0-9fe3-74dc1851526d",
+    "student_id": "2a5c5efb-494c-4779-a92d-c371d1fee5c9",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:13:33.462+00:00"
+  },
+  {
+    "id": "0d959bfa-a5fa-4452-ab63-f16e6e6da7af",
+    "student_id": "602cd779-62b8-4e86-b872-906b9a36bc45",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:15:25.087+00:00"
+  },
+  {
+    "id": "6f782e13-56a2-4e40-8676-f7d5e8bc5f6c",
+    "student_id": "602cd779-62b8-4e86-b872-906b9a36bc45",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:15:27.236+00:00"
+  },
+  {
+    "id": "cfff93f0-5b17-496f-8a53-dcb3e11930e9",
+    "student_id": "feedbb45-d7bd-40a4-b9e5-6356778384c7",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:16:35.037+00:00"
+  },
+  {
+    "id": "d9649206-7112-410f-857d-ce5d9d749a02",
+    "student_id": "feedbb45-d7bd-40a4-b9e5-6356778384c7",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:16:36.501+00:00"
+  },
+  {
+    "id": "effcb889-e4c7-4ce6-a8e7-9e22db168823",
+    "student_id": "feedbb45-d7bd-40a4-b9e5-6356778384c7",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:16:37.549+00:00"
+  },
+  {
+    "id": "c4f403c3-c698-41e3-a122-f289601ad04c",
+    "student_id": "0060fab6-73e2-460f-9599-45f09fc33453",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:18:52.744+00:00"
+  },
+  {
+    "id": "ae1d6c08-491a-431d-a6fd-e25fe2e320ca",
+    "student_id": "0060fab6-73e2-460f-9599-45f09fc33453",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:18:53.725+00:00"
+  },
+  {
+    "id": "6739e2da-04d9-477b-b499-70bc0c0bd7df",
+    "student_id": "0060fab6-73e2-460f-9599-45f09fc33453",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:18:54.797+00:00"
+  },
+  {
+    "id": "518d5cda-05ae-4ed4-8684-7b1addd5c2ff",
+    "student_id": "4cde1ee4-7984-46b0-bc1a-9071af97d445",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:20:26.397+00:00"
+  },
+  {
+    "id": "54e55fc1-e9e6-4484-807c-a9eee178da80",
+    "student_id": "4cde1ee4-7984-46b0-bc1a-9071af97d445",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:20:27.381+00:00"
+  },
+  {
+    "id": "c3366341-4f16-451e-a966-679890c3407c",
+    "student_id": "4cde1ee4-7984-46b0-bc1a-9071af97d445",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:20:28.309+00:00"
+  },
+  {
+    "id": "55f0d48b-f340-4381-8f87-31778c085579",
+    "student_id": "602cd779-62b8-4e86-b872-906b9a36bc45",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:20:45.681+00:00"
+  },
+  {
+    "id": "75a8d857-83a1-4f78-a867-ca4c351b97fe",
+    "student_id": "12c6708a-0df4-40e1-a60e-03a2be851e6d",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:22:02.453+00:00"
+  },
+  {
+    "id": "7d0c5a9c-a3e0-4c6e-b88b-c5896b6d8594",
+    "student_id": "12c6708a-0df4-40e1-a60e-03a2be851e6d",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:22:06.443+00:00"
+  },
+  {
+    "id": "92b2832c-0836-4511-9baa-2e25f88d7fd0",
+    "student_id": "12c6708a-0df4-40e1-a60e-03a2be851e6d",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:22:07.447+00:00"
+  },
+  {
+    "id": "4343d63c-9daa-4c34-919e-34425d5966b0",
+    "student_id": "41a92c8b-52d1-4856-8079-46d60264ecc9",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:24:44.069+00:00"
+  },
+  {
+    "id": "55a35f64-e8db-4162-9a09-88fac35b2afa",
+    "student_id": "41a92c8b-52d1-4856-8079-46d60264ecc9",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:24:45.235+00:00"
+  },
+  {
+    "id": "99fa8383-7759-4eae-b38f-c7f149155e26",
+    "student_id": "41a92c8b-52d1-4856-8079-46d60264ecc9",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:24:47.275+00:00"
+  },
+  {
+    "id": "ee27d314-b422-4fa4-bba4-f2dc846621d6",
+    "student_id": "3680089d-51c9-4d10-a978-fc036dd56f44",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:27:00.166+00:00"
+  },
+  {
+    "id": "7b164b24-835b-4e72-b46f-414c03e74f0f",
+    "student_id": "3680089d-51c9-4d10-a978-fc036dd56f44",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:27:01.39+00:00"
+  },
+  {
+    "id": "294ab3da-9190-46d5-a66e-e449889beab4",
+    "student_id": "1e17e991-0155-4895-ba73-153493665f92",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:31:49.085+00:00"
+  },
+  {
+    "id": "52b99493-3d42-447e-8a92-f50f880e1668",
+    "student_id": "1e17e991-0155-4895-ba73-153493665f92",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:31:50.029+00:00"
+  },
+  {
+    "id": "1ec8bbd9-66df-4a31-ad4f-84da72bcc873",
+    "student_id": "1e17e991-0155-4895-ba73-153493665f92",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:31:51.013+00:00"
+  },
+  {
+    "id": "7b6a99cd-fd0f-4f7e-a1e8-da73bb803e61",
+    "student_id": "5564d8ad-ecce-41a7-a57c-719e995b3192",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:33:02.529+00:00"
+  },
+  {
+    "id": "bcc1c9a8-ab59-46a4-aaf2-e952cb49df94",
+    "student_id": "5564d8ad-ecce-41a7-a57c-719e995b3192",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:33:03.614+00:00"
+  },
+  {
+    "id": "4caa0dcd-ea9c-4c7e-82cb-54f62f44256f",
+    "student_id": "5564d8ad-ecce-41a7-a57c-719e995b3192",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-05T13:33:05.51+00:00"
+  },
+  {
+    "id": "ac516945-e6a7-4257-93b0-9da262bd55ff",
+    "student_id": "5564d8ad-ecce-41a7-a57c-719e995b3192",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "wadevengaADM",
+    "changed_at": "2025-06-05T14:12:20.412+00:00"
+  },
+  {
+    "id": "3dba1423-5865-4dcf-8e16-3aeb8613e4c0",
+    "student_id": "5564d8ad-ecce-41a7-a57c-719e995b3192",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "wadevengaADM",
+    "changed_at": "2025-06-05T14:12:22.401+00:00"
+  },
+  {
+    "id": "77ef482d-0ed2-41b8-8fb2-dc9d6809a683",
+    "student_id": "a65f536d-f575-4df4-a911-56bcbd626d8a",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-24T13:55:35.939+00:00"
+  },
+  {
+    "id": "d0794209-f560-4465-b74c-158177a7f1d8",
+    "student_id": "a65f536d-f575-4df4-a911-56bcbd626d8a",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-24T13:55:37.129+00:00"
+  },
+  {
+    "id": "dceb69e3-20d7-43e6-a769-eb160160de78",
+    "student_id": "ac497113-f6dc-4e7c-bb45-281609ebc2dc",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-24T13:56:01.212+00:00"
+  },
+  {
+    "id": "73f836aa-4649-4321-8d53-a316a89a2b5c",
+    "student_id": "9e6c93e7-4a3e-4879-b18a-ddd0b23488c1",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-25T16:48:37.911+00:00"
+  },
+  {
+    "id": "c6fba854-8b2b-44e9-b59c-69a1227147c8",
+    "student_id": "9e6c93e7-4a3e-4879-b18a-ddd0b23488c1",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-25T16:48:40.699+00:00"
+  },
+  {
+    "id": "8b609aab-fb9c-4708-b0de-a0256fdbe712",
+    "student_id": "8ab732f0-4b7a-4aa9-bfc7-fb931c3d779f",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-26T18:19:49.946+00:00"
+  },
+  {
+    "id": "7a74e762-24b0-4391-aa92-4872b066e92f",
+    "student_id": "8ab732f0-4b7a-4aa9-bfc7-fb931c3d779f",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-06-26T18:19:51.58+00:00"
+  },
+  {
+    "id": "a13f0705-c3e1-49d9-b19e-1e3f1435b148",
+    "student_id": "e7031a97-76a5-472a-95b0-6120cc4981ab",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-01T14:17:09.619+00:00"
+  },
+  {
+    "id": "34845d76-3f16-4599-ac9f-ad26bbab6727",
+    "student_id": "1734604f-d5c0-4b5c-802f-3c93f786bedc",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T13:49:30.917+00:00"
+  },
+  {
+    "id": "5c024dc0-47f1-4d93-98dc-f5098a601174",
+    "student_id": "104057e5-4dda-4ba6-9c0c-cac70102c1ef",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T13:54:48.989+00:00"
+  },
+  {
+    "id": "c5954499-b402-4513-b550-f8e4a18b7d1a",
+    "student_id": "5eb0f40b-d457-44ba-870a-2ef226634388",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:01:47.382+00:00"
+  },
+  {
+    "id": "14acb9a8-9109-41c0-89f2-7952c79559e4",
+    "student_id": "1374e6cf-9325-4274-98df-8977b102e720",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:06:21.921+00:00"
+  },
+  {
+    "id": "8aa66c60-431f-45ad-8103-07a8511c23e2",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-11T14:13:48.502+00:00"
+  },
+  {
+    "id": "06561363-9959-43a5-a6ca-6b22cf51a97e",
+    "student_id": "865c3914-2cce-4461-94f4-56388e2fbc84",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-16T16:23:22.221+00:00"
+  },
+  {
+    "id": "74356d9a-81c0-49f3-820d-9f49a438e615",
+    "student_id": "5d681894-62ae-4685-9873-58f23f5438ad",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-17T11:21:59.37+00:00"
+  },
+  {
+    "id": "f7528e01-a4ac-479a-b840-3cf841183218",
+    "student_id": "5d681894-62ae-4685-9873-58f23f5438ad",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-17T11:22:12.408+00:00"
+  },
+  {
+    "id": "4e373817-51a3-44b2-9ca3-7636d627967b",
+    "student_id": "ae0ee8e7-e4bd-4ca3-9acc-ae0efe79fb9a",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-17T13:13:16.525+00:00"
+  },
+  {
+    "id": "6428a998-3b72-4841-a164-5ad4b296852c",
+    "student_id": "9f6c6fbc-14cc-4347-b494-94f32bdf4e87",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-18T11:11:24.224+00:00"
+  },
+  {
+    "id": "5dd3d66b-be0c-47ce-84c5-2de69ae6c564",
+    "student_id": "9f6c6fbc-14cc-4347-b494-94f32bdf4e87",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-18T11:11:38.564+00:00"
+  },
+  {
+    "id": "588d890b-775c-45fc-9f56-97fc1683893f",
+    "student_id": "b8a41850-bb15-47aa-8504-27e227576f7a",
+    "old_status": "resposta-recebida",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-18T12:40:18.362+00:00"
+  },
+  {
+    "id": "9dcb146b-e5d3-49f5-ac4f-0dfdb325fab3",
+    "student_id": "ae0ee8e7-e4bd-4ca3-9acc-ae0efe79fb9a",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-18T12:54:40.046+00:00"
+  },
+  {
+    "id": "7c0c42db-50ee-4a3e-b790-ca05597cda89",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-18T14:15:05.688+00:00"
+  },
+  {
+    "id": "ae38c617-c6da-4941-bf8b-803e92334842",
+    "student_id": "9a4ff7bb-62ee-4c0a-808c-8dff016c7ceb",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:26:18.192+00:00"
+  },
+  {
+    "id": "f564217a-8880-422b-be65-06eea83a99ab",
+    "student_id": "9e67f5e0-a351-4cc8-b1e3-858fea208160",
+    "old_status": "resposta-recebida",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:35:28.867+00:00"
+  },
+  {
+    "id": "1996e541-e383-4ba0-aabc-ca10ae438c91",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "resposta-recebida",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:37:27.825+00:00"
+  },
+  {
+    "id": "dec8d459-a0f8-463f-b735-a52d289dfad8",
+    "student_id": "865c3914-2cce-4461-94f4-56388e2fbc84",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:39.491+00:00"
+  },
+  {
+    "id": "269e50ab-f764-450f-8152-f2e6e910dd12",
+    "student_id": "059a41f6-8fd9-4603-b571-d3a72f82e110",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:41.585+00:00"
+  },
+  {
+    "id": "c56da0e4-41e9-4c2f-a67b-c2a297d1421d",
+    "student_id": "dafe1068-a432-425d-adfc-fa504af3980b",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:42.424+00:00"
+  },
+  {
+    "id": "a3d1c317-326d-42f7-89ee-b2cc23de899c",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:43.272+00:00"
+  },
+  {
+    "id": "6acb8c97-9d4e-401e-901c-0c4aa3f7b0d2",
+    "student_id": "9e67f5e0-a351-4cc8-b1e3-858fea208160",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:45.872+00:00"
+  },
+  {
+    "id": "de7bb750-5cab-43ad-b9d4-c69bf5250a99",
+    "student_id": "8fb9fdb4-2c8b-4143-93c2-4e60186adb1c",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:48.44+00:00"
+  },
+  {
+    "id": "a5e96f52-219b-424c-b6be-6f44fa9d6091",
+    "student_id": "7b83f67b-2924-420a-8b93-2590bbdb806f",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:49.176+00:00"
+  },
+  {
+    "id": "30add11b-1c73-4446-a42f-2b8e96e26845",
+    "student_id": "24607fe2-9497-4d5a-9498-0584ade4af79",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:38:49.738+00:00"
+  },
+  {
+    "id": "251ad8d5-34d2-4af1-a9af-3ad0d990f49a",
+    "student_id": "9e67f5e0-a351-4cc8-b1e3-858fea208160",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T12:40:23.329+00:00"
+  },
+  {
+    "id": "dd7c7ac9-ef59-473d-a2d6-ff9720a6b426",
+    "student_id": "dafe1068-a432-425d-adfc-fa504af3980b",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T13:56:08.283+00:00"
+  },
+  {
+    "id": "ad22ff90-c7c5-466b-98c1-e6fed480a84d",
+    "student_id": "865c3914-2cce-4461-94f4-56388e2fbc84",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T13:56:36.809+00:00"
+  },
+  {
+    "id": "76e6c317-12c8-442a-8ccb-27ae03d48925",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T13:58:10.042+00:00"
+  },
+  {
+    "id": "72eebbf0-ea59-4700-a446-1ded58dab10d",
+    "student_id": "24607fe2-9497-4d5a-9498-0584ade4af79",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:12:09.786+00:00"
+  },
+  {
+    "id": "30ce72a3-8688-48db-85d4-0c8c3921c289",
+    "student_id": "7b83f67b-2924-420a-8b93-2590bbdb806f",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:14:07.332+00:00"
+  },
+  {
+    "id": "4af65b9c-ffe5-4f6e-bf3f-c8ae1cea5bac",
+    "student_id": "059a41f6-8fd9-4603-b571-d3a72f82e110",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:15:35.872+00:00"
+  },
+  {
+    "id": "a70fdd08-0358-4255-b5eb-cc0882d41c22",
+    "student_id": "059a41f6-8fd9-4603-b571-d3a72f82e110",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:15:47.519+00:00"
+  },
+  {
+    "id": "7b0d0a9e-1574-4bd1-b139-5961d3895a4e",
+    "student_id": "8fb9fdb4-2c8b-4143-93c2-4e60186adb1c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:15:52.551+00:00"
+  },
+  {
+    "id": "801e1820-63ff-409c-99b6-dfdc79159c9a",
+    "student_id": "059a41f6-8fd9-4603-b571-d3a72f82e110",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:19:57.922+00:00"
+  },
+  {
+    "id": "f8a27120-c34f-4a41-8407-8df6608822e8",
+    "student_id": "dafe1068-a432-425d-adfc-fa504af3980b",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:39:56.953+00:00"
+  },
+  {
+    "id": "e26f36d2-d578-4e4e-860d-2fe7363d2f67",
+    "student_id": "dafe1068-a432-425d-adfc-fa504af3980b",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-22T14:40:06.229+00:00"
+  },
+  {
+    "id": "32b17b66-8baf-4c2d-b073-40817fadcf7f",
+    "student_id": "9a4ff7bb-62ee-4c0a-808c-8dff016c7ceb",
+    "old_status": "mensagem-enviada",
+    "new_status": "resposta-recebida",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-23T12:20:48.298+00:00"
+  },
+  {
+    "id": "6c7e9bfa-49a8-4a86-938b-41b964e30e0c",
+    "student_id": "9a4ff7bb-62ee-4c0a-808c-8dff016c7ceb",
+    "old_status": "resposta-recebida",
+    "new_status": "pagamento-feito",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-23T12:20:59.157+00:00"
+  },
+  {
+    "id": "e51f05ca-0990-493a-852d-6834ebaf0a47",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "mensagem-enviada",
+    "new_status": "inadimplente",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-23T12:42:33.512+00:00"
+  },
+  {
+    "id": "af84f37a-d6a2-4891-b9be-cbd2d53ef650",
+    "student_id": "16dd1411-458b-4014-bee4-7140b4de2d1c",
+    "old_status": "inadimplente",
+    "new_status": "mensagem-enviada",
+    "changed_by": "Kamilla.vitoriano",
+    "changed_at": "2025-07-23T12:42:42.119+00:00"
+  }
+]

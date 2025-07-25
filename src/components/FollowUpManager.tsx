@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { addFollowUp, updateFollowUp, deleteFollowUp } from "@/services/supabaseService";
 
 interface FollowUpManagerProps {
   studentId: string;
@@ -33,37 +34,7 @@ const FollowUpManager = ({
   const [editContent, setEditContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Função temporária para simular as funções do supabaseService
-  const mockAddFollowUp = async (studentId: string, content: string, createdBy: string): Promise<FollowUp | null> => {
-    // TODO: Substituir pela função real após a migração
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay
-    
-    const newFollowUp: FollowUp = {
-      id: `temp-${Date.now()}`,
-      studentId,
-      content,
-      createdBy,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    toast.success("Follow-up adicionado com sucesso!");
-    return newFollowUp;
-  };
-
-  const mockUpdateFollowUp = async (followUpId: string, content: string, currentUser: string): Promise<boolean> => {
-    // TODO: Substituir pela função real após a migração
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay
-    toast.success("Follow-up atualizado com sucesso!");
-    return true;
-  };
-
-  const mockDeleteFollowUp = async (followUpId: string, currentUser: string): Promise<boolean> => {
-    // TODO: Substituir pela função real após a migração
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay
-    toast.success("Follow-up excluído com sucesso!");
-    return true;
-  };
+  // Usando as funções reais do supabaseService
 
   const handleAddFollowUp = async () => {
     if (!newFollowUpContent.trim()) {
@@ -73,7 +44,7 @@ const FollowUpManager = ({
 
     setIsSubmitting(true);
     try {
-      const followUp = await mockAddFollowUp(studentId, newFollowUpContent, currentUser);
+      const followUp = await addFollowUp(studentId, newFollowUpContent, currentUser);
       
       if (followUp) {
         onFollowUpAdded(followUp);
@@ -95,7 +66,7 @@ const FollowUpManager = ({
 
     setIsSubmitting(true);
     try {
-      const success = await mockUpdateFollowUp(followUpId, editContent, currentUser);
+      const success = await updateFollowUp(followUpId, editContent, currentUser);
       
       if (success) {
         const updatedFollowUp = followUps.find(f => f.id === followUpId);
@@ -123,7 +94,7 @@ const FollowUpManager = ({
 
     setIsSubmitting(true);
     try {
-      const success = await mockDeleteFollowUp(followUpId, currentUser);
+      const success = await deleteFollowUp(followUpId, currentUser);
       
       if (success) {
         onFollowUpDeleted(followUpId);
