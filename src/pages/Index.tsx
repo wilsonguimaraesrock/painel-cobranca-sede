@@ -3,7 +3,7 @@ import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, DollarSign } from "lucide-react";
+import { Plus, Download, DollarSign, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DataLoader from "@/components/DataLoader";
 import LoadingSkeletons from "@/components/LoadingSkeletons";
@@ -29,6 +29,7 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const [isImporting, setIsImporting] = useState<boolean>(false);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   const navigate = useNavigate();
 
   // Handle data loaded from DataLoader component
@@ -215,6 +216,17 @@ const Index = () => {
     );
   };
 
+  // Handle refresh data
+  const handleRefresh = useCallback(() => {
+    if (!selectedMonth) {
+      toast.error("Selecione um mês para atualizar os dados");
+      return;
+    }
+    console.log("Refreshing data for month:", selectedMonth);
+    setRefreshTrigger(prev => prev + 1);
+    toast.info("Atualizando dados...");
+  }, [selectedMonth]);
+
   // Handle loading state changes
   const handleLoadingChange = useCallback((isLoading: boolean) => {
     console.log(`Loading state changed to: ${isLoading}`);
@@ -246,6 +258,16 @@ const Index = () => {
             {isImporting ? "Importing..." : "Import from Spreadsheet"}
           </Button>
           
+          <Button
+            onClick={handleRefresh}
+            disabled={loading || !selectedMonth}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
+          
           {!loading && students.length > 0 && (
             <div className="flex items-center px-4 py-2 bg-orange-100 border border-orange-200 rounded-md text-orange-800 font-medium">
               <DollarSign className="h-4 w-4 mr-1" />
@@ -266,6 +288,7 @@ const Index = () => {
         selectedMonth={selectedMonth}
         onDataLoaded={handleDataLoaded}
         onLoadingChange={handleLoadingChange}
+        refreshTrigger={refreshTrigger}
       />
       
       {renderContent()}

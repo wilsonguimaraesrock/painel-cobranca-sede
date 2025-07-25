@@ -8,9 +8,10 @@ interface DataLoaderProps {
   selectedMonth: string;
   onDataLoaded: (students: Student[], source: "sheets" | "database" | "") => void;
   onLoadingChange: (loading: boolean) => void;
+  refreshTrigger?: number; // Add trigger to force refresh
 }
 
-const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoaderProps) => {
+const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange, refreshTrigger }: DataLoaderProps) => {
   // Hooks at the top
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const isMountedRef = useRef(true);
@@ -116,7 +117,7 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange }: DataLoader
 
     // Start fetching data
     fetchData();
-  }, [selectedMonth, onDataLoaded, onLoadingChange]);
+  }, [selectedMonth, onDataLoaded, onLoadingChange, refreshTrigger]);
 
   // This component doesn't render anything
   return null;
