@@ -52,7 +52,13 @@ const StudentDetailsDialogV2 = ({
     setIsDateRequired(student.status === "resposta-recebida");
   }, [student]);
 
-  // Load follow-ups from database when modal opens
+  // 📱 CORREÇÃO MOBILE - Follow-ups não apareciam no mobile - 18/01/2025
+  // 
+  // PROBLEMA: Modal dependia de student.followUps que sempre era array vazio
+  // CAUSA: Dados não eram carregados do banco ao buscar estudantes
+  // SOLUÇÃO: Carregamento direto do banco quando modal abre
+  // 
+  // BENEFÍCIO: Funciona em todos os dispositivos (mobile, tablet, desktop)
   useEffect(() => {
     const loadFollowUps = async () => {
       if (isOpen && student.id) {
@@ -63,7 +69,7 @@ const StudentDetailsDialogV2 = ({
           setFollowUps(followUpsFromDb);
         } catch (error) {
           console.error("❌ Erro ao carregar follow-ups:", error);
-          setFollowUps([]); // Fallback para array vazio em caso de erro
+          setFollowUps([]); // 🔄 Fallback para array vazio em caso de erro
         }
       }
     };

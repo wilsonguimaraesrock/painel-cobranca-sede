@@ -1,77 +1,231 @@
-# Welcome to your Lovable project
+# 💼 Sistema de Cobrança - Rockfeller Navegantes
 
-## Project info
+Sistema de gerenciamento de cobrança para instituição de ensino, com interface Kanban para acompanhamento de alunos inadimplentes.
 
-**URL**: https://lovable.dev/projects/a40f0d18-b7a7-4bb4-8caa-ac1b73cf3af6
+## 🌐 **Deploy Ativo**
+- **Produção**: https://cobranca.rockfellernavegantes.com.br
+- **Tipo**: GitHub Pages (SPA)
+- **Deploy**: Automático via GitHub Actions
 
-## How can I edit this code?
+## 🚀 **Funcionalidades Principais**
 
-There are several ways of editing your application.
+### 📊 **Dashboard de Cobrança**
+- Métricas em tempo real de inadimplência
+- Cards indicadores responsivos (2 colunas no mobile)
+- Filtros por categoria de atraso
+- Valores monetários por categoria
 
-**Use Lovable**
+### 🗂️ **Kanban Board**
+- **4 Colunas**: Inadimplente → Mensagem Enviada → Resposta Recebida → Pagamento Realizado
+- Arrastar e soltar entre colunas
+- Validação automática de follow-ups
+- Histórico de mudanças de status
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a40f0d18-b7a7-4bb4-8caa-ac1b73cf3af6) and start prompting.
+### 👥 **Sistema de Follow-ups**
+- **Transparência total**: Visível para toda a equipe
+- Histórico cronológico por aluno
+- Identificação clara de autores
+- Edição restrita ao criador
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🔐 **Autenticação Robusta**
+- Baseada em banco de dados (Supabase)
+- Controle de acesso por roles
+- Roles permitidos: `admin`, `franqueado`, `assessora_adm`, `supervisor_adm`
 
-**Use your preferred IDE**
+## 📋 **Implementações de Hoje (2025-01-18)**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### ✅ **1. Correção SPA Routing (GitHub Pages)**
+- **Problema**: Erro 404 ao atualizar página ou acessar URL direta
+- **Solução**: Implementado `404.html` com redirecionamento automático
+- **Arquivos**: `public/404.html`, `index.html` (script de redirecionamento)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### ✅ **2. Nova Funcionária Cadastrada**
+- **Nome**: Nathaly Ribeiro Alves
+- **Email**: nathalyribeiroalves@hotmail.com
+- **Role**: Funcionário/Supervisora ADM
+- **Arquivo**: `cadastrar-nathaly.sql`
 
-Follow these steps:
+### ✅ **3. Sistema de Autenticação Renovado**
+- **Antes**: Credenciais hardcoded no código
+- **Agora**: Banco de dados com controle de roles
+- **Arquivos**: 
+  - `src/services/authService.ts` (novo)
+  - `src/contexts/AuthContext.tsx` (atualizado)
+  - `src/pages/LoginPage.tsx` (interface renovada)
+  - `setup-senhas-usuarios.sql` (senhas temporárias)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### ✅ **4. Follow-ups Aprimorados**
+- **Visibilidade**: Confirmado que todos veem todas as conversas
+- **Interface**: Badges coloridos para identificar autores
+- **Mobile Fix**: Carregamento direto do banco ao abrir modal
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### ✅ **5. Dashboard Responsivo**
+- **Mobile**: Alterado de 1 para 2 colunas
+- **Tipografia**: Ajustada para telas pequenas
+- **Layout**: `grid-cols-2 md:grid-cols-2 lg:grid-cols-5`
 
-# Step 3: Install the necessary dependencies.
-npm i
+### ✅ **6. Validação Follow-ups Corrigida**
+- **Problema**: Validação usando campo antigo `followUp`
+- **Solução**: Verificação no banco de dados (`getFollowUps`)
+- **Resultado**: Alunos com follow-ups podem ser movidos
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 🛠️ **Stack Tecnológica**
+
+### **Frontend**
+- **React 18** + TypeScript
+- **Vite** (bundler)
+- **Tailwind CSS** (styling)
+- **shadcn/ui** (componentes)
+- **React Router** (SPA routing)
+- **Tanstack Query** (data fetching)
+
+### **Backend/Database**
+- **Supabase** (PostgreSQL + Auth + Real-time)
+- **Row Level Security** (RLS)
+- **Triggers** e **Functions**
+
+### **Deploy & CI/CD**
+- **GitHub Pages** (hosting)
+- **GitHub Actions** (CI/CD)
+- **Custom Domain** com SSL
+
+## 📁 **Estrutura do Projeto**
+
+```
+src/
+├── components/           # Componentes React
+│   ├── ui/              # Componentes shadcn/ui
+│   ├── Dashboard.tsx    # Dashboard com métricas
+│   ├── KanbanBoard.tsx  # Board principal
+│   ├── FollowUpManager.tsx # Sistema de follow-ups
+│   └── StudentCard.tsx  # Cards dos alunos
+├── pages/               # Páginas principais
+│   ├── Index.tsx        # Página principal
+│   ├── LoginPage.tsx    # Página de login
+│   └── RegisterStudentPage.tsx
+├── services/            # Lógica de negócio
+│   ├── authService.ts   # Autenticação
+│   ├── supabaseService.ts # CRUD operations
+│   └── monthsService.ts # Gerenciamento de meses
+├── contexts/            # Context API
+│   └── AuthContext.tsx  # Estado de autenticação
+└── types/               # TypeScript definitions
+    └── index.ts
 ```
 
-**Edit a file directly in GitHub**
+## 🗃️ **Banco de Dados**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### **Tabelas Principais**
+```sql
+-- Alunos e dados de cobrança
+public.students (
+  id, nome, valor, data_vencimento, 
+  dias_atraso, status, mes, ...
+)
 
-**Use GitHub Codespaces**
+-- Sistema de follow-ups
+public.follow_ups (
+  id, student_id, content, created_by,
+  created_at, updated_at
+)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+-- Controle de usuários
+public.user_profiles (
+  id, user_id, name, email, role,
+  password_hash, is_active, ...
+)
 
-## What technologies are used for this project?
+-- Histórico de mudanças
+public.status_history (
+  id, student_id, old_status, new_status,
+  changed_by, changed_at
+)
+```
 
-This project is built with:
+## 🔑 **Credenciais de Acesso**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### **Usuários Ativos**
+```
+1. ADMINISTRADOR:
+   Email: wadevenga@hotmail.com
+   Senha: Salmos2714
 
-## How can I deploy this project?
+2. FRANQUEADA:
+   Email: tatiana.direito@hotmail.com
+   Senha: tati123
 
-Simply open [Lovable](https://lovable.dev/projects/a40f0d18-b7a7-4bb4-8caa-ac1b73cf3af6) and click on Share -> Publish.
+3. ASSESSORA ADM:
+   Email: millaka80@gmail.com
+   Senha: 396502
 
-## Can I connect a custom domain to my Lovable project?
+4. SUPERVISORA ADM:
+   Email: nathalyribeiroalves@hotmail.com
+   Senha: 156890
+```
 
-Yes, you can!
+## 🚀 **Como Rodar Localmente**
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+# 1. Clonar repositório
+git clone https://github.com/takkyonAI/a-kanban-brasil.git
+cd a-kanban-brasil
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# 2. Instalar dependências
+npm install
 
-## [NOVO] Importação automática de alunos ao criar mês
+# 3. Configurar ambiente
+# Criar .env.local com variáveis do Supabase
 
-Ao criar um novo mês pelo frontend, todos os alunos do mês anterior que não estejam com status "pagamento-feito" são automaticamente importados para o novo mês, mantendo-os na mesma etapa/coluna. Isso agiliza o processo de transição mensal e evita retrabalho manual.
+# 4. Rodar desenvolvimento
+npm run dev
+
+# 5. Build para produção
+npm run build
+
+# 6. Deploy para GitHub Pages
+npm run deploy
+```
+
+## 📋 **Scripts Disponíveis**
+
+```json
+{
+  "dev": "vite",                    // Servidor de desenvolvimento
+  "build": "vite build",            // Build para produção
+  "preview": "vite preview",        // Preview do build
+  "deploy": "gh-pages -d dist",     // Deploy para GitHub Pages
+  "predeploy": "npm run build"      // Pre-deploy build
+}
+```
+
+## 🐛 **Debugging**
+
+### **Console Logs Implementados**
+- `📋 Carregando follow-ups para aluno [ID]`
+- `✅ Aluno [Nome] tem X follow-ups registrados. Pode mover.`
+- `🔍 Tentativa de login: {email, password}`
+
+### **Problemas Conhecidos e Soluções**
+
+1. **404 ao atualizar página**: ✅ Resolvido com SPA routing
+2. **Follow-ups não aparecem no mobile**: ✅ Resolvido com carregamento do banco
+3. **Não consegue mover aluno**: ✅ Resolvido com nova validação
+
+## 📝 **Próximas Melhorias**
+
+- [ ] Implementar notificações em tempo real
+- [ ] Relatórios avançados de cobrança
+- [ ] Integração com WhatsApp
+- [ ] Backup automático dos dados
+- [ ] Auditoria completa de ações
+
+## 📞 **Suporte**
+
+- **Desenvolvedor**: Wade Venga
+- **Email**: wadevenga@hotmail.com
+- **GitHub**: https://github.com/takkyonAI/a-kanban-brasil
+
+---
+
+**Última atualização**: 18/01/2025
+**Versão**: 2.0.0 (Sistema de Autenticação Renovado)

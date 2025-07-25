@@ -175,7 +175,14 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       return;
     }
     
-    // Verificar se existe pelo menos um follow-up registrado para alunos inadimplentes
+    // 🔍 VALIDAÇÃO DE FOLLOW-UPS - Corrigido em 18/01/2025
+    // 
+    // PROBLEMA ANTERIOR: Validação usava campo antigo student.followUp (sempre vazio)
+    // SOLUÇÃO: Consulta direta ao banco de dados via getFollowUps(studentId)
+    // 
+    // Permite movimentação se:
+    // - Existe pelo menos 1 follow-up no banco OU
+    // - Campo antigo está preenchido (compatibilidade)
     if (student.status === "inadimplente") {
       try {
         const followUps = await getFollowUps(student.id);
@@ -191,7 +198,7 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
         console.log(`✅ Aluno ${student.nome} tem ${followUps.length} follow-ups registrados. Pode mover.`);
       } catch (error) {
         console.warn("Erro ao verificar follow-ups, usando validação do campo antigo:", error);
-        // Fallback para o campo antigo em caso de erro
+        // 🔄 Fallback para o campo antigo em caso de erro de conexão
         if (!student.followUp?.trim()) {
           toast.error("É necessário adicionar pelo menos um follow-up para mover o aluno", {
             description: "Abra os detalhes do aluno e adicione um follow-up antes de mover para a próxima etapa."

@@ -122,7 +122,8 @@ const FollowUpManager = ({
 
   return (
     <div className="space-y-4">
-      {/* Header com botão para adicionar */}
+      {/* 👥 TRANSPARÊNCIA TOTAL - Melhorado em 18/01/2025
+           Follow-ups sempre foram visíveis para todos, mas agora está mais claro */}
       <div className="flex items-center justify-between">
         <div>
           <h4 className="font-medium text-sm">Follow-ups</h4>

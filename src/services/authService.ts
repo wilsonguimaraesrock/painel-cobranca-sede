@@ -1,11 +1,25 @@
+/**
+ * 🔐 SERVIÇO DE AUTENTICAÇÃO - Sistema de Cobrança Rockfeller
+ * 
+ * Implementado em: 18/01/2025
+ * Substituiu: Sistema de credenciais hardcoded
+ * 
+ * Funcionalidades:
+ * - Autenticação baseada em banco de dados (Supabase)
+ * - Controle de acesso por roles específicos
+ * - Validação de usuários ativos
+ * - Atualização automática de último login
+ */
+
 import { supabase } from '@/config/supabase';
 
-// Roles permitidos para login no sistema de cobrança
+// 🎯 Roles permitidos para acesso ao sistema de cobrança
+// Apenas estes perfis podem fazer login na aplicação
 const ALLOWED_ROLES = [
-  'franqueado',
-  'admin', 
-  'assessora_adm',
-  'supervisor_adm'
+  'franqueado',      // Gestão operacional da franquia
+  'admin',           // Acesso administrativo total
+  'assessora_adm',   // Suporte administrativo
+  'supervisor_adm'   // Supervisão e controle
 ];
 
 export interface AuthUser {

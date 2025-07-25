@@ -128,6 +128,10 @@ const Dashboard = ({ students, onFilterChange, activeFilter }: DashboardProps) =
           )}
         </div>
       </div>
+      {/* 📱 LAYOUT RESPONSIVO - Otimizado em 18/01/2025
+          Mobile: 2 colunas (antes era 1) - Melhor aproveitamento do espaço
+          Tablet: 2 colunas (mantido)
+          Desktop: 5 colunas (mantido) */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {dashboardCards.map((card) => (
           <Card 
