@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import FollowUpManager from "./FollowUpManager";
 import { Lock, Edit3 } from "lucide-react";
+import { getFollowUps } from "@/services/supabaseService";
 
 interface StudentDetailsDialogV2Props {
   student: Student;
@@ -35,7 +36,7 @@ const StudentDetailsDialogV2 = ({
   const [observacoes, setObservacoes] = useState(student.observacoes || "");
   const [dataPagamento, setDataPagamento] = useState(student.dataPagamento || "");
   const [isDateRequired, setIsDateRequired] = useState(false);
-  const [followUps, setFollowUps] = useState<FollowUp[]>(student.followUps || []);
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [isEditingObservacoes, setIsEditingObservacoes] = useState(false);
 
   // Verificar se o usuário atual pode editar as observações
@@ -45,12 +46,30 @@ const StudentDetailsDialogV2 = ({
   useEffect(() => {
     setObservacoes(student.observacoes || "");
     setDataPagamento(student.dataPagamento || "");
-    setFollowUps(student.followUps || []);
     setIsEditingObservacoes(false);
     
     // Date is required when current status is "resposta-recebida" and we want to move to "pagamento-feito"
     setIsDateRequired(student.status === "resposta-recebida");
   }, [student]);
+
+  // Load follow-ups from database when modal opens
+  useEffect(() => {
+    const loadFollowUps = async () => {
+      if (isOpen && student.id) {
+        console.log(`📋 Carregando follow-ups para aluno ${student.id} (${student.nome})`);
+        try {
+          const followUpsFromDb = await getFollowUps(student.id);
+          console.log(`📋 Follow-ups carregados:`, followUpsFromDb);
+          setFollowUps(followUpsFromDb);
+        } catch (error) {
+          console.error("❌ Erro ao carregar follow-ups:", error);
+          setFollowUps([]); // Fallback para array vazio em caso de erro
+        }
+      }
+    };
+
+    loadFollowUps();
+  }, [isOpen, student.id]);
 
   const handleSave = () => {
     // Update the student object with the new values
