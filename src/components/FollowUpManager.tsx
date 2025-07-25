@@ -124,7 +124,10 @@ const FollowUpManager = ({
     <div className="space-y-4">
       {/* Header com botão para adicionar */}
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-sm">Follow-ups</h4>
+        <div>
+          <h4 className="font-medium text-sm">Follow-ups</h4>
+          <p className="text-xs text-gray-500">Visível para toda a equipe</p>
+        </div>
         <Button
           variant="outline"
           size="sm"
@@ -194,8 +197,14 @@ const FollowUpManager = ({
                     <Badge variant="secondary" className="text-xs">
                       #{followUps.length - index}
                     </Badge>
-                    <span className="text-xs text-gray-600">
-                      por {followUp.createdBy}
+                    <Badge 
+                      variant={followUp.createdBy === currentUser ? "default" : "outline"} 
+                      className="text-xs"
+                    >
+                      {followUp.createdBy === currentUser ? "Você" : followUp.createdBy}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {formatDateTime(followUp.createdAt)}
                     </span>
                   </div>
                   
@@ -258,12 +267,11 @@ const FollowUpManager = ({
                     <p className="text-sm whitespace-pre-wrap mb-2">
                       {followUp.content}
                     </p>
-                    <div className="text-xs text-gray-500">
-                      {formatDateTime(followUp.createdAt)}
-                      {followUp.updatedAt > followUp.createdAt && (
-                        <span className="ml-2">(editado)</span>
-                      )}
-                    </div>
+                    {followUp.updatedAt > followUp.createdAt && (
+                      <div className="text-xs text-gray-500">
+                        (editado em {formatDateTime(followUp.updatedAt)})
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
