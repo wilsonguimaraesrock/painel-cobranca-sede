@@ -62,6 +62,18 @@ const StudentDetailsDialog = ({
     }).format(value);
   };
 
+  // Format date from YYYY-MM-DD to DD/MM/YYYY
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    // If already in DD/MM/YYYY format, return as is
+    if (dateString.includes('/')) return dateString;
+    
+    // Convert from YYYY-MM-DD to DD/MM/YYYY
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   // Get status display name
   const getStatusDisplay = (status: string): string => {
     const statusDisplayMap: Record<string, string> = {
@@ -102,7 +114,7 @@ const StudentDetailsDialog = ({
               )}
               {student.status === "pagamento-feito" && student.dataPagamento && (
                 <p className="text-xs font-medium text-green-600 mt-1">
-                  Pagamento realizado em: {student.dataPagamento}
+                  Pagamento realizado em: {formatDate(student.dataPagamento)}
                 </p>
               )}
             </div>

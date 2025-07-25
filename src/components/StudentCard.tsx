@@ -64,6 +64,18 @@ const StudentCard = ({
     }).format(value);
   };
 
+  // Format date from YYYY-MM-DD to DD/MM/YYYY
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    // If already in DD/MM/YYYY format, return as is
+    if (dateString.includes('/')) return dateString;
+    
+    // Convert from YYYY-MM-DD to DD/MM/YYYY
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   // Handle status change
   const handleNextStatus = () => {
     const nextStatus = getNextStatus(student.status);
@@ -121,7 +133,7 @@ const StudentCard = ({
             )}
             {student.status === "pagamento-feito" && student.dataPagamento && (
               <p className="text-xs font-medium text-green-600">
-                Pago em: {student.dataPagamento}
+                Pago em: {formatDate(student.dataPagamento)}
               </p>
             )}
           </div>
