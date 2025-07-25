@@ -7,126 +7,145 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { UserRound, Lock } from "lucide-react";
-
-interface UserCredential {
-  username: string;
-  password: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { authenticateUser, formatRoleName } from "@/services/authService";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { isLoggedIn, login } = useAuth();
 
   // Verificar se já está logado ao carregar a página
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     if (isLoggedIn) {
       navigate("/", { replace: true });
     }
-  }, [navigate]);
+  }, [isLoggedIn, navigate]);
 
-  // Hardcoded credentials
-  const validCredentials: UserCredential[] = [
-    { username: "wadevengaADM", password: "Salmos2714" },
-    { username: "tati.venga", password: "tati.venga" },
-    { username: "Kamilla.vitoriano", password: "396502" },
-    { username: "nathaly.alves", password: "156890" }
-  ];
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Limpar erro anterior
+    if (!email || !password) {
+      setError("Por favor, preencha todos os campos");
+      return;
+    }
+    
+    setIsLoading(true);
     setError("");
     
-    // Verify credentials
-    const isValid = validCredentials.some(
-      (cred) => cred.username === username && cred.password === password
-    );
-
-    if (isValid) {
-      // Store login state in localStorage
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("username", username);
+    try {
+      const result = await authenticateUser({ email, password });
       
-      // Show success message
-      toast.success("Login efetuado com sucesso", {
-        description: `Bem-vindo(a), ${username}!`
-      });
-      
-      // Redirect to main page using navigate WITH replace
-      // We use a small timeout to ensure the toast is shown before redirect
-      setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 100);
-    } else {
-      setError("Usuário ou senha inválidos");
+      if (result.success && result.user) {
+        // Usar o método login do AuthContext
+        login(result.user);
+        
+        // Show success message
+        toast.success("Login efetuado com sucesso", {
+          description: `Bem-vindo(a), ${result.user.name}! (${formatRoleName(result.user.role)})`
+        });
+        
+        // Redirect to main page
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 100);
+      } else {
+        setError(result.error || "Erro na autenticação");
+      }
+    } catch (error) {
+      console.error("Erro no login:", error);
+      setError("Erro interno do servidor");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 bg-primary text-primary-foreground rounded-t-lg">
-          <CardTitle className="text-2xl font-bold text-center">CRM de Cobrança</CardTitle>
-          <CardDescription className="text-center text-primary-foreground/90">
-            Rockfeller Navegantes
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-4">
+            <UserRound className="w-10 h-10 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Sistema de Cobrança
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            Faça login para acessar o painel de cobrança
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
+        
+        <CardContent>
+          {error && (
+            <Alert className="mb-4 border-red-200 bg-red-50">
+              <AlertDescription className="text-red-800">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
             <div className="space-y-2">
-              <div className="flex items-center">
-                <UserRound className="mr-2" size={18} />
-                <label htmlFor="username" className="text-sm font-medium">
-                  Nome de usuário
-                </label>
+              <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                Email
+              </label>
+              <div className="relative">
+                <UserRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoading}
+                  required
+                />
               </div>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Digite seu nome de usuário"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
             </div>
             
             <div className="space-y-2">
-              <div className="flex items-center">
-                <Lock className="mr-2" size={18} />
-                <label htmlFor="password" className="text-sm font-medium">
-                  Senha
-                </label>
+              <label className="text-sm font-medium text-gray-700" htmlFor="password">
+                Senha
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Digite sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoading}
+                  required
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Digite sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
             </div>
-            
-            <Button type="submit" className="w-full">
-              Entrar
-            </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t pt-4">
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} Rockfeller Navegantes
-          </p>
+        
+        <CardFooter>
+          <Button 
+            onClick={handleLogin} 
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
         </CardFooter>
+        
+        <div className="px-6 pb-6">
+          <div className="text-center text-sm text-gray-500">
+            <p className="mb-2">Acesso permitido para:</p>
+            <p className="text-xs">
+              Administradores • Franqueados • Assessoras ADM • Supervisoras ADM
+            </p>
+          </div>
+        </div>
       </Card>
     </div>
   );
