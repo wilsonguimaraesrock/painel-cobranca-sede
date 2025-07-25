@@ -175,13 +175,31 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       return;
     }
     
-    // Verificar se o campo follow up está preenchido
-    if (student.followUp.trim() === "" && student.status === "inadimplente") {
-      toast.error("O campo 'Follow Up' precisa ser preenchido para mover o aluno", {
-        description: "Atualize o campo na planilha ou no detalhe do aluno e tente novamente."
-      });
-      setProcessingStudentId(null);
-      return;
+    // Verificar se existe pelo menos um follow-up registrado para alunos inadimplentes
+    if (student.status === "inadimplente") {
+      try {
+        // Importar a função getFollowUps se não estiver importada
+        const { getFollowUps } = await import("@/services/supabaseService");
+        const followUps = await getFollowUps(student.id);
+        
+        if (followUps.length === 0 && !student.followUp?.trim()) {
+          toast.error("É necessário adicionar pelo menos um follow-up para mover o aluno", {
+            description: "Abra os detalhes do aluno e adicione um follow-up antes de mover para a próxima etapa."
+          });
+          setProcessingStudentId(null);
+          return;
+        }
+      } catch (error) {
+        console.warn("Erro ao verificar follow-ups, usando validação do campo antigo:", error);
+        // Fallback para o campo antigo em caso de erro
+        if (!student.followUp?.trim()) {
+          toast.error("É necessário adicionar pelo menos um follow-up para mover o aluno", {
+            description: "Abra os detalhes do aluno e adicione um follow-up antes de mover para a próxima etapa."
+          });
+          setProcessingStudentId(null);
+          return;
+        }
+      }
     }
     
     // Verificar se o campo data de pagamento está preenchido quando movendo para "pagamento-feito"
