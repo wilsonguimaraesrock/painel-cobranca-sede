@@ -10,7 +10,7 @@ import LoadingSkeletons from "@/components/LoadingSkeletons";
 import PageHeader from "@/components/PageHeader";
 import MonthSelectorWithCount from "@/components/MonthSelectorWithCount";
 import { getSheetData, formatCurrency } from "@/lib/googleSheetsApi";
-import { saveStudents } from "@/services/supabaseService";
+import { saveStudents, preserveExistingStatus } from "@/services/supabaseService";
 import { toast } from "sonner";
 
 // Mapeamento de meses para nomes de abas do Google Sheets
@@ -84,14 +84,17 @@ const Index = () => {
       
       console.log(`Importing ${sheetsData.length} students from spreadsheet for month ${selectedMonth}`);
       
+      // Preservar status existente dos alunos
+      const studentsWithPreservedStatus = await preserveExistingStatus(sheetsData, selectedMonth);
+      
       // Save to database
-      await saveStudents(sheetsData, selectedMonth);
+      await saveStudents(studentsWithPreservedStatus, selectedMonth);
       
       // Update student list
-      handleDataLoaded(sheetsData, "sheets");
+      handleDataLoaded(studentsWithPreservedStatus, "sheets");
       
       toast.success(`Import completed successfully`, {
-        description: `${sheetsData.length} students were imported to the database`
+        description: `${sheetsData.length} students were imported to the database (status preserved)`
       });
     } catch (error) {
       console.error("Error importing data:", error);
@@ -211,6 +214,7 @@ const Index = () => {
           filteredStudents={filteredStudents}
           isFiltered={!!activeFilter}
           onStudentUpdate={handleStudentUpdate}
+          currentMonth={selectedMonth}
         />
       </>
     );
@@ -241,12 +245,13 @@ const Index = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelectorWithCount
             onMonthChange={(month) => {
-              console.log(`Month selected: ${month}`);
+              console.log(`Index: Month selected: ${month}`);
               setSelectedMonth(month);
             }}
             studentsCount={students.length}
             loadingSource={loadingSource}
             loading={loading}
+            selectedMonth={selectedMonth}
           />
           <Button
             onClick={handleForceImport}

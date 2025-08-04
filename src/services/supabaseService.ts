@@ -1,6 +1,7 @@
 import { supabase, supabaseUtils } from "@/config/supabase";
 import { Student, Status, StatusHistory, FollowUp } from "@/types";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
 // Converter um objeto Student do formato da aplicação para o formato do banco de dados
 const convertToDbFormat = (student: Student) => {
@@ -161,6 +162,58 @@ export const saveStudents = async (students: Student[], mes: string): Promise<vo
       description: errorInfo.description
     });
     throw error;
+  }
+};
+
+// Preservar status existente dos alunos ao importar da planilha
+export const preserveExistingStatus = async (newStudents: Student[], mes: string): Promise<Student[]> => {
+  try {
+    console.log(`Preservando status existente para ${newStudents.length} alunos do mês ${mes}`);
+    
+    // Buscar alunos existentes no banco para este mês
+    const existingStudents = await getStudents(mes);
+    
+    // Mapear alunos existentes por nome para facilitar busca
+    const existingStudentsMap = new Map<string, Student>();
+    existingStudents.forEach(student => {
+      existingStudentsMap.set(student.nome.toLowerCase().trim(), student);
+    });
+    
+    // Preservar status existente ou usar "inadimplente" para novos
+    const studentsWithPreservedStatus = newStudents.map(newStudent => {
+      const existingStudent = existingStudentsMap.get(newStudent.nome.toLowerCase().trim());
+      
+      if (existingStudent) {
+        console.log(`✅ Preservando status "${existingStudent.status}" para aluno ${newStudent.nome}`);
+        return {
+          ...newStudent,
+          status: existingStudent.status,
+          statusHistory: existingStudent.statusHistory || [],
+          followUps: existingStudent.followUps || []
+        };
+      } else {
+        console.log(`🆕 Novo aluno ${newStudent.nome} - status definido como "inadimplente"`);
+        return {
+          ...newStudent,
+          status: "inadimplente" as Status,
+          statusHistory: [],
+          followUps: []
+        };
+      }
+    });
+    
+    console.log(`Status preservado para ${studentsWithPreservedStatus.length} alunos`);
+    return studentsWithPreservedStatus;
+    
+  } catch (error) {
+    console.error("Erro ao preservar status existente:", error);
+    // Em caso de erro, retornar alunos com status "inadimplente" (comportamento original)
+    return newStudents.map(student => ({
+      ...student,
+      status: "inadimplente" as Status,
+      statusHistory: [],
+      followUps: []
+    }));
   }
 };
 
@@ -391,9 +444,10 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     // Converter para o formato da aplicação
     const students = data.map(convertFromDbFormat);
     
-    // Obter o histórico de status para cada estudante
+    // Obter o histórico de status e follow-ups para cada estudante
     for (const student of students) {
       try {
+        // Carregar histórico de status
         const { data: historyData, error: historyError } = await supabase
           .from('status_history')
           .select('*')
@@ -401,10 +455,7 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
         
         if (historyError) {
           console.error("Erro ao obter histórico de status:", historyError);
-          continue; // Continua com o próximo estudante mesmo se houver erro
-        }
-        
-        if (historyData && historyData.length > 0) {
+        } else if (historyData && historyData.length > 0) {
           console.log(`Encontrados ${historyData.length} registros de histórico para o estudante ${student.id}`);
           student.statusHistory = historyData.map(history => ({
             oldStatus: history.old_status as Status,
@@ -413,8 +464,31 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
             changedAt: new Date(history.changed_at)
           }));
         }
+
+        // Carregar follow-ups
+        const { data: followUpsData, error: followUpsError } = await supabase
+          .from('follow_ups')
+          .select('*')
+          .eq('student_id', student.id)
+          .order('created_at', { ascending: true });
+        
+        if (followUpsError) {
+          console.error("Erro ao obter follow-ups:", followUpsError);
+        } else if (followUpsData && followUpsData.length > 0) {
+          console.log(`Encontrados ${followUpsData.length} follow-ups para o estudante ${student.id}`);
+          student.followUps = followUpsData.map((dbFollowUp: any) => ({
+            id: dbFollowUp.id,
+            studentId: dbFollowUp.student_id,
+            content: dbFollowUp.content,
+            createdBy: dbFollowUp.created_by,
+            createdAt: new Date(dbFollowUp.created_at),
+            updatedAt: new Date(dbFollowUp.updated_at)
+          }));
+        } else {
+          student.followUps = []; // Inicializar array vazio se não há follow-ups
+        }
       } catch (innerError) {
-        console.error("Erro ao processar histórico:", innerError);
+        console.error("Erro ao processar dados do estudante:", innerError);
       }
     }
     
@@ -792,6 +866,106 @@ export const deleteFollowUp = async (followUpId: string, currentUser: string): P
     toast.error("Erro ao excluir follow-up", {
       description: "Verifique sua conexão e tente novamente."
     });
+    return false;
+  }
+};
+
+// Verificar e corrigir follow-ups de alunos migrados
+export const checkAndFixMigratedStudentFollowUps = async (studentId: string): Promise<boolean> => {
+  try {
+    console.log(`🔍 Verificando follow-ups para aluno ${studentId}`);
+    
+    // Buscar follow-ups do aluno
+    const { data: followUps, error } = await supabase
+      .from('follow_ups')
+      .select('*')
+      .eq('student_id', studentId);
+    
+    if (error) {
+      console.error(`❌ Erro ao buscar follow-ups:`, error);
+      return false;
+    }
+    
+    console.log(`📋 Follow-ups encontrados: ${followUps?.length || 0}`);
+    
+    // Se não há follow-ups, tentar buscar por nome do aluno
+    if (!followUps || followUps.length === 0) {
+      console.log(`🔍 Buscando aluno por ID para obter nome...`);
+      
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('nome, mes')
+        .eq('id', studentId)
+        .single();
+      
+      if (studentError || !student) {
+        console.error(`❌ Erro ao buscar aluno:`, studentError);
+        return false;
+      }
+      
+      console.log(`🔍 Aluno encontrado: ${student.nome} (mês: ${student.mes})`);
+      
+      // Buscar alunos com mesmo nome em outros meses
+      const { data: similarStudents, error: similarError } = await supabase
+        .from('students')
+        .select('id, nome, mes')
+        .ilike('nome', student.nome)
+        .neq('id', studentId);
+      
+      if (similarError) {
+        console.error(`❌ Erro ao buscar alunos similares:`, similarError);
+        return false;
+      }
+      
+      console.log(`🔍 Alunos similares encontrados: ${similarStudents?.length || 0}`);
+      
+      // Buscar follow-ups dos alunos similares
+      for (const similarStudent of similarStudents || []) {
+        console.log(`🔍 Verificando follow-ups de ${similarStudent.nome} (${similarStudent.mes})`);
+        
+        const { data: similarFollowUps, error: similarFollowUpsError } = await supabase
+          .from('follow_ups')
+          .select('*')
+          .eq('student_id', similarStudent.id);
+        
+        if (similarFollowUpsError) {
+          console.error(`❌ Erro ao buscar follow-ups similares:`, similarFollowUpsError);
+          continue;
+        }
+        
+        if (similarFollowUps && similarFollowUps.length > 0) {
+          console.log(`✅ Encontrados ${similarFollowUps.length} follow-ups para copiar`);
+          
+          // Copiar follow-ups para o aluno atual
+          const newFollowUps = similarFollowUps.map(fu => ({
+            id: uuidv4(),
+            student_id: studentId,
+            content: fu.content,
+            created_by: fu.created_by,
+            created_at: fu.created_at,
+            updated_at: fu.updated_at
+          }));
+          
+          const { error: insertError } = await supabase
+            .from('follow_ups')
+            .insert(newFollowUps);
+          
+          if (insertError) {
+            console.error(`❌ Erro ao inserir follow-ups copiados:`, insertError);
+          } else {
+            console.log(`✅ ${newFollowUps.length} follow-ups copiados com sucesso`);
+            return true;
+          }
+        }
+      }
+    } else {
+      console.log(`✅ Aluno já tem ${followUps.length} follow-ups`);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`❌ Erro geral ao verificar follow-ups:`, error);
     return false;
   }
 };

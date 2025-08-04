@@ -6,17 +6,19 @@ interface MonthSelectorWithCountProps {
   studentsCount: number;
   loadingSource: "sheets" | "database" | "";
   loading: boolean;
+  selectedMonth?: string;
 }
 
 const MonthSelectorWithCount = ({ 
   onMonthChange, 
   studentsCount, 
   loadingSource, 
-  loading 
+  loading,
+  selectedMonth 
 }: MonthSelectorWithCountProps) => {
   return (
     <div className="flex items-center flex-grow">
-      <MonthSelector onMonthChange={onMonthChange} />
+      <MonthSelector onMonthChange={onMonthChange} value={selectedMonth} />
       {!loading && studentsCount > 0 && (
         <div className="text-sm text-gray-500 ml-4">
           {studentsCount} alunos encontrados

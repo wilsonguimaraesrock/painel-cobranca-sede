@@ -213,15 +213,26 @@ export const importStudentsFromPreviousMonth = async (newMonth: string): Promise
     }
 
     // Duplicar alunos para o novo mês, mantendo status e dados, mas novo id
-    const newStudents = studentsToImport.map(s => ({
-      ...s,
-      id: uuidv4(),
-      mes: newMonth,
-      statusHistory: []
-    }));
+    const newStudents = studentsToImport.map(s => {
+      const newId = uuidv4();
+      console.log(`🔄 Migrando aluno ${s.nome} (ID: ${s.id} -> ${newId})`);
+      console.log(`🔄 Status: ${s.status}, Follow-ups: ${s.followUps?.length || 0}`);
+      
+      return {
+        ...s,
+        id: newId,
+        mes: newMonth,
+        statusHistory: [], // Resetar histórico para o novo mês
+        followUps: s.followUps || [] // Preservar follow-ups existentes
+      };
+    });
 
     // Salvar no banco
     await saveStudents(newStudents, newMonth);
+    
+    // Migrar follow-ups para os novos IDs
+    await migrateFollowUpsToNewIds(studentsToImport, newStudents);
+    
     toast.success(`${newStudents.length} alunos importados do mês anterior para o novo mês!`);
   } catch (error) {
     console.error("Erro ao importar alunos do mês anterior:", error);
@@ -284,5 +295,68 @@ export const getUniqueStudentMonths = async (): Promise<string[]> => {
   } catch (error) {
     console.error('Erro ao buscar meses únicos dos alunos:', error);
     return [];
+  }
+};
+
+// Migrar follow-ups para novos IDs de alunos
+const migrateFollowUpsToNewIds = async (oldStudents: Student[], newStudents: Student[]): Promise<void> => {
+  try {
+    console.log(`🔄 Migrando follow-ups para ${newStudents.length} alunos`);
+    
+    // Criar mapeamento de IDs antigos para novos
+    const idMapping = new Map<string, string>();
+    oldStudents.forEach((oldStudent, index) => {
+      idMapping.set(oldStudent.id, newStudents[index].id);
+    });
+    
+    let migratedCount = 0;
+    
+    for (const [oldId, newId] of idMapping) {
+      try {
+        // Buscar follow-ups do aluno antigo
+        const { data: followUps, error } = await supabase
+          .from('follow_ups')
+          .select('*')
+          .eq('student_id', oldId);
+        
+        if (error) {
+          console.error(`❌ Erro ao buscar follow-ups para aluno ${oldId}:`, error);
+          continue;
+        }
+        
+        if (followUps && followUps.length > 0) {
+          console.log(`🔄 Migrando ${followUps.length} follow-ups de ${oldId} para ${newId}`);
+          
+          // Criar novos follow-ups com o novo student_id
+          const newFollowUps = followUps.map(fu => ({
+            id: uuidv4(), // Novo ID para o follow-up
+            student_id: newId, // Novo ID do aluno
+            content: fu.content,
+            created_by: fu.created_by,
+            created_at: fu.created_at,
+            updated_at: fu.updated_at
+          }));
+          
+          // Inserir novos follow-ups
+          const { error: insertError } = await supabase
+            .from('follow_ups')
+            .insert(newFollowUps);
+          
+          if (insertError) {
+            console.error(`❌ Erro ao inserir follow-ups para aluno ${newId}:`, insertError);
+          } else {
+            console.log(`✅ ${newFollowUps.length} follow-ups migrados para aluno ${newId}`);
+            migratedCount += newFollowUps.length;
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Erro ao migrar follow-ups para aluno ${oldId}:`, error);
+      }
+    }
+    
+    console.log(`✅ Migração concluída: ${migratedCount} follow-ups migrados`);
+    
+  } catch (error) {
+    console.error("❌ Erro geral na migração de follow-ups:", error);
   }
 };

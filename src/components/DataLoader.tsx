@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Student } from "@/types";
 import { getStudents, checkMonthData } from "@/services/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 interface DataLoaderProps {
@@ -15,6 +16,7 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange, refreshTrigg
   // Hooks at the top
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
   const isMountedRef = useRef(true);
+  const { username } = useAuth();
   
   // Effect for cleanup when unmounting
   useEffect(() => {

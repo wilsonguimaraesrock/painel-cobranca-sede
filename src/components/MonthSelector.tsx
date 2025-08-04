@@ -20,9 +20,10 @@ import {
 
 interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
+  value?: string; // Allow external control of selected month
 }
 
-const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
+const MonthSelector = ({ onMonthChange, value }: MonthSelectorProps) => {
   const [months, setMonths] = useState<{ month_value: string, display_name: string }[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,9 +40,13 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
         const availableMonths = await getAvailableMonthsFromDatabase();
         if (availableMonths.length > 0) {
           setMonths(availableMonths);
-          const currentMonth = availableMonths[0].month_value;
-          setSelectedMonth(currentMonth);
-          onMonthChange(currentMonth);
+          
+          // Only auto-select if no external value is provided and no month is currently selected
+          if (!value && !selectedMonth) {
+            const currentMonth = availableMonths[0].month_value;
+            setSelectedMonth(currentMonth);
+            onMonthChange(currentMonth);
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar meses:", error);
@@ -51,7 +56,15 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
       }
     };
     fetchMonths();
-  }, [onMonthChange]);
+  }, []); // Remove onMonthChange dependency to prevent infinite loops
+
+  // Sync with external value prop
+  useEffect(() => {
+    if (value && value !== selectedMonth) {
+      console.log(`MonthSelector: Syncing with external value: ${value}`);
+      setSelectedMonth(value);
+    }
+  }, [value, selectedMonth]);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -66,9 +79,10 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
-  const handleMonthChange = (value: string) => {
-    setSelectedMonth(value);
-    onMonthChange(value);
+  const handleMonthChange = (newValue: string) => {
+    console.log(`MonthSelector: Changing month from "${selectedMonth}" to "${newValue}"`);
+    setSelectedMonth(newValue);
+    onMonthChange(newValue);
   };
 
   const handleNewMonthAdded = (newMonth: string) => {
@@ -126,8 +140,7 @@ const MonthSelector = ({ onMonthChange }: MonthSelectorProps) => {
                 key={month.month_value}
                 className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 ${selectedMonth === month.month_value ? 'bg-gray-100 font-semibold' : ''}`}
                 onClick={() => {
-                  setSelectedMonth(month.month_value);
-                  onMonthChange(month.month_value);
+                  handleMonthChange(month.month_value);
                   setDropdownOpen(false);
                 }}
               >

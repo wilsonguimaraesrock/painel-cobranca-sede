@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import FollowUpManager from "./FollowUpManager";
 import { Lock, Edit3 } from "lucide-react";
-import { getFollowUps } from "@/services/supabaseService";
+
 
 interface StudentDetailsDialogV2Props {
   student: Student;
@@ -57,25 +57,14 @@ const StudentDetailsDialogV2 = ({
   // PROBLEMA: Modal dependia de student.followUps que sempre era array vazio
   // CAUSA: Dados não eram carregados do banco ao buscar estudantes
   // SOLUÇÃO: Carregamento direto do banco quando modal abre
-  // 
-  // BENEFÍCIO: Funciona em todos os dispositivos (mobile, tablet, desktop)
+  // Usar follow-ups que já vêm carregados com o aluno
   useEffect(() => {
-    const loadFollowUps = async () => {
-      if (isOpen && student.id) {
-        console.log(`📋 Carregando follow-ups para aluno ${student.id} (${student.nome})`);
-        try {
-          const followUpsFromDb = await getFollowUps(student.id);
-          console.log(`📋 Follow-ups carregados:`, followUpsFromDb);
-          setFollowUps(followUpsFromDb);
-        } catch (error) {
-          console.error("❌ Erro ao carregar follow-ups:", error);
-          setFollowUps([]); // 🔄 Fallback para array vazio em caso de erro
-        }
-      }
-    };
-
-    loadFollowUps();
-  }, [isOpen, student.id]);
+    if (isOpen && student.id) {
+      console.log(`📋 Usando follow-ups já carregados para aluno ${student.id} (${student.nome})`);
+      console.log(`📋 Follow-ups disponíveis:`, student.followUps);
+      setFollowUps(student.followUps || []);
+    }
+  }, [isOpen, student.id, student.followUps]);
 
   const handleSave = () => {
     // Update the student object with the new values

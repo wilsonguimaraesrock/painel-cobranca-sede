@@ -4,7 +4,8 @@ import { Student, Status } from "@/types";
 import StudentCard from "./StudentCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateStudentStatus, saveAllStudents, deleteStudent, getFollowUps } from "@/services/supabaseService";
+import { updateStudentStatus, saveAllStudents, deleteStudent, checkAndFixMigratedStudentFollowUps } from "@/services/supabaseService";
+import { getPaymentsForMonth } from "@/services/paymentFilterService";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 
@@ -13,15 +14,17 @@ interface KanbanBoardProps {
   onStudentUpdate: (updatedStudent: Student) => void;
   filteredStudents?: Student[];
   isFiltered: boolean;
+  currentMonth?: string; // Para filtrar pagamentos por mês
 }
 
-const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }: KanbanBoardProps) => {
+const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered, currentMonth }: KanbanBoardProps) => {
   const { username } = useAuth();
   const [processingStudentId, setProcessingStudentId] = useState<string | null>(null);
   const [localStudents, setLocalStudents] = useState<Student[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [isDeletingStudent, setIsDeletingStudent] = useState<boolean>(false);
+  const [filteredPayments, setFilteredPayments] = useState<Student[]>([]);
   
   // Sincronizar o estado local com as props e calcular dias de atraso
   useEffect(() => {
@@ -79,6 +82,28 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       setHasChanges(true);
     }
   }, [students, filteredStudents, isFiltered]);
+
+  // Filtrar pagamentos por mês quando o mês mudar
+  useEffect(() => {
+    if (!currentMonth) {
+      setFilteredPayments([]); // Limpar filtro se não há mês selecionado
+      return;
+    }
+    
+    const filterPaymentsForMonth = async () => {
+      try {
+        console.log(`🔄 Filtrando pagamentos para o mês: ${currentMonth}`);
+        const paymentsInMonth = await getPaymentsForMonth(localStudents, currentMonth);
+        setFilteredPayments(paymentsInMonth);
+        console.log(`✅ Pagamentos filtrados: ${paymentsInMonth.length} para ${currentMonth}`);
+      } catch (error) {
+        console.error("❌ Erro ao filtrar pagamentos:", error);
+        setFilteredPayments([]);
+      }
+    };
+    
+    filterPaymentsForMonth();
+  }, [localStudents, currentMonth]);
   
   // Usar os estudantes locais para exibição
   const studentsToShow = localStudents;
@@ -108,7 +133,22 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
   };
 
   studentsToShow.forEach(student => {
-    studentsByStatus[student.status].push(student);
+    // Para pagamentos, usar filtro apenas se currentMonth estiver definido
+    if (student.status === "pagamento-feito") {
+      if (currentMonth && filteredPayments.length > 0) {
+        // Aplicar filtro de mês apenas se há pagamentos filtrados
+        const isPaymentInCurrentMonth = filteredPayments.some(p => p.id === student.id);
+        if (isPaymentInCurrentMonth) {
+          studentsByStatus[student.status].push(student);
+        }
+      } else {
+        // Se não há filtro ativo, mostrar todos os pagamentos
+        studentsByStatus[student.status].push(student);
+      }
+    } else {
+      // Para outros status, incluir normalmente
+      studentsByStatus[student.status].push(student);
+    }
   });
 
   // Função para atualizar o estado local
@@ -175,31 +215,28 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
       return;
     }
     
-    // 🔍 VALIDAÇÃO DE FOLLOW-UPS - Corrigido em 18/01/2025
-    // 
-    // PROBLEMA ANTERIOR: Validação usava campo antigo student.followUp (sempre vazio)
-    // SOLUÇÃO: Consulta direta ao banco de dados via getFollowUps(studentId)
+    // 🔍 VALIDAÇÃO DE FOLLOW-UPS - Usando dados já carregados
     // 
     // Permite movimentação se:
-    // - Existe pelo menos 1 follow-up no banco OU
+    // - Existe pelo menos 1 follow-up nos dados carregados OU
     // - Campo antigo está preenchido (compatibilidade)
     if (student.status === "inadimplente") {
-      try {
-        const followUps = await getFollowUps(student.id);
+      const hasFollowUps = (student.followUps && student.followUps.length > 0) || student.followUp?.trim();
+      
+      if (!hasFollowUps) {
+        console.log(`🔍 Aluno ${student.nome} não tem follow-ups. Tentando corrigir automaticamente...`);
         
-        if (followUps.length === 0 && !student.followUp?.trim()) {
-          toast.error("É necessário adicionar pelo menos um follow-up para mover o aluno", {
-            description: "Abra os detalhes do aluno e adicione um follow-up antes de mover para a próxima etapa."
+        // Tentar corrigir automaticamente os follow-ups
+        const fixed = await checkAndFixMigratedStudentFollowUps(student.id);
+        
+        if (fixed) {
+          console.log(`✅ Follow-ups corrigidos automaticamente para ${student.nome}`);
+          toast.success("Follow-ups corrigidos automaticamente", {
+            description: "Tente mover o aluno novamente."
           });
           setProcessingStudentId(null);
           return;
-        }
-        
-        console.log(`✅ Aluno ${student.nome} tem ${followUps.length} follow-ups registrados. Pode mover.`);
-      } catch (error) {
-        console.warn("Erro ao verificar follow-ups, usando validação do campo antigo:", error);
-        // 🔄 Fallback para o campo antigo em caso de erro de conexão
-        if (!student.followUp?.trim()) {
+        } else {
           toast.error("É necessário adicionar pelo menos um follow-up para mover o aluno", {
             description: "Abra os detalhes do aluno e adicione um follow-up antes de mover para a próxima etapa."
           });
@@ -207,6 +244,8 @@ const KanbanBoard = ({ students, onStudentUpdate, filteredStudents, isFiltered }
           return;
         }
       }
+      
+      console.log(`✅ Aluno ${student.nome} tem ${student.followUps?.length || 0} follow-ups registrados. Pode mover.`);
     }
     
     // Verificar se o campo data de pagamento está preenchido quando movendo para "pagamento-feito"
