@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Student } from "@/types";
-import { getStudents, checkMonthData } from "@/services/supabaseService";
+import { getStudents, checkMonthData, getStudentsWithVencimentoFilter } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -53,21 +53,21 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange, refreshTrigg
         if (!isMountedRef.current) return;
         
         if (hasData) {
-          // Load from database
-          console.log(`[DataLoader] Loading from database for month: ${selectedMonth}`);
+          // Load from database with vencimento filter
+          console.log(`[DataLoader] Loading from database with vencimento filter for month: ${selectedMonth}`);
           setLoadingSource("database");
-          const dbStudents = await getStudents(selectedMonth);
+          const dbStudents = await getStudentsWithVencimentoFilter(selectedMonth);
           
           // Return early if component unmounted
           if (!isMountedRef.current) return;
           
-          console.log(`[DataLoader] Loaded ${dbStudents.length} students from database for month ${selectedMonth}`);
+          console.log(`[DataLoader] Loaded ${dbStudents.length} students from database with vencimento filter for month ${selectedMonth}`);
           console.log("[DataLoader] Students data:", dbStudents);
           
           if (dbStudents.length > 0) {
             onDataLoaded(dbStudents, "database");
             toast.success(`Dados carregados do banco de dados`, {
-              description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
+              description: `${dbStudents.length} estudantes para o mês ${selectedMonth} (incluindo vencimentos de outros meses)`
             });
           } else {
             console.log(`[DataLoader] No students found despite hasData being true`);
@@ -83,13 +83,13 @@ const DataLoader = ({ selectedMonth, onDataLoaded, onLoadingChange, refreshTrigg
           console.log(`[DataLoader] No data in database for month ${selectedMonth}, trying to load anyway...`);
           
           // Try to load students anyway in case the count check failed
-          const dbStudents = await getStudents(selectedMonth);
+          const dbStudents = await getStudentsWithVencimentoFilter(selectedMonth);
           
           if (dbStudents.length > 0) {
             console.log(`[DataLoader] Found ${dbStudents.length} students despite checkMonthData returning false`);
             onDataLoaded(dbStudents, "database");
             toast.success(`Dados carregados do banco de dados`, {
-              description: `${dbStudents.length} estudantes para o mês ${selectedMonth}`
+              description: `${dbStudents.length} estudantes para o mês ${selectedMonth} (incluindo vencimentos de outros meses)`
             });
           } else {
             console.log(`[DataLoader] No students found for month ${selectedMonth}`);

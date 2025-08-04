@@ -2,6 +2,7 @@ import { supabase, supabaseUtils } from "@/config/supabase";
 import { Student, Status, StatusHistory, FollowUp } from "@/types";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
+import { filterStudentsForMonth } from "./vencimentoService";
 
 // Converter um objeto Student do formato da aplicação para o formato do banco de dados
 const convertToDbFormat = (student: Student) => {
@@ -495,6 +496,102 @@ export const getStudents = async (mes: string): Promise<Student[]> => {
     return students;
   } catch (error) {
     console.error("Erro ao obter estudantes:", error);
+    toast.error("Erro ao carregar dados do banco de dados", {
+      description: "Verifique sua conexão e tente novamente."
+    });
+    return [];
+  }
+};
+
+// Buscar todos os alunos e aplicar filtro de vencimento
+export const getStudentsWithVencimentoFilter = async (targetMonth: string): Promise<Student[]> => {
+  try {
+    console.log(`Buscando todos os estudantes e aplicando filtro de vencimento para o mês ${targetMonth}`);
+    
+    // Buscar todos os estudantes do banco
+    const { data, error } = await supabase
+      .from('students')
+      .select('*');
+    
+    if (error) {
+      console.error("Erro ao buscar todos os estudantes:", error);
+      toast.error("Erro ao carregar dados do banco de dados", {
+        description: "Verifique sua conexão e tente novamente."
+      });
+      return [];
+    }
+    
+    if (!data || data.length === 0) {
+      console.log("Nenhum estudante encontrado no banco");
+      return [];
+    }
+    
+    console.log(`Encontrados ${data.length} estudantes no banco total`);
+    
+    // Converter para o formato da aplicação
+    const allStudents = data.map(convertFromDbFormat);
+    
+    // Obter o histórico de status e follow-ups para cada estudante
+    for (const student of allStudents) {
+      try {
+        // Carregar histórico de status
+        const { data: statusHistoryData, error: statusError } = await supabase
+          .from('status_history')
+          .select('*')
+          .eq('student_id', student.id)
+          .order('changed_at', { ascending: true });
+        
+        if (statusError) {
+          console.error(`Erro ao carregar histórico de status para ${student.id}:`, statusError);
+          student.statusHistory = [];
+        } else if (statusHistoryData && statusHistoryData.length > 0) {
+          student.statusHistory = statusHistoryData.map((dbHistory: any) => ({
+            id: dbHistory.id,
+            studentId: dbHistory.student_id,
+            oldStatus: dbHistory.old_status as Status,
+            newStatus: dbHistory.new_status as Status,
+            changedBy: dbHistory.changed_by,
+            changedAt: new Date(dbHistory.changed_at)
+          }));
+        } else {
+          student.statusHistory = [];
+        }
+        
+        // Carregar follow-ups
+        const { data: followUpsData, error: followUpsError } = await supabase
+          .from('follow_ups')
+          .select('*')
+          .eq('student_id', student.id)
+          .order('created_at', { ascending: true });
+        
+        if (followUpsError) {
+          console.error(`Erro ao carregar follow-ups para ${student.id}:`, followUpsError);
+          student.followUps = [];
+        } else if (followUpsData && followUpsData.length > 0) {
+          student.followUps = followUpsData.map((dbFollowUp: any) => ({
+            id: dbFollowUp.id,
+            studentId: dbFollowUp.student_id,
+            content: dbFollowUp.content,
+            createdBy: dbFollowUp.created_by,
+            createdAt: new Date(dbFollowUp.created_at),
+            updatedAt: new Date(dbFollowUp.updated_at)
+          }));
+        } else {
+          student.followUps = [];
+        }
+      } catch (innerError) {
+        console.error("Erro ao processar dados do estudante:", innerError);
+      }
+    }
+    
+    // Aplicar filtro de vencimento
+    const filteredStudents = filterStudentsForMonth(allStudents, targetMonth);
+    
+    console.log(`Filtro de vencimento aplicado: ${allStudents.length} total -> ${filteredStudents.length} para o mês ${targetMonth}`);
+    
+    return filteredStudents;
+  } catch (error) {
+    console.error("Erro ao obter estudantes com filtro de vencimento:", error);
     toast.error("Erro ao carregar dados do banco de dados", {
       description: "Verifique sua conexão e tente novamente."
     });
