@@ -26,6 +26,8 @@ Sistema de gerenciamento de cobrança para instituição de ensino, com interfac
 - Histórico cronológico por aluno
 - Identificação clara de autores
 - Edição restrita ao criador
+- ✅ Numeração cronológica: o primeiro follow-up é o **#1** (mais antigo) e incrementa com o tempo
+- ✅ Exibição no card: **mais recentes no topo**, rolando para os mais antigos
 
 ### 🔐 **Autenticação Robusta**
 - Baseada em banco de dados (Supabase)
@@ -58,6 +60,7 @@ Sistema de gerenciamento de cobrança para instituição de ensino, com interfac
 - **Visibilidade**: Confirmado que todos veem todas as conversas
 - **Interface**: Badges coloridos para identificar autores
 - **Mobile Fix**: Carregamento direto do banco ao abrir modal
+- **Numeração e exibição**: Numeração do mais antigo para o mais recente (#1, #2, ...), com exibição no topo dos mais recentes
 
 ### ✅ **5. Dashboard Responsivo**
 - **Mobile**: Alterado de 1 para 2 colunas
@@ -228,4 +231,4 @@ npm run deploy
 ---
 
 **Última atualização**: 18/01/2025
-**Versão**: 2.0.0 (Sistema de Autenticação Renovado)
+**Versão**: 2.0.1 (Numeração e exibição de follow-ups)

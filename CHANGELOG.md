@@ -2,6 +2,16 @@
 
 Todas as mudanças notáveis do projeto serão documentadas neste arquivo.
 
+## [2.0.1] - 2025-01-18
+
+### 🔄 Alterado
+- Follow-ups: numeração cronológica (mais antigo = #1) e exibição com mais recentes no topo
+  - Numeração baseada na ordem ascendente de criação
+  - Renderização invertida (recente → antigo) no card do aluno
+  - Mantém badges de autor e timestamps
+
+---
+
 ## [2.0.0] - 2025-01-18 🚀 **RELEASE MAJOR**
 
 ### 🆕 **Adicionado**
@@ -150,5 +160,5 @@ Todas as mudanças notáveis do projeto serão documentadas neste arquivo.
 - 🔐 Segurança
 - 👥 Usuários
 - ⚡ Performance
-- �� Mobile
+- 📱 Mobile
 - 🌐 Deploy 

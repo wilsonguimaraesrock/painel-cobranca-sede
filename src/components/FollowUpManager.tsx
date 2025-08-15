@@ -121,9 +121,8 @@ const FollowUpManager = ({
 	};
 
 	// 🔢 Numeração cronológica (mais antigo = #1) e exibição (mais recente no topo)
-	// - sortedAsc: ordem do mais antigo para o mais recente (base para numeração)
-	// - numberById: mapa id -> posição (1..N) na ordem ascendente
-	// - displayFollowUps: ordem do mais recente para o mais antigo (renderização)
+	// Base da numeração: ordenar ASC por createdAt e numerar 1..N nesta ordem
+	// Exibição: ordem DESC (recente → antigo) mantendo a numeração baseada na ordem ASC
 	const sortedAsc = [...followUps].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 	const numberById = new Map(sortedAsc.map((fu, idx) => [fu.id, idx + 1] as const));
 	const displayFollowUps = [...sortedAsc].reverse();

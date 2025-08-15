@@ -121,23 +121,31 @@ const followUps = await getFollowUps(studentId); // Sem filtro por usuário
 )}
 ```
 
-### **Correção Mobile** (18/01/2025)
-**Problema**: Follow-ups não apareciam no mobile
-**Causa**: Modal dependia de `student.followUps` (sempre vazio)
-**Solução**: Carregamento assíncrono do banco
+### **Numeração e Ordenação (18/01/2025)**
+Objetivo: Deixar a numeração cronológica (mais antigo = #1) e exibir os mais recentes no topo.
 
-```typescript
-// ❌ ANTES
-const [followUps, setFollowUps] = useState(student.followUps || []); // Sempre []
+Implementação em `FollowUpManager.tsx`:
+```ts
+// Base para numeração: ordem cronológica ascendente (antigo → recente)
+const sortedAsc = [...followUps].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-// ✅ AGORA  
-useEffect(() => {
-  if (isOpen && student.id) {
-    const followUpsFromDb = await getFollowUps(student.id);
-    setFollowUps(followUpsFromDb); // Dados reais do banco
-  }
-}, [isOpen, student.id]);
+// Mapa id → número sequencial (1..N)
+const numberById = new Map(sortedAsc.map((fu, idx) => [fu.id, idx + 1] as const));
+
+// Exibição: invertida (recente → antigo)
+const displayFollowUps = [...sortedAsc].reverse();
 ```
+
+Benefícios:
+- Numeração estável e intuitiva (primeiro registro é #1)
+- Visual prioriza o que é mais novo no topo
+- Sem alterar estrutura de dados ou schema no banco
+
+### **Correção Mobile** (18/01/2025)
+- Carregamento direto do banco no modal (`getFollowUps(student.id)`) para evitar array vazio vindo do `student.followUps`.
+
+### **Validação ao Mover** (18/01/2025)
+- Verificação no banco (`getFollowUps`) para permitir movimento se existir ao menos um follow-up (fallback no campo antigo).
 
 ## 🔄 **Validação de Movimentação**
 
