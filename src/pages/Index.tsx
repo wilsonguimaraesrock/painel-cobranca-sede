@@ -3,14 +3,13 @@ import { Student } from "@/types";
 import Dashboard from "@/components/Dashboard";
 import KanbanBoard from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, DollarSign, RefreshCw } from "lucide-react";
+import { Plus, DollarSign, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DataLoader from "@/components/DataLoader";
 import LoadingSkeletons from "@/components/LoadingSkeletons";
 import PageHeader from "@/components/PageHeader";
 import MonthSelectorWithCount from "@/components/MonthSelectorWithCount";
-import { getSheetData, formatCurrency } from "@/lib/googleSheetsApi";
-import { saveStudents, preserveExistingStatus } from "@/services/supabaseService";
+import { formatCurrency } from "@/lib/googleSheetsApi";
 import { toast } from "sonner";
 
 // Mapeamento de meses para nomes de abas do Google Sheets
@@ -28,7 +27,6 @@ const Index = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState<"sheets" | "database" | "">("");
-  const [isImporting, setIsImporting] = useState<boolean>(false);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   const navigate = useNavigate();
 
@@ -58,53 +56,6 @@ const Index = () => {
   const totalEmInadimplencia = students
     .filter(s => s.status !== "pagamento-feito")
     .reduce((total, student) => total + student.valor, 0);
-
-  // Force import from sheet
-  const handleForceImport = async () => {
-    if (!selectedMonth) {
-      toast.error("Select a month before importing data");
-      return;
-    }
-    
-    try {
-      setIsImporting(true);
-      toast.info(`Starting data import for month ${selectedMonth}...`);
-      
-      // Usar o nome correto da aba
-      const sheetName = monthSheetMap[selectedMonth] || selectedMonth;
-      
-      // Get data directly from sheet
-      const sheetsData = await getSheetData(sheetName);
-      
-      if (sheetsData.length === 0) {
-        toast.error(`No students found in spreadsheet for month ${selectedMonth}`);
-        setIsImporting(false);
-        return;
-      }
-      
-      console.log(`Importing ${sheetsData.length} students from spreadsheet for month ${selectedMonth}`);
-      
-      // Preservar status existente dos alunos
-      const studentsWithPreservedStatus = await preserveExistingStatus(sheetsData, selectedMonth);
-      
-      // Save to database
-      await saveStudents(studentsWithPreservedStatus, selectedMonth);
-      
-      // Update student list
-      handleDataLoaded(studentsWithPreservedStatus, "sheets");
-      
-      toast.success(`Import completed successfully`, {
-        description: `${sheetsData.length} students were imported to the database (status preserved)`
-      });
-    } catch (error) {
-      console.error("Error importing data:", error);
-      toast.error("Error importing data from spreadsheet", {
-        description: "Check your connection and try again."
-      });
-    } finally {
-      setIsImporting(false);
-    }
-  };
 
   // Apply filters based on card selection
   const handleFilterChange = useCallback((filterId: string | null) => {
@@ -253,16 +204,6 @@ const Index = () => {
             loading={loading}
             selectedMonth={selectedMonth}
           />
-          <Button
-            onClick={handleForceImport}
-            disabled={isImporting || !selectedMonth}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            {isImporting ? "Importing..." : "Import from Spreadsheet"}
-          </Button>
-          
           <Button
             onClick={handleRefresh}
             disabled={loading || !selectedMonth}
