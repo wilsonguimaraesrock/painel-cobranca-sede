@@ -1,8 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "vite_react_shadcn_ts_v2",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://takkyonai.github.io/a-kanban-brasil/",
+  "homepage": "https://takkyonai.github.io/a-kanban-brasil-v2/",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -41,7 +41,6 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
-    "@radix-ui/react-tooltip": "^1.1.4",
     "@supabase/supabase-js": "^2.49.5",
     "@tanstack/react-query": "^5.76.1",
     "@types/bcryptjs": "^2.4.6",
